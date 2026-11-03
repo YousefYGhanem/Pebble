@@ -1,0 +1,9 @@
+{
+  "id": "hacker-news",
+  "name": "Hacker News",
+  "description": "The top story, every 10 minutes.",
+  "permissions": { "net": ["hacker-news.firebaseio.com"], "notify": true },
+  "settings": [
+    { "key": "minScore", "label": "Tell me about stories above this score", "type": "number", "default": 500 }
+  ]
+}

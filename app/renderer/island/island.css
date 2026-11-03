@@ -1,0 +1,31 @@
+/* Colours, radius and font are theme tokens (themes/*.json), set as CSS variables by theme.ts. */
+* { box-sizing: border-box; margin: 0; }
+html, body { background: transparent; overflow: hidden; user-select: none; }
+body { font: var(--font-size) var(--font); color: var(--text); }
+
+button { font: inherit; border: 0; border-radius: 999px; padding: 6px 14px; cursor: pointer; color: var(--text); background: #ffffff1f; }
+button.likely { background: var(--text); color: var(--background); font-weight: 600; }
+button:hover:not(:disabled) { filter: brightness(1.15); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, textarea { user-select: text; }
+
+/* thin scrollbars that sit on the dark glass */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #ffffff2e; border-radius: 3px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; }
+
+/* every page: the same header line and spacing (the Agents page has its own header with session tabs) */
+.page { padding: 0 18px 2px; display: flex; flex-direction: column; gap: 10px; }
+.page-head { height: 44px; display: flex; align-items: center; gap: 12px; }
+.page-title { font-weight: 600; font-size: 1.05em; }
+.page-time { margin-left: auto; color: var(--muted); }
+.page-head .pip-room { width: 64px; flex: none; } /* where Pip sits, next to the clock */
+.muted { color: var(--muted); }
+.empty { color: var(--muted); padding: 6px 0 8px; }
+button.ghost { background: none; color: var(--muted); padding: 4px 8px; display: inline-flex; align-items: center; gap: 5px; }
+button.ghost:hover { color: var(--text); background: #ffffff10; }
+button.icon { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
+.card { border-radius: 14px; background: #ffffff0d; padding: 10px 12px; }
+input[type='range'] { accent-color: var(--text); }

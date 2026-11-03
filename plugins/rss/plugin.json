@@ -1,0 +1,10 @@
+{
+  "id": "rss",
+  "name": "News feeds (RSS)",
+  "description": "The newest items of RSS or Atom feeds you choose, with a notification for each new one.",
+  "permissions": { "net": ["*"], "notify": true },
+  "settings": [
+    { "key": "feeds", "label": "Feed addresses", "type": "list", "required": true },
+    { "key": "notifyNew", "label": "Tell me about new items", "type": "boolean", "default": true }
+  ]
+}

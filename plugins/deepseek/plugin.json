@@ -1,0 +1,10 @@
+{
+  "id": "deepseek",
+  "name": "DeepSeek balance",
+  "description": "Your DeepSeek API balance as a chip, with a warning when it runs low.",
+  "permissions": { "net": ["api.deepseek.com"], "secrets": ["apiKey"], "notify": true },
+  "settings": [
+    { "key": "apiKey", "label": "Your DeepSeek API key (stored encrypted)", "required": true },
+    { "key": "lowBelow", "label": "Warn when the balance is below", "type": "number", "default": 2 }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "id": "scores",
+  "name": "Live scores",
+  "description": "Your team's match live in the island (score and minute), with a notification for every goal. From ESPN's unofficial scoreboard endpoint (no account; not a documented API, so it may stop working).",
+  "permissions": { "net": ["site.api.espn.com"], "notify": true },
+  "settings": [
+    { "key": "team", "label": "Your team, e.g. Arsenal, Ajax, Real Madrid", "required": true },
+    { "key": "league", "label": "ESPN league code: eng.1 (Premier League), ned.1, esp.1, uefa.champions, or nba / nfl / nhl / mlb", "default": "eng.1" }
+  ]
+}

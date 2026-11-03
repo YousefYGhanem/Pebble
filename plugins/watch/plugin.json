@@ -1,0 +1,12 @@
+{
+  "id": "watch",
+  "name": "Watch a value",
+  "description": "Watches one value on the web, a number in a JSON API (a price, a status) or text on a page, as a chip and a card, with a notification when it changes.",
+  "permissions": { "net": ["*"], "notify": true },
+  "settings": [
+    { "key": "url", "label": "The address", "required": true },
+    { "key": "path", "label": "JSON: a path like data.price or items.0.status. A web page: a regular expression with one group, e.g. Price: (\\d+)", "required": true },
+    { "key": "label", "label": "What it is, e.g. BTC", "default": "Value" },
+    { "key": "every", "label": "How often: 30s, 5m, 1h", "default": "5m" }
+  ]
+}

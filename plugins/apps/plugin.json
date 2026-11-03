@@ -1,0 +1,9 @@
+{
+  "id": "apps",
+  "name": "Windows apps",
+  "description": "Shows when an app you list is open (a call in Teams or Zoom, a recording in OBS…), from the titles of open windows. Nothing leaves this PC.",
+  "permissions": { "windows": true },
+  "settings": [
+    { "key": "watch", "label": "Words to look for: \"program\" or \"program: words in the title\", e.g. \"zoom\", \"teams: meeting\", \"obs64\"", "type": "list", "default": ["teams: meeting", "zoom: meeting", "obs64"] }
+  ]
+}

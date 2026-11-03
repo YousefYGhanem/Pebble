@@ -1,0 +1,10 @@
+{
+  "id": "calendar",
+  "name": "Calendar",
+  "description": "Your next event from a calendar link (the secret iCal address of Google Calendar or Outlook), and a heads-up a few minutes before.",
+  "permissions": { "net": ["*"], "secrets": ["ics"], "notify": true },
+  "settings": [
+    { "key": "ics", "label": "The calendar's secret iCal (.ics) address (stored encrypted)", "required": true },
+    { "key": "remindMinutes", "label": "Remind me this many minutes before", "type": "number", "default": 5 }
+  ]
+}

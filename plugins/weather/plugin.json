@@ -1,0 +1,11 @@
+{
+  "id": "weather",
+  "name": "Weather",
+  "description": "The weather where you are, from Open-Meteo (free, no account). A chip with the temperature, and a heads-up when rain is coming.",
+  "permissions": { "net": ["api.open-meteo.com", "geocoding-api.open-meteo.com"], "notify": true },
+  "settings": [
+    { "key": "city", "label": "Your city, e.g. Amsterdam", "required": true },
+    { "key": "unit", "label": "celsius or fahrenheit", "default": "celsius" },
+    { "key": "rainAlert", "label": "Tell me when rain is coming in the next hour", "type": "boolean", "default": true }
+  ]
+}

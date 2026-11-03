@@ -1,0 +1,53 @@
+{
+  "name": "pebble",
+  "productName": "Pebble",
+  "version": "0.1.0",
+  "description": "A notch-style island for Windows that follows your AI coding agents.",
+  "main": "out/main/index.js",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron-vite dev --watch",
+    "build": "electron-vite build",
+    "build:native": "node scripts/build-native.mjs",
+    "start": "electron-vite preview",
+    "test": "vitest run",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "capture": "electron-vite build && electron . --capture=docs/screens",
+    "hooks:remove": "electron-vite build && electron . --remove-hooks",
+    "icon": "electron scripts/make-icon.cjs",
+    "dist": "npm run build:native && electron-vite build && electron-builder --win --publish never",
+    "release": "npm run build:native && electron-vite build && electron-builder --win --publish always",
+    "pack:extensions": "node scripts/pack-extensions.mjs"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/node": "^24.19.2",
+    "@types/qrcode": "^1.5.6",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  },
+  "allowScripts": {
+    "electron@45.2.1": true
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
+    "electron-updater": "^6.8.11",
+    "qrcode": "^1.5.4",
+    "zod": "^4.6.7"
+  },
+  "author": {
+    "name": "Yousef Ghanem"
+  },
+  "homepage": "https://github.com/YousefYGhanem/Pebble",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YousefYGhanem/Pebble.git"
+  }
+}

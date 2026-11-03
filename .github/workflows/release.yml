@@ -1,0 +1,32 @@
+# Push a tag like v0.2.0 (matching "version" in package.json): this builds the installer and publishes it as a GitHub
+# Release, which installed copies of Pebble pick up as an update. The extension packages are attached as a build artifact.
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # builds the native helper (NativeAOT, with Visual Studio's C++ tools on the runner), the app, and the installer
+      - run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npm run pack:extensions
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-packages
+          path: dist/extensions

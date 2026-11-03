@@ -1,0 +1,32 @@
+{
+  "name": "pebble",
+  "displayName": "Pebble",
+  "description": "Pebble's island for Windows: jump from the island to the exact terminal tab that runs your agent, and (optionally) hear when a long terminal command finishes.",
+  "version": "0.5.0",
+  "publisher": "pebble",
+  "license": "MIT",
+  "engines": { "vscode": "^1.93.0" },
+  "extensionKind": ["ui"],
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished", "onUri"],
+  "main": "./extension.js",
+  "capabilities": { "untrustedWorkspaces": { "supported": true } },
+  "contributes": {
+    "configuration": {
+      "title": "Pebble",
+      "properties": {
+        "pebble.notifyLongCommands": {
+          "type": "boolean",
+          "default": false,
+          "description": "Tell Pebble when a terminal command that took a while finishes. Leave off if Pebble already added this to your shell (tray → Terminals), or you get it twice."
+        },
+        "pebble.minSeconds": {
+          "type": "number",
+          "default": 10,
+          "minimum": 1,
+          "description": "How long a command must run before Pebble tells you it finished."
+        }
+      }
+    }
+  }
+}

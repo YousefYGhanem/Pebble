@@ -1,0 +1,6 @@
+{
+  "id": "webhook",
+  "name": "Webhook inbox",
+  "description": "A local web address anything can POST to (scripts, n8n, CI on this PC): {\"title\", \"text\"} becomes a notification; with \"progress\" (0-100) it shows live in the island.",
+  "permissions": { "notify": true, "webhook": true }
+}

@@ -1,0 +1,9 @@
+{
+  "id": "github",
+  "name": "GitHub",
+  "description": "Reviews waiting for you, your notifications, and a heads-up when CI fails on one of your open pull requests.",
+  "permissions": { "net": ["api.github.com"], "secrets": ["token"], "notify": true },
+  "settings": [
+    { "key": "token", "label": "A GitHub token (read access to notifications and pull requests; stored encrypted)", "required": true }
+  ]
+}

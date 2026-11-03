@@ -1,0 +1,10 @@
+node_modules/
+out/
+dist/
+native/bin/
+native/obj/
+native/out/
+native/publish/
+*.log
+# the design notes stay on the developer's PC
+PLAN.md

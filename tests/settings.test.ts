@@ -1,0 +1,56 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { test, expect } from 'vitest'
+import { DEFAULTS, parseSettings } from '../app/shared/settings'
+import { Store } from '../app/main/store'
+import { accelerator, validSettingsAction } from '../app/shared/settings-ui'
+
+test('partial user settings are merged over the defaults', () => {
+  const r = parseSettings({ island: { width: 400 } })
+  expect(r.ok && r.value.island).toEqual({ ...DEFAULTS.island, width: 400 })
+})
+
+test('bad values are reported with their path', () => {
+  const r = parseSettings({ island: { width: 'wide' } })
+  expect(r.ok).toBe(false)
+  expect(!r.ok && r.problems[0]).toMatch(/^island\.width/)
+})
+
+test('store: user theme, broken edit keeps the last good settings, update saves only the change', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pebble-'))
+  const store = new Store(dir)
+  expect(store.theme.name).toBe('Default')
+  expect(Object.keys(store.themes())).toEqual(expect.arrayContaining(['default', 'high-contrast', 'custom']))
+
+  store.update({ theme: 'custom' })
+  expect(store.theme.name).toBe('Custom')
+  expect(JSON.parse(fs.readFileSync(store.file, 'utf8'))).toEqual({ theme: 'custom' })
+
+  fs.writeFileSync(store.file, '{ "theme": ')
+  store.load()
+  expect(store.settings.theme).toBe('custom')
+
+  expect(() => store.update({ server: { port: 1 } })).toThrow(/server\.port/)
+})
+
+test('the Settings window: only well-formed actions reach main', () => {
+  expect(validSettingsAction({ do: 'update', patch: { theme: 'x' } })).toBe(true)
+  expect(validSettingsAction({ do: 'update', patch: [] })).toBe(false)
+  expect(validSettingsAction({ do: 'agent', id: 'claude' })).toBe(true)
+  expect(validSettingsAction({ do: 'agent', id: '../x' })).toBe(false)
+  expect(validSettingsAction({ do: 'connector.set', id: 'weather', key: 'city', value: 'Cairo' })).toBe(true)
+  expect(validSettingsAction({ do: 'open', what: 'C:/Windows' })).toBe(false)
+  expect(validSettingsAction({ do: 'scene', scene: null })).toBe(true)
+  expect(validSettingsAction({ do: 'rm -rf' })).toBe(false)
+})
+
+test('a key press becomes an Electron shortcut', () => {
+  const k = (key: string, code: string, m: Partial<Record<'ctrlKey' | 'altKey' | 'shiftKey' | 'metaKey', boolean>> = {}) =>
+    accelerator({ ctrlKey: false, altKey: false, shiftKey: false, metaKey: false, key, code, ...m })
+  expect(k('p', 'KeyP', { ctrlKey: true, altKey: true })).toBe('Control+Alt+P')
+  expect(k('Control', 'ControlLeft', { ctrlKey: true })).toBeNull() // still choosing
+  expect(k('p', 'KeyP')).toBeNull() // a plain letter would steal typing
+  expect(k('F9', 'F9')).toBe('F9')
+  expect(k(' ', 'Space', { metaKey: true })).toBe('Super+Space')
+})

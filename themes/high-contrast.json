@@ -1,0 +1,18 @@
+{
+  "name": "High contrast",
+  "tokens": {
+    "background": "#000000",
+    "text": "#ffffff",
+    "muted": "#d0d0d0",
+    "accent": "#ffd400",
+    "onAccent": "#000000",
+    "ready": "#ffffff",
+    "running": "#00b7ff",
+    "done": "#00e676",
+    "error": "#ff5252",
+    "question": "#ffd400",
+    "radius": 14,
+    "font": "'Segoe UI Variable', 'Segoe UI', sans-serif",
+    "fontSize": 14
+  }
+}

@@ -1,0 +1,42 @@
+# The Windows installer (npm run dist → dist/). Per-user, no admin rights. Updates come from GitHub Releases.
+appId: dev.pebble.app
+productName: Pebble
+copyright: Copyright © 2026 Yousef Ghanem
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**
+  - package.json
+# next to the app (process.resourcesPath): the native helper and its CLI, the built-in connectors, the browser extension
+extraResources:
+  - from: native/publish/pebble-native.exe
+    to: native/pebble-native.exe
+  - from: cli/pebble.cmd
+    to: native/pebble.cmd
+  - from: plugins
+    to: plugins
+  - from: extensions/chat
+    to: extensions/chat
+win:
+  target: nsis
+  icon: build/icon.png
+  # unsigned for now: Windows SmartScreen warns on the first run. To sign later, add a certificate
+  # (CSC_LINK / CSC_KEY_PASSWORD) or azureSignOptions here; nothing else changes.
+  signAndEditExecutable: true
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: false
+  createStartMenuShortcut: true
+  shortcutName: Pebble
+  # your settings, themes and outfits stay unless you remove %APPDATA%\Pebble yourself
+  deleteAppDataOnUninstall: false
+  include: build/installer.nsh
+  license: LICENSE
+publish:
+  provider: github
+  owner: YousefYGhanem
+  repo: Pebble
+  releaseType: release
