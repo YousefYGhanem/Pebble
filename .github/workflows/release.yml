@@ -1,5 +1,5 @@
 # Push a tag like v0.2.0 (matching "version" in package.json): this builds the installer and publishes it as a GitHub
-# Release, which installed copies of Pebble pick up as an update. The extension packages are attached as a build artifact.
+# Release, which installed copies of Pebble pick up as an update. The browser extension zip is attached to the release.
 name: Release
 on:
   push:
@@ -9,6 +9,8 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -21,12 +23,11 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # the draft exists before electron-builder uploads: its parallel uploads otherwise race to create two releases
+      - run: gh release create ${{ github.ref_name }} --draft --title "Pebble ${{ github.ref_name }}" --generate-notes
       # builds the native helper (NativeAOT, with Visual Studio's C++ tools on the runner), the app, and the installer
       - run: npm run release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run pack:extensions
-      - uses: actions/upload-artifact@v4
-        with:
-          name: store-packages
-          path: dist/extensions
+      - run: gh release upload ${{ github.ref_name }} (Get-ChildItem dist/extensions/*.zip).FullName
+      # published last, so installed copies never see a release without its installer
+      - run: gh release edit ${{ github.ref_name }} --draft=false --latest

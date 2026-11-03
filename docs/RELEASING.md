@@ -11,7 +11,8 @@
 1. Raise `"version"` in `package.json` (for example `0.2.0`).
 2. Commit, then tag and push: `git tag v0.2.0 && git push --tags`.
 3. The **Release** workflow (`.github/workflows/release.yml`) tests, builds the native helper and the installer, and
-   publishes `Pebble Setup 0.2.0.exe` with `latest.yml` as a GitHub Release.
+   publishes `Pebble Setup 0.2.0.exe`, `latest.yml` and the browser extension zip as a GitHub Release (a draft until
+   everything is uploaded).
 4. Installed copies check a minute after they start and every 6 hours, download the new version in the background and
    install it when Pebble restarts (tray → *Restart to update*, or Settings → General → Updates).
 

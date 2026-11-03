@@ -39,4 +39,4 @@ publish:
   provider: github
   owner: YousefYGhanem
   repo: Pebble
-  releaseType: release
+  releaseType: draft # the release workflow publishes it once everything is uploaded
