@@ -32,6 +32,12 @@ describe.skipIf(process.platform !== 'win32' || !fs.existsSync(EXE))('native hel
     expect(media === null || typeof media === 'object').toBe(true)
   }, 20000)
 
+  test('a burst of requests is answered one for one (each keeps its own line)', async () => {
+    const answers = await Promise.all(['ping', 'ping', 'audio.get', 'ping', 'ping'].map(c => native.request(c)))
+    expect(answers.filter(a => a === 'pong')).toHaveLength(4)
+    expect(answers[2]).toMatchObject({ volume: expect.any(Number) })
+  })
+
   test('a screen region becomes a PNG file', async () => {
     const file = path.join(os.tmpdir(), `pebble-cap-${process.pid}.png`)
     await native.request('screen.capture', { x: 0, y: 0, w: 16, h: 16, file })

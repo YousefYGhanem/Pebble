@@ -31,7 +31,11 @@ static class Server
         Event("ready", new JsonObject { ["version"] = Program.Version, ["pid"] = Environment.ProcessId });
         string? line;
         while ((line = await reader.ReadLineAsync()) != null)
-            if (line.Length > 0) _ = Task.Run(() => Handle(line));
+        {
+            // each request keeps its own line: the task may start after the loop has already read the next one
+            var request = line;
+            if (request.Length > 0) _ = Task.Run(() => Handle(request));
+        }
         return 0;
     }
 
