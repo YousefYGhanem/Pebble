@@ -44,3 +44,13 @@ test('the CLIs get the conversation written out', () => {
   expect(transcript({ system: 'Be Pip.', messages: [{ role: 'user', text: 'a', at: 0 }, { role: 'assistant', text: 'b', at: 0 }, { role: 'user', text: 'c', at: 0 }] }))
     .toBe('Be Pip.\n\nUser: a\n\nYou: b\n\nUser: c\n\nYou:')
 })
+
+test('the CLI not being signed in offers its sign-in; other failures do not', async () => {
+  const { chat } = setup('claude-cli', async () => { throw new Error('Claude Code: Not logged in · Please run /login') })
+  await chat.send('hi')
+  expect(chat.state()).toMatchObject({ signIn: true })
+  const api = setup('deepseek', async () => { throw new Error('401: invalid key') })
+  api.chat.setKey('deepseek', 'sk-1')
+  await api.chat.send('hi')
+  expect(api.chat.state().signIn).toBe(false)
+})

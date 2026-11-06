@@ -24,7 +24,9 @@ export const manifestSchema = z.object({
     label: z.string().max(120),
     type: z.enum(['string', 'number', 'boolean', 'list']).default('string'),
     required: z.boolean().default(false),
-    default: z.unknown().optional()
+    default: z.unknown().optional(),
+    /** chosen from the values found at the address in this other setting (Settings: "Find values") */
+    pick: z.string().regex(/^\w{1,40}$/).optional()
   })).max(20).default([])
 })
 

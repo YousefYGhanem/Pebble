@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process'
 import os from 'node:os'
+import { checkReach } from './extras/reach'
 
 export interface Check { name: string; ok: boolean; detail?: string }
 
@@ -26,6 +27,11 @@ export async function diagnose(i: DiagnosticsInput): Promise<Check[]> {
   // the agents' server: answers 403 to a request without the token
   const server = await fetch(`http://127.0.0.1:${i.port}/`, { signal: AbortSignal.timeout(3000) }).then(r => r.status).catch(() => 0)
   checks.push({ name: 'Agent server', ok: server === 403, detail: server ? `port ${i.port}` : `nothing answers on port ${i.port}` })
+
+  // phone drop: a Public network or no firewall rule blocks the phone
+  const reach = await checkReach(process.execPath).catch(() => null)
+  if (reach) checks.push({ name: 'Phone drop', ok: reach.profile !== 'Public' && reach.allowed,
+    detail: reach.profile === 'Public' ? 'this network is set to Public: Windows blocks phones' : reach.allowed ? `network ${reach.profile}, firewall allows Pebble` : 'no firewall rule lets Pebble in (Files → Phone offers to add one)' })
 
   const self = await run(i.nativeExe, ['selftest'])
   try {

@@ -2,6 +2,7 @@
   // The page row at the bottom of the open island: an icon per page, the current one lit. Arrow keys go left/right.
   import Icon from './Icon.svelte'
   import { PAGES, type Page } from './pages'
+  import { t } from '../i18n.svelte'
   let { page = $bindable(), badges = {} }: { page: Page; badges?: Partial<Record<Page, boolean>> } = $props()
 
   function key(e: KeyboardEvent) {
@@ -11,9 +12,9 @@
   }
 </script>
 
-<div class="nav" role="tablist" aria-label="Pages" tabindex="-1" onkeydown={key}>
+<div class="nav" role="tablist" aria-label={t('i.page.pages')} tabindex="-1" onkeydown={key}>
   {#each PAGES as p (p.id)}
-    <button role="tab" aria-selected={p.id === page} aria-label={p.label} title={p.label} class:on={p.id === page} onclick={e => { e.stopPropagation(); page = p.id }}>
+    <button role="tab" aria-selected={p.id === page} aria-label={t(`i.page.${p.id}`)} title={t(`i.page.${p.id}`)} class:on={p.id === page} onclick={e => { e.stopPropagation(); page = p.id }}>
       <Icon name={p.icon} size={15} />
       {#if badges[p.id]}<i class="badge"></i>{/if}
     </button>

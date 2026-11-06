@@ -2,7 +2,7 @@
   // The Settings window. Every control saves at once through main (settings.json, checked by the same schema); main
   // sends the whole view back after each change, so what you see is always what is saved.
   import { applyTheme } from '../theme'
-  import { LANGUAGES, setLanguage, t } from '../i18n.svelte'
+  import { LANGUAGES, setLanguage, t, tOr } from '../i18n.svelte'
   import { accelerator, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
   import { CHIPS } from '../../shared/settings'
   import { SCENES, type Scene } from '../../shared/island'
@@ -11,6 +11,7 @@
 
   let v = $state<SettingsView>()
   let tab = $state('general')
+  let pickFilter = $state('')
   let recording = $state<'toggleShortcut' | 'tuckShortcut' | 'buddyShortcut' | 'voiceShortcut' | null>(null)
 
   window.settingsApi.onView(next => { v = next; applyTheme(next.theme); setLanguage(next.settings.general.language) })
@@ -38,6 +39,12 @@
     const keys = accelerator(e)
     if (keys) { set(`general.${recording}`, keys); recording = null }
   }
+  // Pip's chat: the model list comes from the provider (again when you switch provider or add a key)
+  $effect(() => {
+    if (tab !== 'chat' || !v) return
+    const m = v.chatModels
+    if (!m || (m.provider !== v.settings.chat.provider && !m.loading)) act({ do: 'chat.models' })
+  })
   const diagnosis = $derived(v?.diagnostics && v.diagnostics !== 'running' ? v.diagnostics : null)
 </script>
 
@@ -142,7 +149,7 @@
         <section>
           <label class="row"><span>{t('look.theme')}</span>
             <select value={s.theme} onchange={e => set('theme', text(e))}>
-              {#each v.themes as th}<option value={th.id}>{th.name}</option>{/each}
+              {#each v.themes as th}<option value={th.id}>{tOr(`theme.${th.id}`, th.name)}</option>{/each}
             </select></label>
           <div class="row"><span>{t('look.motion')}</span>
             <div class="seg">
@@ -160,7 +167,7 @@
             <input type="text" maxlength="24" value={s.pip.name} onchange={e => set('pip.name', text(e).trim() || 'Pip')} /></label>
           <div class="outfits">
             {#each [{ id: 'auto', name: t('pip.auto'), ok: true, hint: '' }, { id: 'none', name: t('pip.none'), ok: true, hint: '' },
-              ...OUTFITS.map(o => ({ id: o.id, name: o.name, ok: v!.pip.wearable.includes(o.id), hint: o.tasks !== undefined ? t('pip.tasks', { count: o.tasks }) : t('pip.inSeason') })),
+              ...OUTFITS.map(o => ({ id: o.id, name: tOr(`o.${o.id}`, o.name), ok: v!.pip.wearable.includes(o.id), hint: o.tasks !== undefined ? t('pip.tasks', { count: o.tasks }) : t('pip.inSeason') })),
               ...v.pip.custom.map(id => ({ id, name: id, ok: true, hint: t('pip.yours') }))] as o}
               <button class="outfit" class:on={s.pip.outfit === o.id} disabled={!o.ok} onclick={() => set('pip.outfit', o.id)}>
                 {o.name}{#if o.hint && (!o.ok || o.hint === t('pip.yours'))}<small>{o.hint}</small>{/if}
@@ -196,14 +203,19 @@
 
       {:else if tab === 'chat'}
         {@const p = PROVIDERS.find(x => x.id === s.chat.provider)!}
+        {@const models = v.chatModels?.provider === s.chat.provider ? v.chatModels : undefined}
         <h1>{t('tab.chat')}</h1>
         <section>
           <label class="row"><span>{t('chat.who')}<small>{t('chat.whoHint')}</small></span>
             <select value={s.chat.provider} onchange={e => set('chat', { provider: text(e), model: '' })}>
               {#each PROVIDERS as x}<option value={x.id}>{x.name}</option>{/each}
             </select></label>
-          <label class="row"><span>{t('chat.model')}<small>{t('chat.modelEmpty', { model: p.model || t('chat.cliDefault') })}</small></span>
-            <input type="text" value={s.chat.model} placeholder={p.model || 'default'} onchange={e => set('chat.model', text(e).trim())} /></label>
+          <label class="row"><span>{t('chat.model')}<small>{models?.loading ? t('chat.modelsLoading') : models?.error ? t('chat.modelsError', { error: models.error }) : t('chat.modelHint')}</small></span>
+            <select value={s.chat.model} onchange={e => set('chat.model', text(e))}>
+              <option value="">{t('chat.modelDefault', { model: p.model || t('chat.cliDefault') })}</option>
+              {#if s.chat.model && !models?.list.some(m => m.id === s.chat.model)}<option value={s.chat.model}>{s.chat.model}</option>{/if}
+              {#each models?.list ?? [] as m}<option value={m.id}>{m.name === m.id ? m.id : `${m.name} (${m.id})`}</option>{/each}
+            </select></label>
           <label class="row"><span>{t('chat.readAloud')}<small>{t('chat.readAloudHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.chat.readAloud} onchange={() => set('chat.readAloud', !s.chat.readAloud)} /></label>
         </section>
@@ -256,15 +268,32 @@
         <h1>{t('tab.connectors')}</h1>
         {#each v.connectors as c (c.id)}
           <section class="card">
-            <label class="row head"><span><b>{c.name}</b>{#if !c.builtIn}<em>{t('connectors.yours')}</em>{/if}<small>{c.description}</small></span>
+            <label class="row head"><span><b>{tOr(`c.${c.id}.name`, c.name)}</b>{#if !c.builtIn}<em>{t('connectors.yours')}</em>{/if}<small>{tOr(`c.${c.id}.desc`, c.description)}</small></span>
               <input type="checkbox" class="switch" checked={c.enabled} onchange={() => act({ do: 'connector', id: c.id })} /></label>
             {#if c.enabled && c.problem}<div class="problem">{c.problem}</div>{/if}
             {#each c.fields as f (f.key)}
-              {#if f.type === 'boolean'}
-                <label class="row"><span>{f.label}</span>
+              {#if f.pick}
+                {@const open = v.connectorPick?.id === c.id && v.connectorPick.key === f.key ? v.connectorPick : undefined}
+                <div class="col"><span>{tOr(`c.${c.id}.${f.key}`, f.label)}{#if f.value}<small>{t('pick.current', { value: String(f.value) })}</small>{/if}</span>
+                  <div class="pickbar">
+                    <button onclick={() => { pickFilter = ''; act({ do: 'connector.pick', id: c.id, key: f.key }) }} disabled={open?.loading}>{t(open?.loading ? 'pick.finding' : 'pick.find')}</button>
+                    {#if open}<button class="link" onclick={() => act({ do: 'connector.pickClose' })}>{t('pick.close')}</button>{/if}
+                  </div>
+                  {#if open?.error}<div class="problem">{open.error}</div>{/if}
+                  {#if open?.items.length}
+                    <input type="text" placeholder={t('pick.filter')} bind:value={pickFilter} />
+                    <div class="picks">
+                      {#each open.items.filter(x => !pickFilter || (x.label + ' ' + x.value).toLowerCase().includes(pickFilter.toLowerCase())).slice(0, 80) as x}
+                        <button class="pick" onclick={() => act({ do: 'connector.set', id: c.id, key: f.key, value: x.path })}><span>{x.label}</span><b>{x.value}</b></button>
+                      {/each}
+                    </div>
+                  {/if}
+                </div>
+              {:else if f.type === 'boolean'}
+                <label class="row"><span>{tOr(`c.${c.id}.${f.key}`, f.label)}</span>
                   <input type="checkbox" class="switch" checked={f.value === true} onchange={() => act({ do: 'connector.set', id: c.id, key: f.key, value: f.value !== true })} /></label>
               {:else}
-                <label class="row"><span>{f.label}{#if f.required}<small>{t('connectors.needed')}</small>{/if}</span>
+                <label class="row"><span>{tOr(`c.${c.id}.${f.key}`, f.label)}{#if f.required}<small>{t('connectors.needed')}</small>{/if}</span>
                   {#if f.secret}
                     <input type="password" autocomplete="off" placeholder={t(f.set ? 'secret.saved' : 'secret.notSet')}
                       onchange={e => { const x = text(e); (e.currentTarget as HTMLInputElement).value = ''; act({ do: 'connector.set', id: c.id, key: f.key, value: x }) }} />
@@ -376,6 +405,11 @@
   .outfit.on small { color: inherit; }
   .error, .problem { border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; background: color-mix(in srgb, var(--error) 18%, transparent); }
   .problem { margin: 0 0 8px; font-size: 13px; }
+  .pickbar { display: flex; gap: 8px; align-items: center; }
+  .picks { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
+  .pick { display: flex; justify-content: space-between; gap: 16px; text-align: start; background: none; padding: 7px 10px; }
+  .pick span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pick b { font-weight: 600; white-space: nowrap; }
   @keyframes rise { from { opacity: 0; transform: translateY(4px); } }
   @media (prefers-reduced-motion: reduce) { section { animation: none; } .switch::after { transition: none; } }
 </style>

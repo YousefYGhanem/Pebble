@@ -90,7 +90,9 @@ mood live as you edit. Settings → Advanced → Test mode → **Pip: …** play
 
 **Chat with Pip** (the Chat page): Settings → **Pip's chat** picks who answers: Claude Code or Codex (your own plan, run
 in an empty folder with Pebble's hooks off), or the Anthropic, OpenAI, Gemini or DeepSeek API with your key (kept
-encrypted in `%APPDATA%\Pebble\keys.secrets`, sent only to that provider). The conversation stays in memory only.
+encrypted in `%APPDATA%\Pebble\keys.secrets`, sent only to that provider). The conversation stays in memory only. The model is picked from the
+provider's own list. The `claude` and `codex` commands need their own sign-in (the Claude desktop app's does not count):
+when they are not signed in, the chat offers **Sign in**.
 
 **Screen buddy**: point at a window and press **Ctrl+Alt+B**, or press the eye on the Chat page and pick one. Pip gets
 its picture and the text Windows' OCR reads on it, with your next message (DeepSeek, which cannot see pictures, gets the
@@ -150,7 +152,7 @@ there moves into encrypted storage (Windows DPAPI) when you save, and the file t
 | Live scores | your team (+ league) | your match live in the island, a notification per goal (ESPN's unofficial scoreboard endpoint: not a documented or licensed API, so it may stop working) |
 | Calendar | your calendar's secret iCal link | the next event, a reminder a few minutes before |
 | News feeds | RSS/Atom addresses | the newest items, a notification for new ones |
-| Watch a value | an address + a JSON path or a regular expression | the value, a notification when it changes |
+| Watch a value | an address, then **Find values** and pick one from the list | the value, a notification when it changes |
 | Webhook inbox | – | anything that POSTs `{"title","text","progress"}` to its local address (Settings → Connectors → *Copy its webhook address*) |
 | DeepSeek balance | your API key | your balance, a warning when it runs low |
 | Windows apps | – | a meeting in Teams or Zoom, OBS recording… (window titles, nothing leaves the PC) |
@@ -215,9 +217,9 @@ Everything lives in `%APPDATA%\Pebble` and applies the moment you save:
 Theme tokens become CSS variables (`fontSize` → `--font-size`; numbers are px). Built-in themes are in [themes/](themes).
 
 **First start** shows a short welcome tour (language, which AIs, terminals, Pip's name); Settings → General shows it
-again, or `Pebble --welcome`. **Languages**: the Settings window and the tour take their words from
-[i18n/](i18n) (`en.json`; `nl.json` and `ar.json` translate part of it, and Arabic switches to right-to-left). Add a
-language by adding a file; a missing word falls back to English. The island itself is still English only.
+again, or `Pebble --welcome`. **Languages**: English and Arabic, everywhere: the island, Settings, the tour, the tray
+and notifications (Arabic lays Settings and the tour out right to left). The words are in [i18n/](i18n); a language
+is its file there plus a line in [app/shared/i18n.ts](app/shared/i18n.ts), and a missing word falls back to English.
 
 **Living skins** (Settings → Island): the island glows hot with embers while the processor works hard, frosts over
 when the PC idles, grows a spider web at night (23:00–05:00) and vines after a long day (8+ hours since its first start

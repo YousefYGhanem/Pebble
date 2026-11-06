@@ -8,6 +8,7 @@
   import { clock, type Page } from './pages'
   import type { Widget } from '../../shared/connectors'
   import WidgetCard from './WidgetCard.svelte'
+  import { locale, t } from '../i18n.svelte'
 
   let { sessions, extras, widgets = [], now, act, go }: { sessions: Session[]; extras: ExtrasState; widgets?: Widget[]; now: number; act: (a: Action) => void; go: (p: Page) => void } = $props()
   const cards = $derived(widgets.filter(w => w.kind === 'card').slice(0, 4))
@@ -20,49 +21,49 @@
   <div class="page-head">
     <div class="when">
       <span class="big">{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-      <span class="muted">{date.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+      <span class="muted">{date.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })}</span>
     </div>
     <span class="page-time"></span>
     {#if r}
-      <button class="radio" class:on={r.wifi} title="Wi-Fi (right-click: networks)" aria-label="Wi-Fi" aria-pressed={!!r.wifi}
+      <button class="radio" class:on={r.wifi} title={t('i.home.wifi')} aria-label="Wi-Fi" aria-pressed={!!r.wifi}
         onclick={() => act({ do: 'radio', kind: 'wifi', on: !r.wifi })} oncontextmenu={e => { e.preventDefault(); act({ do: 'open', what: 'wifi' }) }}><Icon name="wifi" size={15} /></button>
-      <button class="radio" class:on={r.bluetooth} title="Bluetooth (right-click: devices)" aria-label="Bluetooth" aria-pressed={!!r.bluetooth}
+      <button class="radio" class:on={r.bluetooth} title={t('i.home.bluetooth')} aria-label="Bluetooth" aria-pressed={!!r.bluetooth}
         onclick={() => act({ do: 'radio', kind: 'bluetooth', on: !r.bluetooth })} oncontextmenu={e => { e.preventDefault(); act({ do: 'open', what: 'bluetooth' }) }}><Icon name="bluetooth" size={15} /></button>
     {/if}
-    <button class="radio" title="Settings" aria-label="Settings" onclick={() => act({ do: 'settings.open' })}><Icon name="settings" size={15} /></button>
+    <button class="radio" title={t('i.home.settings')} aria-label={t('i.home.settings')} onclick={() => act({ do: 'settings.open' })}><Icon name="settings" size={15} /></button>
     <span class="pip-room"></span>
   </div>
 
   <div class="tiles">
     <button class="tile" onclick={() => go('agents')}>
-      <span class="label"><Icon name="agents" size={13} />Agents</span>
-      {#if busy.length}<span class="value">{busy.length} working</span><span class="muted line">{busy[0]!.project} · {busy[0]!.detail}</span>
-      {:else if sessions.length}<span class="value">All done</span><span class="muted line">{sessions[0]!.project}</span>
+      <span class="label"><Icon name="agents" size={13} />{t('i.page.agents')}</span>
+      {#if busy.length}<span class="value">{t('i.home.working', { n: busy.length })}</span><span class="muted line">{busy[0]!.project} · {busy[0]!.detail}</span>
+      {:else if sessions.length}<span class="value">{t('i.home.allDone')}</span><span class="muted line">{sessions[0]!.project}</span>
       {:else}<span class="value muted">Quiet</span>{/if}
     </button>
 
     <button class="tile" onclick={() => go('music')}>
-      <span class="label"><Icon name="music" size={13} />Music</span>
+      <span class="label"><Icon name="music" size={13} />{t('i.page.music')}</span>
       {#if extras.media}
         <span class="music">
           {#if extras.art}<img src={extras.art} alt="" />{/if}
           <span class="line"><b>{extras.media.title}</b><br /><span class="muted">{extras.media.artist}</span></span>
         </span>
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-        <span class="playpause" role="button" tabindex="-1" aria-label={extras.media.playing ? 'Pause' : 'Play'}
+        <span class="playpause" role="button" tabindex="-1" aria-label={extras.media.playing ? t('i.common.pause') : t('i.common.play')}
           onclick={e => { e.stopPropagation(); act({ do: 'media', action: 'toggle' }) }}><Icon name={extras.media.playing ? 'pause' : 'play'} size={13} /></span>
       {:else}<span class="value muted">Nothing playing</span>{/if}
     </button>
 
     <button class="tile" onclick={() => go('focus')}>
-      <span class="label"><Icon name="focus" size={13} />Focus</span>
-      {#if extras.focus}<span class="value">{clock(focusLeft(extras.focus, now) * 1000)}</span><span class="muted line">{extras.focus.left !== undefined ? 'paused' : 'left'}</span>
+      <span class="label"><Icon name="focus" size={13} />{t('i.page.focus')}</span>
+      {#if extras.focus}<span class="value">{clock(focusLeft(extras.focus, now) * 1000)}</span><span class="muted line">{extras.focus.left !== undefined ? t('i.home.paused') : t('i.home.left')}</span>
       {:else}<span class="value muted">Start a timer</span>{/if}
     </button>
 
     <button class="tile" onclick={() => go(extras.shelf.length ? 'files' : 'notes')}>
-      <span class="label"><Icon name={extras.shelf.length ? 'files' : 'notes'} size={13} />{extras.shelf.length ? 'Files' : 'Notes'}</span>
-      {#if extras.shelf.length}<span class="value">{extras.shelf.length} on the shelf</span>
+      <span class="label"><Icon name={extras.shelf.length ? 'files' : 'notes'} size={13} />{extras.shelf.length ? t('i.page.files') : t('i.page.notes')}</span>
+      {#if extras.shelf.length}<span class="value">{t('i.home.onShelf', { n: extras.shelf.length })}</span>
       {:else if extras.notes.length}<span class="muted line">{extras.notes[0]!.text.split('\n')[0]}</span>
       {:else}<span class="value muted">Empty</span>{/if}
     </button>
@@ -75,7 +76,7 @@
   {/if}
 
   <div class="system muted">
-    <span>CPU {extras.system.cpu}%</span><span>Memory {extras.system.ram}%</span>
+    <span>{t('i.home.cpu', { n: extras.system.cpu })}</span><span>{t('i.home.memory', { n: extras.system.ram })}</span>
   </div>
 </div>
 

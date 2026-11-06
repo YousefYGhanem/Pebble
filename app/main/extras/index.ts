@@ -225,7 +225,7 @@ export function validAction(a: unknown): a is Action {
     case 'focus.start': return Number.isInteger(o.seconds) && (o.seconds as number) >= 1 && (o.seconds as number) <= 24 * 3600
     case 'radio': return (o.kind === 'wifi' || o.kind === 'bluetooth') && typeof o.on === 'boolean'
     case 'open': return o.what === 'wifi' || o.what === 'bluetooth'
-    case 'shelf.clear': case 'clip.clear': case 'focus.pause': case 'focus.resume': case 'focus.stop': case 'drop.start': case 'drop.stop': case 'settings.open': case 'chat.stop': case 'chat.clear': case 'chat.windows': case 'chat.dictate': return true
+    case 'shelf.clear': case 'clip.clear': case 'focus.pause': case 'focus.resume': case 'focus.stop': case 'drop.start': case 'drop.stop': case 'drop.allow': case 'drop.network': case 'settings.open': case 'chat.stop': case 'chat.clear': case 'chat.signIn': case 'chat.windows': case 'chat.dictate': return true
     case 'chat.look': return Number.isSafeInteger(o.hwnd)
     case 'chat.say': return o.at === null || Number.isFinite(o.at)
     case 'word.check': case 'word.close': return true

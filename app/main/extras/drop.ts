@@ -11,6 +11,8 @@ import { logger } from '../log'
 const log = logger('drop')
 const MAX_UPLOAD = 500 * 1024 * 1024
 const LIFETIME = 60 * 60 * 1000
+/** the same port every time (easy to type, and to allow in a firewall); another one if it is taken */
+const PORT = 47902
 
 /** This PC's address on the local network (Wi-Fi or cable), or null. */
 export function lanAddress(nets = os.networkInterfaces()): string | null {
@@ -54,13 +56,21 @@ export class DropServer extends EventEmitter {
     if (!ip) throw new Error('This PC is not on a network (Wi-Fi or cable).')
     this.key = randomBytes(16).toString('hex')
     const server = http.createServer((req, res) => this.handle(req, res))
-    await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(0, '0.0.0.0', resolve) })
+    const listen = (port: number) => new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, '0.0.0.0', resolve) })
+    await listen(PORT).catch(() => listen(0))
     this.server = server
     const url = `http://${ip}:${(server.address() as { port: number }).port}/${this.key}`
     const svg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' })
     this.state = { url, qr: 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64'), connected: false, received: 0, expiresAt: Date.now() + LIFETIME }
     this.timer = setTimeout(() => this.stop(), LIFETIME)
     log.info(`phone drop on ${ip} (for an hour)`)
+    this.emit('change')
+  }
+
+  /** Shows why a phone may not get through (after the firewall and network checks). */
+  setBlocked(blocked: Drop['blocked']) {
+    if (!this.state || this.state.blocked === blocked) return
+    this.state.blocked = blocked
     this.emit('change')
   }
 

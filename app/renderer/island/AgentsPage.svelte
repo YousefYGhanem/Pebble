@@ -3,7 +3,9 @@
   // of this turn. Right: the code it changes, or its answer, with a reply box once it stopped. Questions, plans and
   // permissions take the full width. Bottom: plan usage and context, and "jump to terminal".
   import type { Answer, HistoryItem, Usage } from '../../shared/ipc'
-  import { AGENT_NAMES, summary, type Session } from '../../shared/state'
+  import { AGENT_NAMES, type Session } from '../../shared/state'
+  import { ago as agoAt, detailText, stepsSummary } from './pages'
+  import { t } from '../i18n.svelte'
   import AskView from './AskView.svelte'
   import DiffView from './DiffView.svelte'
   import Icon from './Icon.svelte'
@@ -26,11 +28,7 @@
     const t = Math.max(0, Math.round(ms / 1000)), m = Math.floor(t / 60), sec = t % 60
     return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}:${String(sec).padStart(2, '0')}`
   }
-  const ago = (at: number) => {
-    const m = Math.round((now - at) / 60000)
-    return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : new Date(at).toLocaleDateString()
-  }
-  const STATUS = { ready: 'Ready', running: 'Working', question: 'Needs you', done: 'Done', error: 'Stopped' } as const
+  const ago = (at: number) => agoAt(at, now)
 
   function send() {
     if (!s || !draft.trim()) return
@@ -51,8 +49,8 @@
           <span class="dot {x.status}"></span>{x.project}
         </button>
       {/each}
-      <button role="tab" aria-selected={showHistory} class="tab" class:on={showHistory} title="History" onclick={e => { e.stopPropagation(); showHistory = !showHistory }}>
-        <Icon name="history" />{#if !sessions.length}History{/if}
+      <button role="tab" aria-selected={showHistory} class="tab" class:on={showHistory} title={t('i.agents.history')} onclick={e => { e.stopPropagation(); showHistory = !showHistory }}>
+        <Icon name="history" />{#if !sessions.length}{t('i.agents.history')}{/if}
       </button>
     </div>
     <span class="time">{time}</span>
@@ -63,27 +61,27 @@
     <div class="history">
       {#each history as h (h.at)}
         <div class="h-item">
-          <div class="h-top"><b>{h.project}</b><span>{AGENT_NAMES[h.agent]} · {clock(h.seconds * 1000)}{h.files ? ` · ${h.files} file${h.files > 1 ? 's' : ''}` : ''} · {ago(h.at)}</span></div>
+          <div class="h-top"><b>{h.project}</b><span>{AGENT_NAMES[h.agent]} · {clock(h.seconds * 1000)}{h.files ? ` · ${h.files > 1 ? t('i.agents.files', { n: h.files }) : t('i.agents.file')}` : ''} · {ago(h.at)}</span></div>
           <div class="h-prompt">{h.prompt}</div>
           {#if h.result}<div class="h-result">{h.result.split('\n')[0]}</div>{/if}
         </div>
       {:else}
-        <div class="empty">Finished turns show up here.</div>
+        <div class="empty">{t('i.agents.historyEmpty')}</div>
       {/each}
     </div>
   {:else if !s}
-    <div class="empty">No agent sessions yet. Start Claude Code or Codex in a terminal.</div>
+    <div class="empty">{t('i.agents.none')}</div>
   {:else if s.ask}
     <AskView session={s} onanswer={a => onanswer(s.id, a)} />
   {:else}
     <div class="body">
       <div class="left">
         <div class="status {s.status}">
-          {STATUS[s.status]}
+          {t(`i.status.${s.status}`)}
           {#if s.status === 'running' && s.startedAt}<span class="timer">{clock(now - s.startedAt)}</span>{/if}
         </div>
         {#if s.prompt}<div class="prompt" title={s.prompt}>{s.prompt}</div>{/if}
-        {#if summary(s.steps)}<div class="summary">{summary(s.steps)}</div>{/if}
+        {#if stepsSummary(s.steps)}<div class="summary">{stepsSummary(s.steps)}</div>{/if}
         <ol class="steps">
           {#each s.steps.slice(-6) as step, i (step.at + step.text)}
             <li class:failed={step.failed} class:current={s.status === 'running' && i === Math.min(5, s.steps.length - 1)}>
@@ -98,13 +96,13 @@
         {:else if s.message}
           <div class="card message">{s.message}</div>
         {:else}
-          <div class="card muted">{s.detail || 'Waiting for the next step…'}</div>
+          <div class="card muted">{detailText(s.detail) || t('i.detail.waiting')}</div>
         {/if}
         {#if s.replyable}
           <div class="reply">
-            <textarea rows="1" placeholder="Reply to {AGENT_NAMES[s.agent]}…" bind:value={draft}
+            <textarea rows="1" placeholder={t('i.agents.replyTo', { name: AGENT_NAMES[s.agent] })} bind:value={draft}
               onkeydown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}></textarea>
-            <button class="likely" disabled={!draft.trim()} onclick={send}>Send</button>
+            <button class="likely" disabled={!draft.trim()} onclick={send}>{t('i.agents.send')}</button>
           </div>
         {/if}
       </div>
@@ -114,16 +112,16 @@
   {#if !showHistory}
     <footer>
       {#if usage.fiveHour}
-        <span class="usage" title="Claude plan usage">
+        <span class="usage" title={t('i.agents.usage')}>
           <svg width="20" height="20" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" class="track" /><circle cx="11" cy="11" r="9" class="arc" style:stroke={tone(usage.fiveHour.used)} stroke-dasharray={ring(usage.fiveHour.used)} /></svg>
-          5h {Math.round(usage.fiveHour.used)}%{#if usage.sevenDay}{` · week ${Math.round(usage.sevenDay.used)}%`}{/if}
+          5h {Math.round(usage.fiveHour.used)}%{#if usage.sevenDay}{` · ${t('i.agents.week', { n: Math.round(usage.sevenDay.used) })}`}{/if}
         </span>
       {/if}
-      {#if s?.context !== undefined}<span class="meta">context {Math.round(s.context)}%</span>{/if}
+      {#if s?.context !== undefined}<span class="meta">{t('i.agents.context', { n: Math.round(s.context) })}</span>{/if}
       {#if s}<span class="meta">{AGENT_NAMES[s.agent]}{s.provider ? ` · ${s.provider}` : ''}{s.model ? ` · ${s.model}` : ''}</span>{/if}
       <span class="grow"></span>
-      {#if s?.windowPid}<button class="link" onclick={e => { e.stopPropagation(); onjump(s.id) }}><Icon name="jump" size={13} />Jump to terminal</button>{/if}
-      {#if s && !s.ask}<button class="link" onclick={e => { e.stopPropagation(); ondismiss(s.id) }}>Hide</button>{/if}
+      {#if s?.windowPid}<button class="link" onclick={e => { e.stopPropagation(); onjump(s.id) }}><Icon name="jump" size={13} />{t('i.agents.jump')}</button>{/if}
+      {#if s && !s.ask}<button class="link" onclick={e => { e.stopPropagation(); ondismiss(s.id) }}>{t('i.agents.hide')}</button>{/if}
     </footer>
   {/if}
 </div>

@@ -5,6 +5,7 @@
   import { backOut } from 'svelte/easing'
   import type { Action, ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
+  import { t } from '../i18n.svelte'
 
   let { extras, now, act, reduced }: { extras: ExtrasState; now: number; act: (a: Action) => void; reduced: boolean } = $props()
   const drop = $derived(extras.drop)
@@ -13,28 +14,33 @@
 
 <div class="page">
   <div class="page-head">
-    <span class="page-title">Files</span>
-    {#if !drop}<button class="ghost" onclick={() => act({ do: 'drop.start' })}><Icon name="phone" size={14} />Phone</button>{/if}
-    {#if extras.shelf.length && !drop}<button class="ghost" onclick={() => act({ do: 'shelf.clear' })}>Clear all</button>{/if}
+    <span class="page-title">{t('i.page.files')}</span>
+    {#if !drop}<button class="ghost" onclick={() => act({ do: 'drop.start' })}><Icon name="phone" size={14} />{t('i.files.phone')}</button>{/if}
+    {#if extras.shelf.length && !drop}<button class="ghost" onclick={() => act({ do: 'shelf.clear' })}>{t('i.files.clearAll')}</button>{/if}
     <span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span>
   </div>
 
   {#if drop}
     <div class="drop">
       <div class="qr" class:radar={!drop.connected && !reduced}>
-        <img src={drop.qr} alt="QR code for your phone" />
+        <img src={drop.qr} alt={t('i.files.qr')} />
         {#if drop.connected}<span class="ok"><Icon name="check" size={18} /></span>{/if}
       </div>
       <div class="drop-text">
-        <div class="title">{drop.connected ? 'Your phone is connected' : 'Scan with your phone’s camera'}</div>
-        <div class="muted">Same Wi-Fi as this PC. Your phone can save what is on the shelf, and “Send to PC” puts photos and files in Downloads and here.</div>
-        {#if drop.received}<div>{drop.received} file{drop.received > 1 ? 's' : ''} received</div>{/if}
-        <div class="muted small">Stops by itself in {Math.max(1, Math.round((drop.expiresAt - now) / 60000))} min.</div>
-        <button onclick={() => act({ do: 'drop.stop' })}>Stop</button>
+        <div class="title">{drop.connected ? t('i.files.connected') : t('i.files.scan')}</div>
+        <div class="muted">{t('i.files.how')}</div>
+        {#if drop.blocked && !drop.connected}
+          <div class="warn">{drop.blocked === 'public' ? t('i.files.public') : t('i.files.firewall')}
+            <button onclick={() => act({ do: drop.blocked === 'public' ? 'drop.network' : 'drop.allow' })}>{drop.blocked === 'public' ? t('i.files.makePrivate') : t('i.files.allow')}</button></div>
+        {/if}
+        {#if !drop.connected}<div class="muted small">{t('i.files.notOpening')}</div>{/if}
+        {#if drop.received}<div>{t('i.files.received', { n: drop.received })}</div>{/if}
+        <div class="muted small">{t('i.files.stops', { n: Math.max(1, Math.round((drop.expiresAt - now) / 60000)) })}</div>
+        <button onclick={() => act({ do: 'drop.stop' })}>{t('i.common.stop')}</button>
       </div>
     </div>
   {:else if !extras.shelf.length}
-    <div class="empty">Drag files onto the island to keep them here for a while. Drag them out again into any app.</div>
+    <div class="empty">{t('i.files.empty')}</div>
   {:else}
     <div class="shelf">
       {#each extras.shelf as f (f.path)}
@@ -65,6 +71,7 @@
   .noicon { width: 56px; height: 56px; display: grid; place-items: center; color: var(--muted); }
   .name { max-width: 100%; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .small { font-size: 0.78em; }
+  .warn { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--question); font-size: 0.85em; }
   .tools { position: absolute; top: 2px; right: 2px; display: none; }
   .file:hover .tools, .file:focus-within .tools { display: flex; }
   .tools button { padding: 3px; }

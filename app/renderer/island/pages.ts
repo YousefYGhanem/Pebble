@@ -1,3 +1,6 @@
+import { t } from '../i18n.svelte'
+import type { Step } from '../../shared/state'
+
 // The island's pages, in order (the dots at the bottom and ‹ › follow this order).
 export const PAGES = [
   { id: 'home', label: 'Home', icon: 'home' },
@@ -22,7 +25,27 @@ export function clock(ms: number): string {
 /** "just now", "4 min ago", "2 h ago" */
 export function ago(at: number, now: number): string {
   const m = Math.round((now - at) / 60000)
-  return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : new Date(at).toLocaleDateString()
+  return m < 1 ? t('i.time.justNow') : m < 60 ? t('i.time.minAgo', { n: m }) : m < 1440 ? t('i.time.hAgo', { n: Math.round(m / 60) }) : new Date(at).toLocaleDateString()
+}
+
+/** "read 3 · edited 2 · ran 1" for this turn, in your language. */
+export function stepsSummary(steps: Step[]): string {
+  return (['read', 'edit', 'run', 'search'] as const).map(k => [k, steps.filter(x => x.kind === k).length] as const)
+    .filter(([, n]) => n > 0).map(([k, n]) => t(`i.steps.${k}`, { n })).join(' · ')
+}
+
+/** A session's detail line: the fixed phrases the agents' state writes (in English), in your language. */
+export function detailText(d: string): string {
+  let m: RegExpExecArray | null
+  if (d === 'Session started') return t('i.detail.started')
+  if (d === 'Done') return t('i.detail.done')
+  if (d === 'Stopped with an error') return t('i.detail.error')
+  if (d === 'Working') return t('i.detail.working')
+  if (d === 'Answering…') return t('i.detail.answering')
+  if ((m = /^Done: ([\s\S]*)$/.exec(d))) return t('i.detail.doneWith', { text: m[1]! })
+  if ((m = /^Sent: ([\s\S]*)$/.exec(d))) return t('i.detail.sent', { text: m[1]! })
+  if ((m = /^(\S+) failed$/.exec(d))) return t('i.detail.failed', { tool: m[1]! })
+  return d
 }
 
 /** The album's main colour (average of the cover, kept bright enough to glow on black), as "r, g, b". */

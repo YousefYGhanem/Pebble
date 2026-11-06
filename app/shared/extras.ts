@@ -46,6 +46,8 @@ export interface Drop {
   qr: string
   /** the phone opened the page */
   connected: boolean
+  /** why a phone may not get through: the network is set to Public, or the firewall has no rule for Pebble */
+  blocked?: 'public' | 'firewall'
   /** files received from the phone this time */
   received: number
   expiresAt: number
@@ -81,9 +83,10 @@ export type Action =
   | { do: 'focus.pause' | 'focus.resume' | 'focus.stop' }
   | { do: 'radio'; kind: 'wifi' | 'bluetooth'; on: boolean }
   | { do: 'open'; what: 'wifi' | 'bluetooth' }
-  | { do: 'drop.start' | 'drop.stop' }
+  | { do: 'drop.start' | 'drop.stop' | 'drop.allow' | 'drop.network' }
   | { do: 'settings.open' }
   | { do: 'chat.send'; text: string }
+  | { do: 'chat.signIn' }
   | { do: 'chat.stop' | 'chat.clear' | 'chat.windows' | 'chat.dictate' }
   | { do: 'chat.look'; hwnd: number }
   | { do: 'chat.say'; at: number | null }

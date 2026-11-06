@@ -38,5 +38,7 @@ export interface ChatState {
   windows?: { hwnd: number; title: string; process: string }[]
   busy: boolean
   error?: string
+  /** the Claude Code or Codex command is not signed in: the island offers to open its sign-in */
+  signIn?: boolean
   word?: WordFixes
 }

@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeImage, Notification, powerMonitor, safeStorage, screen, shell, utilityProcess } from 'electron'
 import { CH, type Answer, type IslandState } from '../shared/ipc'
@@ -20,10 +21,12 @@ import { buildTray } from './tray'
 import { SettingsWindow } from './settings-window'
 import { Extras, validAction } from './extras'
 import { DropServer } from './extras/drop'
+import { allowInFirewall, checkReach } from './extras/reach'
 import { FocusGuard, guardPage, guardPreload } from './extras/guard'
 import type { ExtrasState } from '../shared/extras'
 import { ConnectorHost } from './connectors/host'
 import { describePermissions } from '../shared/connectors'
+import { translate, translateOr } from '../shared/i18n'
 import { Chat } from './ai/chat'
 import { diagnose } from './diagnostics'
 import { Updater } from './updater'
@@ -128,6 +131,8 @@ let sleepy = false
 const native = new Native(nativeExe(app.getAppPath(), app.isPackaged))
 const extras = new Extras(userData, native, () => store.settings)
 const extensionKey = loadExtensionKey(userData)
+/** words for the tray and notifications, in your language */
+const tr = (key: string, vars?: Record<string, string | number>) => translate(store.settings.general.language, key, vars)
 const extensionDir = app.isPackaged ? path.join(process.resourcesPath, 'extensions', 'chat') : path.join(app.getAppPath(), 'extensions', 'chat')
 const chatApps = new ChatApps(hub, extensionKey, { native, followed: () => store.settings.chatApps.desktop, problem: (title, body) => toast(title, body) })
 const drop = new DropServer(() => extras.state.shelf, app.getPath('downloads'))
@@ -174,6 +179,14 @@ function bringBack() {
   if (island && !island.isVisible()) { shownAnyway = true; updateVisibility() }
 }
 
+/** Phone drop: is this network Private, and does the firewall let Pebble in? (Windows blocks the phone otherwise.) */
+async function checkDrop() {
+  const r = await checkReach(process.execPath).catch(() => null)
+  if (!r) return
+  drop.setBlocked(r.profile === 'Public' ? 'public' : r.allowed ? undefined : 'firewall')
+  log.info(`phone drop: network ${r.profile}, firewall ${r.allowed ? 'allows' : 'has no rule for'} ${path.basename(process.execPath)}`)
+}
+
 function toggleIsland() { bringBack(); send(CH.toggle) }
 /** Opens the island on a page, with the keyboard (listen: start voice typing in its message box). */
 function showPage(page: string, listen = false) { bringBack(); island?.focus(); send(CH.page, page, listen) }
@@ -187,7 +200,7 @@ async function look(w: { hwnd: number; pid?: number; title?: string; process?: s
     if (w.pid) { await native.request('window.focus', { hwnd: w.hwnd, pid: w.pid }); await new Promise(r => setTimeout(r, 250)) }
     if (hide) { island!.hide(); await new Promise(r => setTimeout(r, 120)) } // the island is not part of the picture
     await native.request('window.capture', { hwnd: w.hwnd, file })
-  } catch (err) { toast(`${store.settings.pip.name} could not look`, (err as Error).message); return }
+  } catch (err) { toast(tr('m.couldNotLook', { name: store.settings.pip.name }), (err as Error).message); return }
   finally { if (hide) island!.showInactive() }
   // big screens: at most 1568 px on the long side (what vision models take in without shrinking it themselves)
   const img = nativeImage.createFromPath(file), { width, height } = img.getSize()
@@ -199,7 +212,7 @@ async function look(w: { hwnd: number; pid?: number; title?: string; process?: s
 async function buddy() {
   const p = screen.dipToScreenPoint(screen.getCursorScreenPoint())
   const w = await native.request<{ hwnd: number; title: string; process: string } | null>('window.fromPoint', { x: Math.round(p.x), y: Math.round(p.y) }).catch(() => null)
-  if (!w) { toast('Screen buddy', 'Point at a window, then press the shortcut.'); return }
+  if (!w) { toast(tr('m.buddy'), tr('m.buddyHint')); return }
   await look(w)
   showPage('chat')
 }
@@ -303,6 +316,7 @@ const settingsWin = new SettingsWindow({
   playScene,
   setChatKey: (p, key) => chat.setKey(p as ProviderId, key),
   updates: updater,
+  chatModels: () => ({ provider: store.settings.chat.provider, list: chat.models() }),
   diagnose: () => diagnose({
     version: app.getVersion(), port: store.settings.server.port, nativeExe: nativeExe(app.getAppPath(), app.isPackaged),
     agents: agents().map(a => ({ name: a.name, available: a.available(), connected: connected(a) })),
@@ -314,7 +328,7 @@ const settingsWin = new SettingsWindow({
 /** Call after anything the tray or the Settings window shows has changed. */
 function refreshTray() {
   const u = updater.status
-  buildTray({ toggleIsland, toggleTuck, openSettings: () => settingsWin.open(), update: u.state === 'ready' ? { version: u.version, install: () => updater.install() } : undefined }, store.theme.tokens.accent)
+  buildTray({ toggleIsland, toggleTuck, openSettings: () => settingsWin.open(), t: tr, update: u.state === 'ready' ? { version: u.version, install: () => updater.install() } : undefined }, store.theme.tokens.accent)
   settingsWin.push()
 }
 
@@ -370,12 +384,29 @@ ipcMain.on(CH.dismiss, (e, id: unknown) => {
 })
 ipcMain.on(CH.act, (e, a: unknown) => {
   if (!fromIsland(e) || !validAction(a)) return
-  if (a.do === 'drop.start') { drop.start().catch(err => { log.warn('phone drop:', err.message); toast('Phone drop', err.message) }); return }
+  if (a.do === 'drop.start') {
+    drop.start().then(checkDrop).catch(err => { log.warn('phone drop:', err.message); toast(tr('m.drop'), err.message) })
+    return
+  }
+  if (a.do === 'drop.allow') {
+    allowInFirewall(process.execPath)
+    // look again for a minute: the rule is there once you said yes to Windows' prompt
+    let tries = 0
+    const again = setInterval(() => { void checkDrop(); if (++tries >= 20 || !drop.state?.blocked) clearInterval(again) }, 3000)
+    return
+  }
+  if (a.do === 'drop.network') { void shell.openExternal('ms-settings:network-status'); return }
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(); return }
   if (a.do === 'chat.send') { void chat.send(a.text); return }
   if (a.do === 'chat.stop') { chat.stop(); return }
   if (a.do === 'chat.clear') { chat.clear(); return }
+  if (a.do === 'chat.signIn') {
+    // its own sign-in, in a console window you can see (it opens the browser to log in)
+    const cmd = store.settings.chat.provider === 'codex-cli' ? 'codex login' : 'claude auth login'
+    spawn('cmd.exe', ['/c', `start "Sign in" cmd.exe /k ${cmd}`], { detached: true, stdio: 'ignore', windowsVerbatimArguments: true }).unref()
+    return
+  }
   if (a.do === 'chat.windows') {
     native.request<{ hwnd: number; pid: number; title: string; process: string }[]>('windows.list')
       .then(ws => chat.pick(ws.filter(w => w.pid !== process.pid).slice(0, 20).map(({ hwnd, title, process }) => ({ hwnd, title, process }))))
@@ -470,7 +501,7 @@ app.whenReady().then(async () => {
   native.watch('drag', true, 'drop-target')
   extras.on('change', push)
   extras.on('peak', (p: number) => send(CH.peak, p))
-  extras.on('focus-done', (seconds: number) => toast('Focus time is over', `${Math.round(seconds / 60)} minutes done. Take a short break.`))
+  extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) })))
   drop.on('change', push)
   // an answer streams in many small pieces: show them at most ~20 times a second
   let chatTimer: NodeJS.Timeout | undefined
@@ -485,7 +516,7 @@ app.whenReady().then(async () => {
   let connectorsTimer: NodeJS.Timeout | undefined
   fs.watch(userData, (_e, name) => { if (name === 'connectors.json') { clearTimeout(connectorsTimer); connectorsTimer = setTimeout(() => void connectors.reload(), 300) } })
   fs.watch(connectors.userDir, () => { clearTimeout(connectorsTimer); connectorsTimer = setTimeout(() => { connectors.discover(); void connectors.reload(); refreshTray() }, 500) })
-  drop.on('received', (paths: string[]) => { void extras.shelve(paths); toast('From your phone', paths.map(p => path.basename(p)).join(', ')) })
+  drop.on('received', (paths: string[]) => { void extras.shelve(paths); toast(tr('m.fromPhone'), paths.map(p => path.basename(p)).join(', ')) })
   setInterval(() => {
     const now = powerMonitor.getSystemIdleTime() >= store.settings.pip.sleepAfterMinutes * 60
     if (now !== sleepy) { sleepy = now; push() }
@@ -514,17 +545,17 @@ app.whenReady().then(async () => {
   hub.on('question', (id: string) => {
     bringBack() // the island itself switches to its "ask" size
     const s = hub.sessions.get(id)
-    if (s) toast(`${agentName(s)} needs you · ${s.project}`, s.ask?.kind === 'plan' ? 'A plan is ready for you' : s.detail, id)
+    if (s) toast(tr('m.needsYou', { agent: agentName(s), project: s.project }), s.ask?.kind === 'plan' ? tr('m.planReady') : s.detail, id)
   })
   hub.on('finished', (s: Session) => {
     history.add(s)
     if (s.agent !== 'cli' && s.prompt) {
       for (const id of pip.finish(s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0)) {
-        toast(`${store.settings.pip.name} earned something`, ACHIEVEMENTS.find(a => a.id === id)?.name ?? id)
+        toast(tr('m.earned', { name: store.settings.pip.name }), translateOr(store.settings.general.language, `o.${id}`, ACHIEVEMENTS.find(a => a.id === id)?.name ?? id))
       }
       refreshTray()
     }
-    toast(`${agentName(s)} is done · ${s.project}`, s.message?.split('\n')[0] || s.detail, s.id)
+    toast(tr('m.isDone', { agent: agentName(s), project: s.project }), s.message?.split('\n')[0] || s.detail, s.id)
   })
   hub.on('notify', (n: { id: string; title: string; body: string }) => toast(n.title, n.body, n.id))
   fullscreen.on('change', (id: number | null) => {
@@ -535,7 +566,7 @@ app.whenReady().then(async () => {
   store.on('change', () => { applySettings(); refreshTray(); push() })
   updater.on('change', (s: { state: string; version?: string }) => {
     refreshTray()
-    if (s.state === 'ready') toast(`Pebble ${s.version} is ready`, 'It installs when Pebble restarts (tray → Restart to update).')
+    if (s.state === 'ready') toast(tr('m.updateReady', { version: s.version ?? '' }), tr('m.updateReadyBody'))
   })
   store.watch()
   applySettings()

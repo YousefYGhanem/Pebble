@@ -3,6 +3,7 @@
   // type (half a second after you stop).
   import type { Action, Note } from '../../shared/extras'
   import Icon from './Icon.svelte'
+  import { t } from '../i18n.svelte'
 
   let { notes, act }: { notes: Note[]; act: (a: Action) => void } = $props()
   let selected = $state<string>()
@@ -11,7 +12,7 @@
   // follow main, except while you are typing (your words win)
   $effect(() => { if (!timer) draft = notes.map(n => ({ ...n })) })
   const current = $derived(draft.find(n => n.id === selected) ?? draft[0])
-  const titleOf = (n: Note) => n.text.split('\n')[0]?.trim() || 'Empty note'
+  const titleOf = (n: Note) => n.text.split('\n')[0]?.trim() || t('i.notes.untitled')
 
   function save() {
     clearTimeout(timer)
@@ -31,12 +32,12 @@
 
 <div class="page">
   <div class="page-head">
-    <span class="page-title">Notes</span>
-    <button class="ghost" onclick={add}><Icon name="plus" size={13} />New</button>
+    <span class="page-title">{t('i.page.notes')}</span>
+    <button class="ghost" onclick={add}><Icon name="plus" size={13} />{t('i.common.new')}</button>
     <span class="page-time"></span><span class="pip-room"></span>
   </div>
   {#if !draft.length}
-    <div class="empty">No notes yet. “New” starts one.</div>
+    <div class="empty">{t('i.notes.none')}</div>
   {:else}
     <div class="notes">
       <div class="list">
@@ -46,8 +47,8 @@
       </div>
       {#if current}
         <div class="editor">
-          <textarea bind:value={current.text} oninput={() => { current.at = Date.now(); save() }} placeholder="Write something…"></textarea>
-          <button class="ghost del" onclick={() => remove(current.id)}><Icon name="trash" size={12} />Delete</button>
+          <textarea bind:value={current.text} oninput={() => { current.at = Date.now(); save() }} placeholder={t('i.notes.write')}></textarea>
+          <button class="ghost del" onclick={() => remove(current.id)}><Icon name="trash" size={12} />{t('i.common.delete')}</button>
         </div>
       {/if}
     </div>

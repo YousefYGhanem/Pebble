@@ -29,3 +29,6 @@ button.ghost:hover { color: var(--text); background: #ffffff10; }
 button.icon { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
 .card { border-radius: 14px; background: #ffffff0d; padding: 10px 12px; }
 input[type='range'] { accent-color: var(--text); }
+
+/* Arabic: the layout stays (Pip sits on the right), each line of text runs right to left on its own */
+:lang(ar) * { unicode-bidi: plaintext; }

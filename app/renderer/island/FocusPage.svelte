@@ -2,6 +2,7 @@
   // Focus: a timer. Pick a length, start; the island keeps it as a ring around Pip (animation #18) and chimes at the end.
   import { focusLeft, type Action, type FocusTimer } from '../../shared/extras'
   import { clock } from './pages'
+  import { t } from '../i18n.svelte'
 
   let { focus, now, act }: { focus: FocusTimer | null; now: number; act: (a: Action) => void } = $props()
   const PRESETS = [5, 15, 25, 45, 60]
@@ -11,7 +12,7 @@
 </script>
 
 <div class="page">
-  <div class="page-head"><span class="page-title">Focus</span><span class="page-time"></span><span class="pip-room"></span></div>
+  <div class="page-head"><span class="page-title">{t('i.page.focus')}</span><span class="page-time"></span><span class="pip-room"></span></div>
   <div class="focus">
     <div class="dial">
       <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -23,16 +24,16 @@
     <div class="side">
       {#if !focus}
         <div class="presets">
-          {#each PRESETS as p (p)}<button class:on={minutes === p} onclick={() => (minutes = p)}>{p} min</button>{/each}
+          {#each PRESETS as p (p)}<button class:on={minutes === p} onclick={() => (minutes = p)}>{t('i.focus.min', { n: p })}</button>{/each}
         </div>
-        <label class="custom muted">or <input type="number" min="1" max="600" bind:value={minutes} aria-label="Minutes" /> minutes</label>
-        <button class="likely start" disabled={!(minutes >= 1)} onclick={() => act({ do: 'focus.start', seconds: Math.round(minutes * 60) })}>Start</button>
+        <label class="custom muted">{t('i.focus.or')} <input type="number" min="1" max="600" bind:value={minutes} aria-label={t('i.focus.minutes')} /> {t('i.focus.minutes')}</label>
+        <button class="likely start" disabled={!(minutes >= 1)} onclick={() => act({ do: 'focus.start', seconds: Math.round(minutes * 60) })}>{t('i.common.start')}</button>
       {:else}
-        <div class="muted">{focus.left !== undefined ? 'Paused' : 'Focus time. The island shows the ring around Pip.'}</div>
+        <div class="muted">{focus.left !== undefined ? t('i.focus.paused') : t('i.focus.running')}</div>
         <div class="row">
-          {#if focus.left !== undefined}<button class="likely" onclick={() => act({ do: 'focus.resume' })}>Resume</button>
-          {:else}<button onclick={() => act({ do: 'focus.pause' })}>Pause</button>{/if}
-          <button onclick={() => act({ do: 'focus.stop' })}>Stop</button>
+          {#if focus.left !== undefined}<button class="likely" onclick={() => act({ do: 'focus.resume' })}>{t('i.common.resume')}</button>
+          {:else}<button onclick={() => act({ do: 'focus.pause' })}>{t('i.common.pause')}</button>{/if}
+          <button onclick={() => act({ do: 'focus.stop' })}>{t('i.common.stop')}</button>
         </div>
       {/if}
     </div>

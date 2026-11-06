@@ -3,6 +3,7 @@
   import type { ConnectorInfo, Widget } from '../../shared/connectors'
   import type { Action } from '../../shared/extras'
   import WidgetCard from './WidgetCard.svelte'
+  import { t, tOr } from '../i18n.svelte'
 
   let { widgets, connectors, now, act }: { widgets: Widget[]; connectors: ConnectorInfo[]; now: number; act: (a: Action) => void } = $props()
   const cards = $derived(widgets.filter(w => w.kind !== 'chip'))
@@ -10,16 +11,16 @@
 </script>
 
 <div class="page">
-  <div class="page-head"><span class="page-title">Widgets</span><span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
+  <div class="page-head"><span class="page-title">{t('i.page.widgets')}</span><span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
   {#if !cards.length && !trouble.length}
-    <div class="empty">No connectors are on. Tray → Connectors: GitHub, weather, live scores, your calendar, news feeds, a value to watch, a webhook inbox, DeepSeek balance, Windows apps, or your own.</div>
+    <div class="empty">{t('i.widgets.none')}</div>
   {/if}
   {#if cards.length}
     <div class="grid">
       {#each cards as w (w.plugin + '/' + w.id)}<WidgetCard {w} onopen={() => act({ do: 'widget.open', plugin: w.plugin, id: w.id })} />{/each}
     </div>
   {/if}
-  {#each trouble as c (c.id)}<div class="trouble"><b>{c.name}:</b> {c.problem}</div>{/each}
+  {#each trouble as c (c.id)}<div class="trouble"><b>{tOr(`c.${c.id}.name`, c.name)}:</b> {c.problem}</div>{/each}
 </div>
 
 <style>

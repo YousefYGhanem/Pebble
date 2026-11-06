@@ -5,6 +5,7 @@ import { PROVIDERS, type ChatMessage, type ChatState, type Look, type ProviderId
 import type { Vault } from '../connectors/host'
 import { writeJsonAtomic } from '../store'
 import { ask as defaultAsk } from './providers'
+import { listModels, type ModelChoice } from './models'
 import { logger } from '../log'
 
 const log = logger('chat')
@@ -24,6 +25,7 @@ export class Chat extends EventEmitter {
   windows?: { hwnd: number; title: string; process: string }[]
   busy = false
   error?: string
+  signIn = false
   word?: WordFixes
   private stopper?: AbortController
   private keys: Record<string, string> = {}
@@ -51,7 +53,7 @@ export class Chat extends EventEmitter {
   state(): ChatState {
     const s = this.settings(), p = PROVIDERS.find(x => x.id === s.provider)!
     const look = this.look && { title: this.look.title, process: this.look.process }
-    return { provider: p.name, ready: !p.key || this.hasKey(p.id), messages: this.messages, look, windows: this.windows, busy: this.busy, error: this.error, word: this.word }
+    return { provider: p.name, ready: !p.key || this.hasKey(p.id), messages: this.messages, look, windows: this.windows, busy: this.busy, error: this.error, signIn: this.signIn, word: this.word }
   }
 
   async send(text: string) {
@@ -65,6 +67,7 @@ export class Chat extends EventEmitter {
     this.messages.push(answer)
     this.busy = true
     this.error = undefined
+    this.signIn = false
     this.stopper = new AbortController()
     this.emit('change')
     try {
@@ -74,7 +77,12 @@ export class Chat extends EventEmitter {
         onText: t => { answer.text += t; this.emit('change') }
       })
     } catch (err) {
-      if (!this.stopper.signal.aborted) { this.error = (err as Error).message; log.warn(p.id, this.error) }
+      if (!this.stopper.signal.aborted) {
+        this.error = (err as Error).message
+        // the CLI is not signed in (the Claude desktop app keeps its own login; the claude command needs one too)
+        this.signIn = !p.key && /not logged in|log ?in|sign ?in|auth/i.test(this.error)
+        log.warn(p.id, this.error)
+      }
     }
     if (!answer.text) this.messages = this.messages.filter(m => m !== answer)
     this.busy = false
@@ -100,6 +108,13 @@ export class Chat extends EventEmitter {
       system, messages: [{ role: 'user', text, at: Date.now() }], sandbox: this.sandbox, signal: new AbortController().signal, onText: t => { out += t }
     })
     return out
+  }
+
+  /** The chosen provider's models (with its key). */
+  models(): Promise<ModelChoice[]> {
+    const p = PROVIDERS.find(x => x.id === this.settings().provider)!
+    if (p.key && !this.hasKey(p.id)) return Promise.reject(new Error(`add your ${p.name} key first`))
+    return listModels(p.id, this.keys[p.id] && this.vault.decrypt(this.keys[p.id]!))
   }
 
   setWord(w: WordFixes | undefined) { this.word = w; this.emit('change') }

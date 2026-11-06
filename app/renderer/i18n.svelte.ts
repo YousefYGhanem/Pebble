@@ -1,23 +1,21 @@
-import en from '../../i18n/en.json'
+import { translate, translateOr, WORDS } from '../shared/i18n'
 
-// Words on screen come from i18n/<language>.json ("nl.json", "ar.json"…): add a file to add a language. A missing
-// word falls back to English. {name} in a text is filled in from vars.
+// The language of a window's words (app/shared/i18n.ts). Reactive: switching language redraws the words at once.
 
-const files = import.meta.glob<{ default: Record<string, string> }>('../../i18n/*.json', { eager: true })
-const byId = Object.fromEntries(Object.entries(files).map(([p, m]) => [/([\w-]+)\.json$/.exec(p)![1]!, m.default]))
+export { LANGUAGES } from '../shared/i18n'
 
-/** every language there is a file for: { id: "nl", name: "Nederlands" } */
-export const LANGUAGES = Object.entries(byId).map(([id, words]) => ({ id, name: words['language.name'] ?? id }))
+let language = $state('en')
 
-let words = $state<Record<string, string>>(en)
-
-export function setLanguage(id: string) {
-  words = byId[id] ?? en
-  document.documentElement.lang = id
-  document.documentElement.dir = words['language.dir'] === 'rtl' ? 'rtl' : 'ltr'
+/** mirror: lay the window out right to left for Arabic. The island does not (Pip sits at a fixed spot on the right):
+ *  there only each line of text runs right to left. */
+export function setLanguage(id: string, mirror = true) {
+  language = id in WORDS ? id : 'en'
+  document.documentElement.lang = language
+  document.documentElement.dir = mirror && WORDS[language]!['language.dir'] === 'rtl' ? 'rtl' : 'ltr'
 }
 
-export function t(key: string, vars: Record<string, string | number> = {}): string {
-  const s = words[key] ?? (en as Record<string, string>)[key] ?? key
-  return s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m))
-}
+/** dates in the chosen language ("Friday 6 November", "الجمعة ٦ نوفمبر") */
+export const locale = () => language
+
+export const t = (key: string, vars?: Record<string, string | number>) => translate(language, key, vars)
+export const tOr = (key: string, fallback: string) => translateOr(language, key, fallback)

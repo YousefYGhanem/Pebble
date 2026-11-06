@@ -4,6 +4,7 @@
   import type { Session, Status } from '../../shared/state'
   import type { Scene } from '../../shared/island'
   import { applyTheme } from '../theme'
+  import { setLanguage, t } from '../i18n.svelte'
   import AgentsPage from './AgentsPage.svelte'
   import HomePage from './HomePage.svelte'
   import MusicPage from './MusicPage.svelte'
@@ -154,6 +155,7 @@
 
   window.pebble.onState(s => {
     applyTheme(s.theme)
+    setLanguage(s.settings.general.language, false)
     const first = !view
     if (view && s.pip.achievements.length > view.pip.achievements.length) { confetti(innerWidth / 2, top0.value + rect.value.h); say('achievement'); love() }
     for (const c of s.pip.custom) if (!images.has(c.id)) { const img = new Image(); img.onload = () => wake(); img.src = c.data; images.set(c.id, img) }
@@ -482,14 +484,14 @@
             <span class="chip" class:right={i === 1}>
               {#if c === 'time'}{new Date(now).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '')}
               {:else if c === 'battery' && battery}<span class:low={battery.level <= 15 && !battery.charging} class:charging={battery.charging}>{battery.level}%</span>
-              {:else if c === 'cpu'}{extras?.system.cpu ?? 0}%<small>CPU</small>
-              {:else if c === 'ram'}{extras?.system.ram ?? 0}%<small>RAM</small>
+              {:else if c === 'cpu'}{extras?.system.cpu ?? 0}%<small>{t('i.home.cpuChip')}</small>
+              {:else if c === 'ram'}{extras?.system.ram ?? 0}%<small>{t('i.home.ramChip')}</small>
               {:else if c.startsWith('widget:')}<span class="wchip">{chipText(c)}</span>{/if}
             </span>
           {/each}
         </div>
       {:else if mode === 'medium' && medium === 'drop'}
-        <div class="line" style:height="{view.settings.island.height}px"><Icon name="files" size={14} /><span class="title">Drop to keep it on the shelf</span></div>
+        <div class="line" style:height="{view.settings.island.height}px"><Icon name="files" size={14} /><span class="title">{t('i.island.dropHere')}</span></div>
       {:else if mode === 'medium' && medium === 'music' && extras?.media}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <div class="line music-line" style:height="{view.settings.island.height}px" onclick={e => { e.stopPropagation(); page = 'music'; lastPage = 'music'; open = true }}>
@@ -509,7 +511,7 @@
           {#if activity.progress !== undefined}<span class="act-progress"><i style:width="{activity.progress}%"></i></span>{/if}
         </div>
       {:else if mode === 'medium' && medium === 'focus' && extras?.focus}
-        <div class="line" style:height="{view.settings.island.height}px"><Icon name="focus" size={14} /><span class="title">Focus · {clock(focusLeft(extras.focus, now) * 1000)} {extras.focus.left !== undefined ? 'paused' : 'left'}</span></div>
+        <div class="line" style:height="{view.settings.island.height}px"><Icon name="focus" size={14} /><span class="title">{t('i.island.focus', { time: clock(focusLeft(extras.focus, now) * 1000), state: extras.focus.left !== undefined ? t('i.home.paused') : t('i.home.left') })}</span></div>
       {:else if mode === 'medium' && top}
         <div class="line" style:height="{view.settings.island.height}px">
           <span class="dot {top.status}"></span>
@@ -522,18 +524,18 @@
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <div class="ask" onclick={e => e.stopPropagation()}>
           {#if ask.kind === 'permission'}
-            <div class="ask-text"><b>{s.project}</b> wants to use {ask.tool}<div class="detail">{ask.summary}</div></div>
+            <div class="ask-text">{t('i.ask.wantsToUse', { project: s.project, tool: ask.tool })}<div class="detail">{ask.summary}</div></div>
             <div class="buttons">
-              <button class="likely" onclick={() => answer(s.id, { kind: 'permission', choice: 'allow' })}>Allow</button>
-              <button onclick={() => answer(s.id, { kind: 'permission', choice: 'deny' })}>Deny</button>
+              <button class="likely" onclick={() => answer(s.id, { kind: 'permission', choice: 'allow' })}>{t('i.ask.allow')}</button>
+              <button onclick={() => answer(s.id, { kind: 'permission', choice: 'deny' })}>{t('i.ask.deny')}</button>
             </div>
           {:else if ask.kind === 'question' && quick}
-            <div class="ask-text"><b>{s.project}</b> asks<div class="detail strong">{quick.question}</div></div>
+            <div class="ask-text">{t('i.ask.asks', { project: s.project })}<div class="detail strong">{quick.question}</div></div>
             <div class="buttons">
               {#each quick.options as o, i (o.label)}
                 <button class:likely={i === 0} title={o.description} onclick={() => answer(s.id, { kind: 'question', answers: { [quick.question]: o.label } })}>{o.label}</button>
               {/each}
-              <button onclick={() => openOn(s.id)}>Other…</button>
+              <button onclick={() => openOn(s.id)}>{t('i.ask.other')}</button>
             </div>
           {:else}
             <div class="ask-text"><b>{s.project}</b> {ask.kind === 'plan' ? 'has a plan for you' : 'has questions for you'}<div class="detail">{s.prompt ?? ''}</div></div>

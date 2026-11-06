@@ -12,7 +12,7 @@ export interface ConnectorView {
   running: boolean
   problem?: string
   webhook: string | null
-  fields: { key: string; label: string; type: string; required: boolean; secret: boolean; value: unknown; set: boolean }[]
+  fields: { key: string; label: string; type: string; required: boolean; secret: boolean; value: unknown; set: boolean; pick?: string }[]
 }
 
 export interface SettingsView {
@@ -28,6 +28,10 @@ export interface SettingsView {
   pip: { done: number; wearable: string[]; custom: string[] }
   /** which chat providers have a key saved */
   chatKeys: Record<string, boolean>
+  /** "Find values" for a connector setting: what was found at its address */
+  connectorPick?: { id: string; key: string; items: { label: string; value: string; path: string }[]; loading?: boolean; error?: string }
+  /** the chosen chat provider's models, fetched from it (Settings → Pip's chat → Model) */
+  chatModels?: { provider: string; list: { id: string; name: string }[]; loading?: boolean; error?: string }
   /** pairing the browser extension: its key, and the folder to load it from */
   extension: { key: string; folder: string; port: number }
   scene: Scene | null
@@ -49,6 +53,9 @@ export type SettingsAction =
   | { do: 'history.clear' | 'restart' | 'quit' }
   | { do: 'scene'; scene: Scene | null }
   | { do: 'chat.key'; provider: string; value: string }
+  | { do: 'chat.models' }
+  | { do: 'connector.pick'; id: string; key: string }
+  | { do: 'connector.pickClose' }
 
 const OPEN = ['settings', 'themes', 'log', 'connectors', 'plugins', 'outfits', 'extension']
 
@@ -64,6 +71,8 @@ export function validSettingsAction(a: unknown): a is SettingsAction {
     case 'open': return OPEN.includes(o.what as string)
     case 'history.clear': case 'restart': case 'quit': case 'copyExtensionKey': case 'diagnose': case 'copyDiagnostics': case 'welcome': case 'welcome.clicked': case 'welcome.done': case 'update.check': case 'update.install': return true
     case 'scene': return o.scene === null || typeof o.scene === 'string'
+    case 'chat.models': case 'connector.pickClose': return true
+    case 'connector.pick': return id && typeof o.key === 'string' && /^\w{1,40}$/.test(o.key)
     case 'chat.key': return typeof o.provider === 'string' && typeof o.value === 'string' && o.value.length < 500
     default: return false
   }

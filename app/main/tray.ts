@@ -4,6 +4,8 @@ export interface TrayActions {
   toggleIsland(): void
   toggleTuck(): void
   openSettings(): void
+  /** the menu's words, in your language */
+  t(key: string, vars?: Record<string, string | number>): string
   /** a downloaded update: its version, to offer "Restart to update" */
   update?: { version: string; install(): void }
 }
@@ -33,12 +35,12 @@ export function buildTray(a: TrayActions, accent: string) {
   // everything else lives in the Settings window
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Pebble', enabled: false },
-    { label: 'Open / close island', click: a.toggleIsland },
-    { label: 'Tuck away / bring back', click: a.toggleTuck },
-    { label: 'Settings…', click: a.openSettings },
-    ...(a.update ? [{ label: `Restart to update to ${a.update.version}`, click: a.update.install }] : []),
+    { label: a.t('m.tray.open'), click: a.toggleIsland },
+    { label: a.t('m.tray.tuck'), click: a.toggleTuck },
+    { label: a.t('m.tray.settings'), click: a.openSettings },
+    ...(a.update ? [{ label: a.t('m.tray.update', { version: a.update.version }), click: a.update.install }] : []),
     { type: 'separator' },
-    { label: 'Restart', click: () => { app.relaunch(); app.quit() } },
-    { label: 'Quit', click: () => app.quit() }
+    { label: a.t('m.tray.restart'), click: () => { app.relaunch(); app.quit() } },
+    { label: a.t('m.tray.quit'), click: () => app.quit() }
   ]))
 }

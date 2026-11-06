@@ -2,11 +2,12 @@
   // A connector's card (Home and the Widgets page): title, value, a few lines; a click opens its link.
   import type { Widget } from '../../shared/connectors'
   import Icon from './Icon.svelte'
+  import { t } from '../i18n.svelte'
   let { w, onopen }: { w: Widget; onopen: () => void } = $props()
   const emoji = $derived(w.icon && !/^[a-z-]+$/.test(w.icon)) // "⚽" is drawn as text, "agents" as a line icon
 </script>
 
-<button class="card tone-{w.tone ?? 'info'}" onclick={onopen} disabled={!w.link} title={w.link ? 'Open' : undefined}>
+<button class="card tone-{w.tone ?? 'info'}" onclick={onopen} disabled={!w.link} title={w.link ? t('i.common.open') : undefined}>
   <span class="label">{#if emoji}<span>{w.icon}</span>{:else if w.icon}<Icon name={w.icon} size={13} />{/if}{w.title ?? w.plugin}</span>
   <span class="value">{w.text}</span>
   {#each w.lines ?? [] as l, i (i)}<span class="line">{l}</span>{/each}

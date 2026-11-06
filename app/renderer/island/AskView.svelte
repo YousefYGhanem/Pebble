@@ -5,6 +5,9 @@
   import { diffOf, type Session } from '../../shared/state'
   import DiffView from './DiffView.svelte'
   import { markdown } from './md'
+  import { t } from '../i18n.svelte'
+  /** text from an agent goes into the sentence as text, never as markup */
+  const esc = (s: string) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 
   let { session, onanswer }: { session: Session; onanswer: (a: Answer) => void } = $props()
   const ask = $derived(session.ask!)
@@ -33,16 +36,16 @@
 
 <div class="ask">
   {#if ask.kind === 'permission'}
-    <div class="title"><b>{session.project}</b> wants to use <b>{ask.tool}</b></div>
+    <div class="title">{@html t('i.ask.wantsTo', { project: `<b>${esc(session.project)}</b>`, tool: `<b>${esc(ask.tool)}</b>` })}</div>
     {#if permissionDiff}
       <DiffView diff={permissionDiff} />
     {:else}
       <pre class="command">{ask.summary}</pre>
     {/if}
     <div class="buttons">
-      <button class="likely" onclick={() => onanswer({ kind: 'permission', choice: 'allow' })}>Allow</button>
-      {#if ask.canAlways}<button onclick={() => onanswer({ kind: 'permission', choice: 'always' })}>Always allow</button>{/if}
-      <button onclick={() => onanswer({ kind: 'permission', choice: 'deny' })}>Deny</button>
+      <button class="likely" onclick={() => onanswer({ kind: 'permission', choice: 'allow' })}>{t('i.ask.allow')}</button>
+      {#if ask.canAlways}<button onclick={() => onanswer({ kind: 'permission', choice: 'always' })}>{t('i.ask.always')}</button>{/if}
+      <button onclick={() => onanswer({ kind: 'permission', choice: 'deny' })}>{t('i.ask.deny')}</button>
     </div>
   {:else if ask.kind === 'question'}
     {#each ask.questions as q (q.question)}
@@ -56,17 +59,17 @@
             </button>
           {/each}
         </div>
-        <input placeholder="Or type your own answer…" bind:value={other[q.question]} onkeydown={e => e.key === 'Enter' && send()} />
+        <input placeholder={t('i.ask.own')} bind:value={other[q.question]} onkeydown={e => e.key === 'Enter' && send()} />
       </div>
     {/each}
-    <div class="buttons"><button class="likely" disabled={!complete} onclick={send}>Send answer</button></div>
+    <div class="buttons"><button class="likely" disabled={!complete} onclick={send}>{t('i.ask.sendAnswer')}</button></div>
   {:else}
-    <div class="title"><b>{session.project}</b> has a plan</div>
+    <div class="title">{@html t('i.ask.hasPlan', { project: `<b>${esc(session.project)}</b>` })}</div>
     <div class="plan">{@html markdown(ask.plan)}</div>
-    <textarea rows="2" placeholder="What should change? (optional)" bind:value={feedback}></textarea>
+    <textarea rows="2" placeholder={t('i.ask.change')} bind:value={feedback}></textarea>
     <div class="buttons">
-      <button class="likely" onclick={() => onanswer({ kind: 'plan', approve: true })}>Approve plan</button>
-      <button onclick={() => onanswer({ kind: 'plan', approve: false, feedback })}>{feedback.trim() ? 'Send feedback' : 'Keep planning'}</button>
+      <button class="likely" onclick={() => onanswer({ kind: 'plan', approve: true })}>{t('i.ask.approve')}</button>
+      <button onclick={() => onanswer({ kind: 'plan', approve: false, feedback })}>{feedback.trim() ? t('i.ask.feedback') : t('i.ask.keepPlanning')}</button>
     </div>
   {/if}
 </div>

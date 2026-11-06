@@ -7,6 +7,7 @@
   import Icon from './Icon.svelte'
   import Wave from './Wave.svelte'
   import { clock } from './pages'
+  import { t } from '../i18n.svelte'
 
   let { extras, now, color, act, reduced }: { extras: ExtrasState; now: number; color: string | null; act: (a: Action) => void; reduced: boolean } = $props()
   const m = $derived(extras.media)
@@ -22,9 +23,9 @@
 </script>
 
 <div class="page music" style:--album={color ?? '255, 255, 255'}>
-  <div class="page-head"><span class="page-title">Music</span><span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
+  <div class="page-head"><span class="page-title">{t('i.page.music')}</span><span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
   {#if !m}
-    <div class="empty">Nothing is playing. Start music in any app (Spotify, a browser, …) and it shows here.</div>
+    <div class="empty">{t('i.music.nothing')}</div>
   {:else}
     <div class="top">
       {#if extras.art}<img class="cover" src={extras.art} alt="" />{:else}<div class="cover none"><Icon name="music" size={28} /></div>{/if}
@@ -33,14 +34,14 @@
         <div class="muted">{m.artist}{m.album ? ` · ${m.album}` : ''}</div>
         <div class="controls">
           <button class="icon ghost" aria-label="Previous" disabled={!m.canPrevious} onclick={() => act({ do: 'media', action: 'previous' })}><Icon name="previous" size={16} /></button>
-          <button class="icon play" aria-label={m.playing ? 'Pause' : 'Play'} onclick={() => act({ do: 'media', action: 'toggle' })}><Icon name={m.playing ? 'pause' : 'play'} size={16} /></button>
+          <button class="icon play" aria-label={m.playing ? t('i.common.pause') : t('i.common.play')} onclick={() => act({ do: 'media', action: 'toggle' })}><Icon name={m.playing ? 'pause' : 'play'} size={16} /></button>
           <button class="icon ghost" aria-label="Next" disabled={!m.canNext} onclick={() => act({ do: 'media', action: 'next' })}><Icon name="next" size={16} /></button>
           {#if m.playing}<Wave color="rgb(var(--album))" bars={7} height={20} />{/if}
-          <label class="vol" title="Volume"><Icon name="volume" size={14} /><input type="range" min="0" max="100" bind:value={volume} oninput={() => act({ do: 'volume', volume })} aria-label="Volume" /></label>
+          <label class="vol" title={t('i.music.volume')}><Icon name="volume" size={14} /><input type="range" min="0" max="100" bind:value={volume} oninput={() => act({ do: 'volume', volume })} aria-label={t('i.music.volume')} /></label>
         </div>
       </div>
     </div>
-    <div class="progress" role="slider" tabindex="0" aria-label="Song position" aria-valuenow={Math.round(pos / 1000)} onclick={seek} onkeydown={() => {}} class:seekable={m.canSeek}>
+    <div class="progress" role="slider" tabindex="0" aria-label={t('i.music.position')} aria-valuenow={Math.round(pos / 1000)} onclick={seek} onkeydown={() => {}} class:seekable={m.canSeek}>
       <div class="fill" style:width="{m.durationMs ? (pos / m.durationMs) * 100 : 0}%"></div>
     </div>
     <div class="times muted"><span>{clock(pos)}</span><span>{m.durationMs ? clock(m.durationMs) : ''}</span></div>

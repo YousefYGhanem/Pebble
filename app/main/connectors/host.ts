@@ -220,13 +220,13 @@ export class ConnectorHost extends EventEmitter {
   // ---------- settings, for the Settings window ----------
 
   /** A connector's settings with their current values. Secrets only say whether they are set: their value never leaves main. */
-  fields(id: string): { key: string; label: string; type: string; required: boolean; secret: boolean; value: unknown; set: boolean }[] {
+  fields(id: string): { key: string; label: string; type: string; required: boolean; secret: boolean; value: unknown; set: boolean; pick?: string }[] {
     const f = this.found.get(id)
     if (!f) return []
     const values = this.config[id]?.settings ?? {}
     return f.manifest.settings.map(s => {
       const secret = f.manifest.permissions.secrets.includes(s.key)
-      return { key: s.key, label: s.label, type: s.type, required: s.required, secret, value: secret ? '' : values[s.key] ?? s.default ?? '', set: secret ? !!this.secrets[id]?.[s.key] : true }
+      return { key: s.key, label: s.label, type: s.type, required: s.required, secret, value: secret ? '' : values[s.key] ?? s.default ?? '', set: secret ? !!this.secrets[id]?.[s.key] : true, pick: s.pick }
     })
   }
 
