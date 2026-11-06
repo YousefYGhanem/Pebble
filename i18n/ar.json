@@ -24,7 +24,7 @@
   "update.title": "التحديثات",
   "update.auto": "تنزيل الإصدارات الجديدة تلقائيًا",
   "update.autoHint": "من GitHub Releases؛ تُثبَّت عند إعادة تشغيل Pebble",
-  "update.off": "يعمل من الشيفرة المصدرية: لا تحديثات",
+  "update.off": "نسخة محلية: لا تحديثات (النسخ المثبّتة تتحدّث تلقائيًا)",
   "update.idle": "لم يتم الفحص بعد",
   "update.checking": "جارٍ الفحص…",
   "update.latest": "Pebble محدَّث",

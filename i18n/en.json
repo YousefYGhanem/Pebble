@@ -24,7 +24,7 @@
   "update.title": "Updates",
   "update.auto": "Download new versions by themselves",
   "update.autoHint": "from GitHub Releases; they install when Pebble restarts",
-  "update.off": "Running from source: no updates",
+  "update.off": "A local build: no updates (installed copies update themselves)",
   "update.idle": "Not checked yet",
   "update.checking": "Checking…",
   "update.latest": "Pebble is up to date",

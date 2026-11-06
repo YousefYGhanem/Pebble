@@ -1,4 +1,6 @@
 import { EventEmitter } from 'node:events'
+import fs from 'node:fs'
+import path from 'node:path'
 import { app } from 'electron'
 import electronUpdater from 'electron-updater'
 import { logger } from './log'
@@ -18,12 +20,13 @@ export type UpdateState =
  * Emits 'change' with the new state.
  */
 export class Updater extends EventEmitter {
-  status: UpdateState = { state: app.isPackaged ? 'idle' : 'off' }
+  // from source, or a local build (npm run app writes no app-update.yml: only the installer build says where updates come from)
+  status: UpdateState = { state: app.isPackaged && fs.existsSync(path.join(process.resourcesPath, 'app-update.yml')) ? 'idle' : 'off' }
   private timer?: NodeJS.Timeout
 
   constructor(private enabled: () => boolean) {
     super()
-    if (!app.isPackaged) return
+    if (this.status.state === 'off') return
     const u = electronUpdater.autoUpdater
     u.logger = { info: (m: unknown) => log.info(String(m)), warn: (m: unknown) => log.warn(String(m)), error: (m: unknown) => log.error(String(m)), debug: () => {} }
     u.autoDownload = true
