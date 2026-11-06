@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pebble for chat sites",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shows in Pebble's island when claude.ai, ChatGPT, Gemini or DeepSeek has answered, and lets you reply from there.",
   "permissions": [
     "storage"
