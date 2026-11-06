@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import http from 'node:http'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import QRCode from 'qrcode'
 import type { Drop, ShelfFile } from '../../shared/extras'
@@ -56,6 +56,9 @@ export class DropServer extends EventEmitter {
     if (!ip) throw new Error('This PC is not on a network (Wi-Fi or cable).')
     this.key = randomBytes(16).toString('hex')
     const server = http.createServer((req, res) => this.handle(req, res))
+    // in the log, whether a phone gets through at all (a firewall or the Wi-Fi drops it before it reaches Pebble)
+    server.on('connection', s => log.info(`phone drop: connection from ${s.remoteAddress}`))
+    server.on('clientError', (err: NodeJS.ErrnoException, socket) => { log.warn(`phone drop: bad request (${err.code ?? err.message})`); socket.destroy() })
     const listen = (port: number) => new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, '0.0.0.0', resolve) })
     await listen(PORT).catch(() => listen(0))
     this.server = server
@@ -63,7 +66,7 @@ export class DropServer extends EventEmitter {
     const svg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' })
     this.state = { url, qr: 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64'), connected: false, received: 0, expiresAt: Date.now() + LIFETIME }
     this.timer = setTimeout(() => this.stop(), LIFETIME)
-    log.info(`phone drop on ${ip} (for an hour)`)
+    log.info(`phone drop on ${ip}:${(server.address() as { port: number }).port} (for an hour)`)
     this.emit('change')
   }
 
@@ -85,7 +88,8 @@ export class DropServer extends EventEmitter {
   private handle(req: http.IncomingMessage, res: http.ServerResponse) {
     const url = new URL(req.url ?? '/', 'http://x')
     const [key, what, arg] = url.pathname.split('/').filter(Boolean)
-    if (!this.state || key !== this.key) { res.writeHead(404).end(); return }
+    log.info(`phone drop: ${req.method} ${key === this.key ? '/<key>' : '(another address)'}${what ? '/' + what : ''} from ${req.socket.remoteAddress}`)
+    if (!this.state || !key || key.length !== this.key.length || !timingSafeEqual(Buffer.from(key), Buffer.from(this.key))) { res.writeHead(404).end(); return }
     if (!this.state.connected) { this.state.connected = true; this.emit('change') }
 
     if (req.method === 'GET' && !what) { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }).end(this.page()); return }

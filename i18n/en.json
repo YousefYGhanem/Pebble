@@ -279,9 +279,9 @@
   "i.files.connected": "Your phone is connected",
   "i.files.scan": "Scan with your phone’s camera",
   "i.files.how": "Same Wi-Fi as this PC. Your phone can save what is on the shelf, and “Send to PC” puts photos and files in Downloads and here.",
-  "i.files.public": "This network is set to Public, so Windows blocks your phone.",
+  "i.files.public": "This network is set to Public, so Windows blocks your phone. On a café or hotel Wi-Fi, keep it that way.",
   "i.files.firewall": "Windows Firewall may block your phone.",
-  "i.files.makePrivate": "Make it Private",
+  "i.files.makePrivate": "It is my own network: make it Private",
   "i.files.allow": "Allow Pebble",
   "i.files.notOpening": "Not opening? Your phone must be on the same Wi-Fi as this PC (not a guest network) with mobile data off.",
   "i.files.received": "{n} received",
@@ -389,5 +389,10 @@
   "o.marathon": "Marathon: one task over 30 minutes",
   "theme.default": "Default",
   "theme.high-contrast": "High contrast",
-  "theme.custom": "Custom"
+  "theme.custom": "Custom",
+  "m.speechFailed": "Could not read it aloud",
+  "m.speechFailedBody": "Windows has no voice for this, or speech is not available. Settings → Time & language → Speech adds voices.",
+  "i.agents.usageOf": "{name} usage",
+  "i.agents.session": "session {n}%",
+  "i.agents.tokens": "session {session} · week {week} tokens"
 }

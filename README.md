@@ -31,12 +31,13 @@ Restart agent sessions that were already running.
 
 | Agent | What the island shows | Answer from the island | How Pebble connects |
 | --- | --- | --- | --- |
-| **Claude Code** | everything below, + usage ring | permissions, questions, plans, replies after it stops | HTTP hooks + `pebble-native hook window/reply` + status line in `~/.claude/settings.json` |
-| **Codex** | prompt, steps, done | (asks in its own UI) | curl hooks in `~/.codex/hooks.json` |
+| **Claude Code** | everything below, + session and weekly usage | permissions, questions, plans, replies after it stops | HTTP hooks + `pebble-native hook window/reply/status` in `~/.claude/settings.json` (your own status line keeps working: Pebble runs it inside its own and puts it back when removed) |
+| **Codex** | prompt, steps, done, session and weekly usage (from its session files) | (asks in its own UI) | curl hooks in `~/.codex/hooks.json` |
 | **Gemini CLI** | prompt, steps, diff, answer, "needs you" | (asks in its own terminal) | `pebble-native hook relay` in `~/.gemini/settings.json` |
 | **Cursor** (editor agent and `cursor-agent`) | prompt, commands, edits, answer | (asks in its own UI) | `pebble-native hook relay` in `~/.cursor/hooks.json` (observing hooks only) |
 | **OpenCode** (any model, DeepSeek too) | prompt, steps, answer, model, "needs you" | (asks in its own UI) | a plugin file `~/.config/opencode/plugins/pebble.js` |
 | **Aider** | "Aider is waiting for you" | — | `notifications-command` in `~/.aider.conf.yml` (your own one wins) |
+| **DeepSeek Harness** | prompt, steps, answer, "needs you", errors, tokens this session and this week | (asks in its own window) | nothing installed: Pebble reads its session logs in `~/.dsh/sessions` |
 | **Any MCP agent** | your agent's messages and questions | questions (`ask_user`) | `claude mcp add pebble -- "<path>
 ativeoutpebble-native.exe" mcp` (or your agent's MCP config) |
 

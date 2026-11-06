@@ -84,7 +84,9 @@ export const settingsSchema = z.object({
     gemini: z.object({ enabled: z.boolean() }),
     cursor: z.object({ enabled: z.boolean() }),
     opencode: z.object({ enabled: z.boolean() }),
-    aider: z.object({ enabled: z.boolean() })
+    aider: z.object({ enabled: z.boolean() }),
+    /** DeepSeek Harness: Pebble reads its session logs (no hooks to install) */
+    dsh: z.object({ enabled: z.boolean() })
   }),
   terminals: z.object({
     /** a command that ran at least this long tells you when it finishes (Settings → Agents → Terminals adds it to your shells) */
@@ -121,7 +123,7 @@ export const DEFAULTS: Settings = {
   motion: { mode: 'system', speed: 1 },
   agents: {
     claude: { enabled: true, answerPermissions: true }, codex: { enabled: true }, gemini: { enabled: true },
-    cursor: { enabled: true }, opencode: { enabled: true }, aider: { enabled: true }
+    cursor: { enabled: true }, opencode: { enabled: true }, aider: { enabled: true }, dsh: { enabled: true }
   },
   terminals: { minSeconds: 10 },
   features: { sound: true, toasts: true, doneSeconds: 8 },

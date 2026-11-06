@@ -33,10 +33,14 @@ export type Answer =
   | { kind: 'question'; answers: Record<string, string> }
   | { kind: 'plan'; approve: boolean; feedback?: string }
 
-/** Claude plan usage (account-wide), from the status line. used: 0–100. */
+/**
+ * A CLI's usage, account-wide. Plans with limits (Claude Code, Codex): the 5-hour session window and the week, used
+ * 0–100. Pay-as-you-go (DeepSeek Harness): tokens of the current session and of the last 7 days.
+ */
 export interface Usage {
   fiveHour?: { used: number; resetsAt: number }
   sevenDay?: { used: number; resetsAt: number }
+  tokens?: { session: number; week: number }
   at?: number
 }
 
@@ -68,7 +72,8 @@ export interface IslandState {
   sessions: Session[]
   settings: Settings
   theme: Theme
-  usage: Usage
+  /** by agent: claude, codex, dsh */
+  usage: Partial<Record<Agent, Usage>>
   history: HistoryItem[]
   pip: PipState
   extras: ExtrasState

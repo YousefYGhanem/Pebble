@@ -2,10 +2,10 @@
 // Every agent's events are turned into Claude Code's hook shape (HookEvent) by its adapter; that is the shared model.
 
 export type Status = 'ready' | 'running' | 'question' | 'done' | 'error'
-export type Agent = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'cli' | 'web'
+export type Agent = 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'dsh' | 'cli' | 'web'
 
 /** How each agent is called in the island. */
-export const AGENT_NAMES: Record<Agent, string> = { claude: 'Claude Code', codex: 'Codex', gemini: 'Gemini', cursor: 'Cursor', opencode: 'OpenCode', cli: 'Script', web: 'Chat' }
+export const AGENT_NAMES: Record<Agent, string> = { claude: 'Claude Code', codex: 'Codex', gemini: 'Gemini', cursor: 'Cursor', opencode: 'OpenCode', dsh: 'DeepSeek Harness', cli: 'Script', web: 'Chat' }
 export type StepKind = 'read' | 'edit' | 'run' | 'search' | 'web' | 'task' | 'other'
 
 export interface Step { at: number; kind: StepKind; text: string; failed?: boolean }
@@ -93,7 +93,7 @@ const str = (v: unknown) => (typeof v === 'string' ? v : '')
 export function stepKind(tool = ''): StepKind {
   if (/^(Read|NotebookRead|LS|view|read_file|read_many_files|list_directory|readFile)$/i.test(tool)) return 'read'
   if (/^(Edit|MultiEdit|Write|NotebookEdit|apply_patch|write_file|replace|edit|write|patch)$/i.test(tool)) return 'edit'
-  if (/^(Bash|PowerShell|shell|exec_command|local_shell|run_shell_command|Shell)$/i.test(tool)) return 'run'
+  if (/^(Bash|PowerShell|pwsh|shell|exec_command|local_shell|run_shell_command|Shell)$/i.test(tool)) return 'run'
   if (/^(Grep|Glob|search|find|grep_search|search_file_content|grep|glob|list)$/i.test(tool)) return 'search'
   if (/^(WebFetch|WebSearch|web_search|fetch|web_fetch|google_web_search|webfetch)$/i.test(tool)) return 'web'
   if (/^(Task|Agent)$/i.test(tool)) return 'task'
@@ -103,7 +103,7 @@ export function stepKind(tool = ''): StepKind {
 export function describeTool(name = '', input: Record<string, unknown> = {}): string {
   const cmd = input.command
   if (cmd) return `${name}: ${(Array.isArray(cmd) ? cmd.join(' ') : String(cmd)).slice(0, 160)}`
-  const file = input.file_path ?? input.filePath
+  const file = input.file_path ?? input.filePath ?? input.path
   if (file) return `${name} ${basename(String(file))}`
   if (input.pattern) return `${name} "${String(input.pattern).slice(0, 60)}"`
   if (input.url) return `${name} ${input.url}`

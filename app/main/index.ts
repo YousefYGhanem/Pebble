@@ -30,6 +30,8 @@ import { translate, translateOr } from '../shared/i18n'
 import { Chat } from './ai/chat'
 import { diagnose } from './diagnostics'
 import { Updater } from './updater'
+import { DshWatch, use as useDsh } from './agents/dsh'
+import { readCodexUsage } from './agents/codex-usage'
 import { applyWord, FIX_PROMPT, parseFixes, readWord } from './ai/word'
 import { ChatApps, loadExtensionKey } from './chatapps'
 import { PROVIDERS, type ProviderId } from '../shared/chat'
@@ -60,7 +62,7 @@ const captureDir = process.argv.find(a => a.startsWith('--capture='))?.slice(10)
 if (captureDir) {
   app.whenReady().then(async () => {
     const win = createIsland(store.settings, true)
-    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: NO_EXTRAS, chat: { provider: 'Claude Code', ready: true, messages: [], busy: false } } satisfies IslandState))
+    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { claude: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: NO_EXTRAS, chat: { provider: 'Claude Code', ready: true, messages: [], busy: false } } satisfies IslandState))
     await new Promise<void>(r => win.webContents.once('did-finish-load', () => r()))
     await new Promise(r => setTimeout(r, 1500)) // hello
     fs.mkdirSync(captureDir, { recursive: true })
@@ -134,6 +136,8 @@ const extensionKey = loadExtensionKey(userData)
 /** words for the tray and notifications, in your language */
 const tr = (key: string, vars?: Record<string, string | number>) => translate(store.settings.general.language, key, vars)
 const extensionDir = app.isPackaged ? path.join(process.resourcesPath, 'extensions', 'chat') : path.join(app.getAppPath(), 'extensions', 'chat')
+// DeepSeek Harness: followed through its session logs (switched on and off like the other agents)
+useDsh(new DshWatch({ event: e => hub.ingest(e, 'dsh'), usage: u => hub.setUsage('dsh', u) }))
 const chatApps = new ChatApps(hub, extensionKey, { native, followed: () => store.settings.chatApps.desktop, problem: (title, body) => toast(title, body) })
 const drop = new DropServer(() => extras.state.shelf, app.getPath('downloads'))
 const guard = new FocusGuard(native, () => store.settings, guardPreload(), guardPage)
@@ -224,7 +228,11 @@ async function say(text: string) {
   try {
     await native.request('speech.say', { text: plain, file })
     send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`)
-  } catch (err) { log.warn('say:', (err as Error).message) }
+  } catch (err) {
+    log.warn('say:', (err as Error).message)
+    send(CH.play, null)
+    toast(tr('m.speechFailed'), tr('m.speechFailedBody'))
+  }
 }
 function toggleTuck() { bringBack(); send(CH.tuck) }
 
@@ -237,7 +245,6 @@ function setConnected(a: Adapter, on: boolean) {
     if (!on) a.remove()
     else if (a.install() === false) log.info(`${a.name}: you set this up yourself, Pebble leaves it alone`)
     log.info(`${a.name} ${on ? 'connected' : 'disconnected'}`)
-    if (on && a.id === 'claude' && claude.hasOwnStatusLine()) log.info('you have your own Claude Code status line: Pebble leaves it and shows no usage ring')
   } catch (err) { log.error(`${a.name}:`, err) }
   store.update({ agents: { [a.id]: { enabled: on } } }) // remembered: an agent you switched off stays off
   refreshTray()
@@ -536,6 +543,13 @@ app.whenReady().then(async () => {
     screen.on(ev as 'display-added', () => { if (island) placeIsland(island, store.settings); refreshTray() })
   }
   hub.on('change', push)
+  // Codex's plan usage, from its newest session file
+  let codexUsage = ''
+  setInterval(() => {
+    if (!store.settings.agents.codex.enabled) return
+    const u = readCodexUsage(), key = JSON.stringify(u)
+    if (u && key !== codexUsage) { codexUsage = key; hub.setUsage('codex', u) }
+  }, 30_000).unref()
   // an agent's process (relay hook, OpenCode plugin): find its window once, for "jump to terminal"
   hub.on('pid', (id: string, pid: number) => {
     const s = hub.sessions.get(id)

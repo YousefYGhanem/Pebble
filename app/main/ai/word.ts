@@ -38,7 +38,7 @@ export async function readWord(): Promise<{ name: string; text: string }> {
 
 export const FIX_PROMPT = 'You proofread documents. Find spelling, grammar and clarity problems in the text the user gives you. ' +
   'Answer with JSON only, no other text: [{"find": "exact text from the document", "replace": "the corrected text", "why": "a few words"}]. ' +
-  '"find" must be copied exactly from the document, short (a few words, at most 200 characters) and unique enough to locate. ' +
+  '"find" must be copied exactly from the document, within one paragraph, short (a few words, at most 200 characters) and unique enough to locate. ' +
   'At most 25 fixes. Keep the author\'s meaning and voice. Answer [] when nothing needs fixing.'
 
 /** The fixes in an AI answer that can really be made: valid, found in the text, actually changing something. */
@@ -48,7 +48,7 @@ export function parseFixes(answer: string, text: string): Fix[] {
   try { list = JSON.parse(json) } catch { return [] }
   if (!Array.isArray(list)) return []
   return list.filter((f): f is Fix => !!f && typeof f.find === 'string' && typeof f.replace === 'string' && typeof f.why === 'string'
-    && f.find.length > 0 && f.find.length <= 250 && f.replace.length <= 250 && f.find !== f.replace && text.includes(f.find)).slice(0, 25)
+    && f.find.length > 0 && f.find.length <= 250 && !/[\r\n]/.test(f.find + f.replace) && f.replace.length <= 250 && f.find !== f.replace && text.includes(f.find)).slice(0, 25)
 }
 
 /** Puts the fixes in as tracked changes (the document's own Track Changes setting is restored after). */

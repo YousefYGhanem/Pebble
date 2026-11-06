@@ -94,7 +94,7 @@ test('status line: usage for the ring, model and context per session, and the li
   await post('/hook', { session_id: 'u', hook_event_name: 'UserPromptSubmit', prompt: 'x' })
   const r = await post('/status', { session_id: 'u', model: { display_name: 'Opus' }, context_window: { used_percentage: 41.6 }, rate_limits: { five_hour: { used_percentage: 23, resets_at: 1800000000 }, seven_day: { used_percentage: 61, resets_at: 1800500000 } } })
   expect(await r.text()).toBe('Opus · ctx 42% · 5h 23%')
-  expect(h.usage.fiveHour).toEqual({ used: 23, resetsAt: 1800000000000 })
+  expect(h.usage.claude?.fiveHour).toEqual({ used: 23, resetsAt: 1800000000000 })
   expect(h.sessions.get('u')).toMatchObject({ model: 'Opus', context: 41.6 })
 })
 

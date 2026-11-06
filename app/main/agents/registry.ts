@@ -4,10 +4,11 @@ import * as gemini from './gemini'
 import * as cursor from './cursor'
 import * as opencode from './opencode'
 import * as aider from './aider'
+import * as dsh from './dsh'
 
 /** Everything Pebble connects to, the same way: the tray lists them, start-up connects the ones found on this PC. */
 export interface Adapter {
-  id: 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'aider'
+  id: 'claude' | 'codex' | 'gemini' | 'cursor' | 'opencode' | 'aider' | 'dsh'
   name: string
   /** on this PC (Claude Code always counts: it also runs inside the Claude app) */
   available(): boolean
@@ -24,6 +25,8 @@ export function adapters(c: { port: number; token: string; nativeExe: string }):
     { id: 'gemini', name: 'Gemini CLI', available: gemini.available, installed: () => gemini.installed(c), install: () => gemini.install(c), remove: () => gemini.remove() },
     { id: 'cursor', name: 'Cursor', available: cursor.available, installed: () => cursor.installed(c), install: () => cursor.install(c), remove: () => cursor.remove() },
     { id: 'opencode', name: 'OpenCode', available: opencode.available, installed: () => opencode.installed(c), install: () => opencode.install(c), remove: () => opencode.remove() },
-    { id: 'aider', name: 'Aider', available: aider.available, installed: () => aider.installed(c), install: () => aider.install(c), remove: () => aider.remove() }
+    { id: 'aider', name: 'Aider', available: aider.available, installed: () => aider.installed(c), install: () => aider.install(c), remove: () => aider.remove() },
+    // nothing to install: "connected" means Pebble follows its session logs
+    { id: 'dsh', name: 'DeepSeek Harness', available: dsh.available, installed: () => !!dsh.current?.on, install: () => dsh.current?.start(), remove: () => dsh.current?.stop() }
   ]
 }

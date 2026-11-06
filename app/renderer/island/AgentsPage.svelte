@@ -3,7 +3,7 @@
   // of this turn. Right: the code it changes, or its answer, with a reply box once it stopped. Questions, plans and
   // permissions take the full width. Bottom: plan usage and context, and "jump to terminal".
   import type { Answer, HistoryItem, Usage } from '../../shared/ipc'
-  import { AGENT_NAMES, type Session } from '../../shared/state'
+  import { AGENT_NAMES, type Agent, type Session } from '../../shared/state'
   import { ago as agoAt, detailText, stepsSummary } from './pages'
   import { t } from '../i18n.svelte'
   import AskView from './AskView.svelte'
@@ -11,7 +11,7 @@
   import Icon from './Icon.svelte'
 
   let { sessions, usage, history, now, selected = $bindable(), onanswer, onreply, onjump, ondismiss, onseen }: {
-    sessions: Session[]; usage: Usage; history: HistoryItem[]; now: number; selected: string | undefined
+    sessions: Session[]; usage: Partial<Record<Agent, Usage>>; history: HistoryItem[]; now: number; selected: string | undefined
     onanswer: (id: string, a: Answer) => void; onreply: (id: string, text: string) => void
     onjump: (id: string) => void; ondismiss: (id: string) => void; onseen: (ids: string[]) => void
   } = $props()
@@ -37,6 +37,9 @@
   }
 
   // usage ring: r = 9 → circumference ≈ 56.5
+  // the usage of the CLI this session runs (Claude Code's when nothing is selected)
+  const u = $derived(usage[s?.agent ?? 'claude'] ?? {})
+  const tokens = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n))
   const ring = (used: number) => `${(Math.min(100, used) / 100) * 56.5} 56.5`
   const tone = (used: number) => (used >= 95 ? 'var(--error)' : used >= 80 ? 'var(--question)' : 'var(--text)')
 </script>
@@ -111,11 +114,13 @@
 
   {#if !showHistory}
     <footer>
-      {#if usage.fiveHour}
-        <span class="usage" title={t('i.agents.usage')}>
-          <svg width="20" height="20" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" class="track" /><circle cx="11" cy="11" r="9" class="arc" style:stroke={tone(usage.fiveHour.used)} stroke-dasharray={ring(usage.fiveHour.used)} /></svg>
-          5h {Math.round(usage.fiveHour.used)}%{#if usage.sevenDay}{` · ${t('i.agents.week', { n: Math.round(usage.sevenDay.used) })}`}{/if}
+      {#if u.fiveHour}
+        <span class="usage" title={t('i.agents.usageOf', { name: AGENT_NAMES[s?.agent ?? 'claude'] })}>
+          <svg width="20" height="20" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" class="track" /><circle cx="11" cy="11" r="9" class="arc" style:stroke={tone(u.fiveHour.used)} stroke-dasharray={ring(u.fiveHour.used)} /></svg>
+          {t('i.agents.session', { n: Math.round(u.fiveHour.used) })}{#if u.sevenDay}{` · ${t('i.agents.week', { n: Math.round(u.sevenDay.used) })}`}{/if}
         </span>
+      {:else if u.tokens}
+        <span class="usage" title={t('i.agents.usageOf', { name: AGENT_NAMES[s?.agent ?? 'claude'] })}>{t('i.agents.tokens', { session: tokens(u.tokens.session), week: tokens(u.tokens.week) })}</span>
       {/if}
       {#if s?.context !== undefined}<span class="meta">{t('i.agents.context', { n: Math.round(s.context) })}</span>{/if}
       {#if s}<span class="meta">{AGENT_NAMES[s.agent]}{s.provider ? ` · ${s.provider}` : ''}{s.model ? ` · ${s.model}` : ''}</span>{/if}

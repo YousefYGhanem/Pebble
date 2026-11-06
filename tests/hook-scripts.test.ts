@@ -10,7 +10,9 @@ import { install } from '../app/main/agents/claude'
 
 const TOKEN = 'f'.repeat(48)
 const PORT = 47990
-const EXE = path.join(__dirname, '..', 'native', 'out', 'pebble-native.exe')
+// the newest helper build: native/publish (npm run build:native), else native/out
+const EXE = [path.join(__dirname, '..', 'native', 'publish', 'pebble-native.exe'), path.join(__dirname, '..', 'native', 'out', 'pebble-native.exe')]
+  .filter(f => fs.existsSync(f)).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0] ?? path.join(__dirname, '..', 'native', 'out', 'pebble-native.exe')
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pebble-live-'))
 const settings = path.join(dir, 'settings.json')
 let hub: Hub
@@ -86,9 +88,9 @@ describe.skipIf(process.platform !== 'win32' || !fs.existsSync(EXE))('native hoo
   test('the status line command prints the line and feeds the usage ring', async () => {
     const cmd = JSON.parse(fs.readFileSync(settings, 'utf8')).statusLine.command as string
     const args = cmd.match(/"[^"]*"|\S+/g)!.slice(1).map(a => a.replace(/^"|"$/g, ''))
-    const { out } = await run('curl.exe', args, JSON.stringify({ model: { display_name: 'Opus' }, rate_limits: { five_hour: { used_percentage: 12, resets_at: 1 } } }))
+    const { out } = await run(EXE, args, JSON.stringify({ model: { display_name: 'Opus' }, rate_limits: { five_hour: { used_percentage: 12, resets_at: 1 } } }))
     expect(out).toBe('Opus · 5h 12%')
-    expect(hub.usage.fiveHour?.used).toBe(12)
+    expect(hub.usage.claude?.fiveHour?.used).toBe(12)
   }, 20000)
 
   test('pebble CLI: notify, and ask waits for the answer', async () => {

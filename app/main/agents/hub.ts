@@ -50,7 +50,8 @@ interface Held { res: http.ServerResponse; agent: Agent; suggestions?: unknown[]
  */
 export class Hub extends EventEmitter {
   readonly sessions = new Map<string, Session>()
-  usage: Usage = {}
+  /** each CLI's usage (see Usage); the status line fills Claude's, main the others */
+  usage: Partial<Record<Agent, Usage>> = {}
   private held = new Map<string, Held>()
   private waits = new Map<string, http.ServerResponse>()
   private lastText = new Map<string, string>() // Cursor: its final text arrives before stop
@@ -109,6 +110,22 @@ export class Hub extends EventEmitter {
     this.release(id, { hookSpecificOutput: { hookEventName: 'PermissionRequest', decision } })
     this.patch(id, { status: 'running', ask: undefined })
     return true
+  }
+
+  /** Events Pebble reads itself (DeepSeek Harness's session logs) instead of receiving them on /hook. */
+  ingest(e: HookEvent, agent: Agent) {
+    const next = apply(this.sessions.get(e.session_id), e, agent, Date.now(), findLine)
+    if (next) this.sessions.set(e.session_id, next)
+    else this.sessions.delete(e.session_id)
+    if (next && e.hook_event_name === 'Stop') this.emit('finished', next)
+    if (next && e.hook_event_name === 'PermissionRequest') this.emit('question', e.session_id) // it asks in its own window
+    this.emit('change')
+  }
+
+  /** A CLI's usage changed (Codex's session files, DeepSeek Harness's token counts). */
+  setUsage(agent: Agent, u: Usage) {
+    this.usage[agent] = { ...u, at: Date.now() }
+    this.emit('change')
   }
 
   // ---------- chat apps (browser tabs, desktop apps) ----------
@@ -300,12 +317,12 @@ export class Hub extends EventEmitter {
     const obj = (v: unknown) => (v && typeof v === 'object' ? (v as Record<string, unknown>) : {})
     const rl = obj(d.rate_limits), five = obj(rl.five_hour), week = obj(rl.seven_day)
     const window = (w: Record<string, unknown>) => num(w.used_percentage) === undefined ? undefined : { used: num(w.used_percentage)!, resetsAt: (num(w.resets_at) ?? 0) * 1000 }
-    if (rl.five_hour || rl.seven_day) this.usage = { fiveHour: window(five), sevenDay: window(week), at: Date.now() }
+    if (rl.five_hour || rl.seven_day) this.usage.claude = { fiveHour: window(five), sevenDay: window(week), at: Date.now() }
     const model = typeof obj(d.model).display_name === 'string' ? String(obj(d.model).display_name) : undefined
     const context = num(obj(d.context_window).used_percentage)
     if (typeof d.session_id === 'string' && this.sessions.has(d.session_id)) this.patch(d.session_id, { model, context, provider: providerOf(model) })
     else this.emit('change')
-    const parts = [model, context !== undefined ? `ctx ${Math.round(context)}%` : '', this.usage.fiveHour ? `5h ${Math.round(this.usage.fiveHour.used)}%` : '']
+    const parts = [model, context !== undefined ? `ctx ${Math.round(context)}%` : '', this.usage.claude?.fiveHour ? `5h ${Math.round(this.usage.claude.fiveHour.used)}%` : '']
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' }).end(parts.filter(Boolean).join(' · '))
   }
 

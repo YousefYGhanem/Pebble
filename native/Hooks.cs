@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -35,11 +36,15 @@ static class Hooks
     /// `hook relay --agent A --port P --token T [--reply continue]` (Gemini CLI, Cursor): passes the hook's JSON to Pebble
     /// with the agent's process id, then always prints what the agent expects back (`{}`, or `{"continue":true}`), also
     /// when Pebble is not running: an agent must never be blocked by Pebble.
+    /// `hook status --port P --token T [--then-b64 B]` (Claude Code's status line): gives Pebble the usage for its ring;
+    /// with --then-b64 it also runs your own status line command (base64, so no quoting can break it) and prints what
+    /// that prints, so you keep your status line. Without it, prints Pebble's short line.
     /// </summary>
     public static async Task<int> Run(string kind, Dictionary<string, string> o)
     {
         var input = "";
         try { input = await Stdin(); } catch { }
+        if (kind == "status") return await Status(input, o);
         if (kind == "relay")
         {
             await Relay(input, o);
@@ -74,6 +79,49 @@ static class Hooks
         }
         catch { /* Pebble closed, timed out, or answered elsewhere */ }
         return 0;
+    }
+
+    static async Task<int> Status(string input, Dictionary<string, string> o)
+    {
+        // your own status line runs at the same time as the report to Pebble: the line stays as quick as it was
+        Task<string>? own = null;
+        if (o.TryGetValue("then-b64", out var b64))
+            try { own = RunOwn(Encoding.UTF8.GetString(Convert.FromBase64String(b64)), input); } catch { }
+        var line = "";
+        try
+        {
+            if (o.TryGetValue("port", out var port) && o.TryGetValue("token", out var token))
+            {
+                using var http = Client(token, TimeSpan.FromSeconds(2));
+                var res = await http.PostAsync($"http://127.0.0.1:{port}/status", new StringContent(input, Encoding.UTF8, "application/json"));
+                line = await res.Content.ReadAsStringAsync();
+            }
+        }
+        catch { /* Pebble not running: your own line still shows */ }
+        if (own != null) try { line = await own; } catch { line = ""; }
+        using var stdout = Console.OpenStandardOutput();
+        stdout.Write(Encoding.UTF8.GetBytes(line.TrimEnd() + "\n"));
+        return 0;
+    }
+
+    /// <summary>Your own status line command, given the same JSON on stdin; what it prints.</summary>
+    static async Task<string> RunOwn(string command, string input)
+    {
+        // commands written for bash (~, $VAR, .sh) run in Git Bash, the way Claude Code runs them; others in cmd
+        var bashy = command.Contains('~') || command.Contains('$') || command.Contains(".sh");
+        var psi = bashy ? new ProcessStartInfo("bash.exe") : new ProcessStartInfo("cmd.exe");
+        if (bashy) { psi.ArgumentList.Add("-c"); psi.ArgumentList.Add(command); }
+        else psi.Arguments = "/d /s /c \"" + command + "\"";
+        psi.RedirectStandardInput = psi.RedirectStandardOutput = true;
+        psi.UseShellExecute = false;
+        psi.CreateNoWindow = true;
+        psi.StandardOutputEncoding = Encoding.UTF8;
+        using var p = Process.Start(psi)!;
+        await p.StandardInput.WriteAsync(input);
+        p.StandardInput.Close();
+        var output = await p.StandardOutput.ReadToEndAsync();
+        await p.WaitForExitAsync();
+        return output;
     }
 
     static async Task Relay(string input, Dictionary<string, string> o)

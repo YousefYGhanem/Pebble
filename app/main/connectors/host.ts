@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { createHash, randomBytes } from 'node:crypto'
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { manifestSchema, type ConnectorInfo, type Manifest, type Widget } from '../../shared/connectors'
 import type { FromMain, ToMain } from './runner'
@@ -262,7 +262,7 @@ export class ConnectorHost extends EventEmitter {
   /** true when delivered (right plugin, right key, running). */
   deliver(id: string, key: string, body: unknown): boolean {
     const want = this.config[id]?.webhookKey, child = this.running.get(id)
-    if (!want || !child || key.length !== want.length || key !== want) return false
+    if (!want || !child || key.length !== want.length || !timingSafeEqual(Buffer.from(key), Buffer.from(want))) return false
     child.post({ type: 'webhook', body })
     return true
   }

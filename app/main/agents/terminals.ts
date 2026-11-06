@@ -32,7 +32,7 @@ export function snippet(shell: Shell, o: Install): string {
   if (shell === 'bash') {
     const exe = fwd(o.nativeExe).replace(/^([A-Za-z]):/, (_, d: string) => '/' + d.toLowerCase()) // C:/x -> /c/x
     return [
-      '__pebble_start() { [ -n "$__pebble_prompting" ] && return; [ -z "$__pebble_t" ] && { __pebble_t=$SECONDS; __pebble_cmd=$BASH_COMMAND; }; }',
+      '__pebble_start() { [ -n "$__pebble_prompting" ] && return; [ -z "$__pebble_t" ] && { __pebble_t=$SECONDS; __pebble_cmd=${1:-$BASH_COMMAND}; }; }',
       '__pebble_done() {',
       '  local code=$? s; __pebble_prompting=1',
       '  if [ -n "$__pebble_t" ]; then',
@@ -43,7 +43,15 @@ export function snippet(shell: Shell, o: Install): string {
       '  fi',
       '  unset __pebble_t',
       '}',
-      "trap '__pebble_start' DEBUG",
+      // another DEBUG trap (bash-preexec, starship, atuin…) keeps working: join bash-preexec's list, or run after the other trap
+      '__pebble_chain() {',
+      '  if [ -n "${bash_preexec_imported:-}${__bp_imported:-}" ]; then [[ " ${preexec_functions[*]} " == *" __pebble_start "* ]] || preexec_functions+=(__pebble_start); return; fi',
+      '  local p; p=$(trap -p DEBUG); [[ "$p" == *__pebble_start* ]] && return',
+      '  [ -n "$p" ] && eval "set -- $p" && p=$3',
+      '  trap "__pebble_start${p:+; $p}" DEBUG',
+      '}',
+      // a function only sees the DEBUG trap with functrace (set -T) on, so it is on just for this call
+      '__pebble_f=$-; set -T; __pebble_chain; [[ $__pebble_f == *T* ]] || set +T; unset __pebble_f',
       '[[ "$PROMPT_COMMAND" == *__pebble_done* ]] || PROMPT_COMMAND="__pebble_done${PROMPT_COMMAND:+; $PROMPT_COMMAND}; unset __pebble_prompting"'
     ].join('\n')
   }

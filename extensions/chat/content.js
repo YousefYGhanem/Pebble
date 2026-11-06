@@ -71,6 +71,11 @@ function typeReply(text) {
     const send = site.send && document.querySelector(site.send)
     if (send && !send.disabled) send.click()
     else box.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true }))
+    // still in the box a moment later: the site did not take it (its page changed); say so instead of leaving a draft
+    setTimeout(() => {
+      const left = inputBox(), now = left ? (left.tagName === 'TEXTAREA' ? left.value : left.innerText) : ''
+      if (now.trim() === text.trim()) { problem = 'the reply is in the message box but was not sent: press Send there'; void report() }
+    }, 1500)
   }, 150)
   return null
 }

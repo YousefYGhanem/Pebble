@@ -72,7 +72,7 @@ export class Lyrics {
 }
 
 async function defaultFetch(url: string): Promise<unknown> {
-  const res = await fetch(url, { headers: { 'User-Agent': 'Pebble/0.6 (desktop app)' }, signal: AbortSignal.timeout(8000) })
+  const res = await fetch(url, { headers: { 'User-Agent': 'Pebble (https://github.com/YousefYGhanem/Pebble)' }, signal: AbortSignal.timeout(8000) })
   if (res.status === 404) return null
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.json()

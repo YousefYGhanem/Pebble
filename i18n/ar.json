@@ -279,9 +279,9 @@
   "i.files.connected": "هاتفك متصل",
   "i.files.scan": "امسح الرمز بكاميرا هاتفك",
   "i.files.how": "نفس شبكة Wi-Fi مثل هذا الجهاز. يمكن لهاتفك حفظ ما على الرف، و\"أرسل إلى الجهاز\" يضع الصور والملفات في التنزيلات وهنا.",
-  "i.files.public": "هذه الشبكة مضبوطة على \"عامة\"، لذلك يحظر Windows هاتفك.",
+  "i.files.public": "هذه الشبكة مضبوطة على \"عامة\"، لذلك يحظر Windows هاتفك. على شبكة مقهى أو فندق، أبقها كذلك.",
   "i.files.firewall": "قد يحظر جدار حماية Windows هاتفك.",
-  "i.files.makePrivate": "اجعلها خاصة",
+  "i.files.makePrivate": "إنها شبكتي: اجعلها خاصة",
   "i.files.allow": "اسمح لـ Pebble",
   "i.files.notOpening": "لا يفتح؟ يجب أن يكون هاتفك على نفس شبكة Wi-Fi مثل هذا الجهاز (ليست شبكة ضيوف) وبيانات الجوال متوقفة.",
   "i.files.received": "استُلم {n}",
@@ -389,5 +389,10 @@
   "o.marathon": "ماراثون: مهمة تجاوزت 30 دقيقة",
   "theme.default": "الافتراضية",
   "theme.high-contrast": "تباين عالٍ",
-  "theme.custom": "مخصصة"
+  "theme.custom": "مخصصة",
+  "m.speechFailed": "تعذّرت القراءة بصوت عالٍ",
+  "m.speechFailedBody": "لا يوجد صوت في Windows لهذا، أو أن الكلام غير متاح. الإعدادات ← الوقت واللغة ← الكلام لإضافة أصوات.",
+  "i.agents.usageOf": "استهلاك {name}",
+  "i.agents.session": "الجلسة {n}%",
+  "i.agents.tokens": "الجلسة {session} · الأسبوع {week} رمز"
 }
