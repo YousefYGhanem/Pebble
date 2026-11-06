@@ -13,7 +13,10 @@
   const m = $derived(extras.media)
   const pos = $derived(m ? positionNow(m, now) : 0)
   const line = $derived(extras.lyrics && m ? lyricIndex(extras.lyrics, pos + 250) : -1) // a quarter second early reads better
+  // the system volume; while you drag, your value wins (Windows' answer catches up on its own)
   let volume = $state(50)
+  let dragging = false
+  $effect(() => { if (!dragging && extras.volume) volume = extras.volume.level })
 
   function seek(e: MouseEvent) {
     if (!m?.canSeek || !m.durationMs) return
@@ -37,7 +40,7 @@
           <button class="icon play" aria-label={m.playing ? t('i.common.pause') : t('i.common.play')} onclick={() => act({ do: 'media', action: 'toggle' })}><Icon name={m.playing ? 'pause' : 'play'} size={16} /></button>
           <button class="icon ghost" aria-label="Next" disabled={!m.canNext} onclick={() => act({ do: 'media', action: 'next' })}><Icon name="next" size={16} /></button>
           {#if m.playing}<Wave color="rgb(var(--album))" bars={7} height={20} />{/if}
-          <label class="vol" title={t('i.music.volume')}><Icon name="volume" size={14} /><input type="range" min="0" max="100" bind:value={volume} oninput={() => act({ do: 'volume', volume })} aria-label={t('i.music.volume')} /></label>
+          <label class="vol" title={t('i.music.volume')}><Icon name="volume" size={14} /><input type="range" min="0" max="100" bind:value={volume} oninput={() => { dragging = true; act({ do: 'volume', volume }) }} onchange={() => (dragging = false)} aria-label={t('i.music.volume')} /></label>
         </div>
       </div>
     </div>

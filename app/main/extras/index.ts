@@ -21,7 +21,7 @@ const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipbo
  * 'peak' (0–1, ~30 a second while music plays) and 'focus-done'.
  */
 export class Extras extends EventEmitter {
-  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null }
+  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
   private lyrics: Lyrics
   private songKey = ''
   private lastClip = ''
@@ -45,6 +45,8 @@ export class Extras extends EventEmitter {
   start() {
     this.native.on('media', (m: Media | null) => void this.onMedia(m))
     this.native.on('peak', (p: number) => this.emit('peak', p))
+    // Windows' volume, also when you change it elsewhere (keyboard keys, the taskbar)
+    this.native.on('audio', (a: { volume: number; muted: boolean } | null) => { this.state.volume = a ? { level: a.volume, muted: a.muted } : null; this.changed() })
     this.native.on('ready', () => void this.readRadios())
     this.applySettings()
     setInterval(() => void this.readClipboard(), 1000).unref()
@@ -56,6 +58,7 @@ export class Extras extends EventEmitter {
   applySettings() {
     const on = this.settings().music.enabled
     this.native.watch('media', on)
+    this.native.watch('audio', on)
     if (!on && this.state.media) { this.state.media = null; this.state.art = null; this.state.lyrics = null; this.native.watch('peaks', false); this.changed() }
   }
 

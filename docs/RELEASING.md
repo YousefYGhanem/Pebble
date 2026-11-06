@@ -27,17 +27,25 @@ To build an installer on this PC without publishing: `npm run dist` → `dist/Pe
   Updates do not do this. Your settings, themes and outfits stay in `%APPDATA%\Pebble`; delete that folder to remove
   them too.
 
-## Code signing (not set up yet)
+## Code signing (SignPath, waiting for approval)
 
-The installer is unsigned, so Windows SmartScreen shows "Windows protected your PC" on the first run (More info → Run
-anyway). To sign later, either:
+The installer is unsigned until SignPath is set up, so Windows SmartScreen shows "Windows protected your PC" on the first
+run (More info → Run anyway). The release workflow already signs through SignPath ([build/sign.cjs](../build/sign.cjs))
+as soon as its secrets exist:
 
-- **A certificate** (`.pfx`): add the repository secrets `CSC_LINK` (the file, base64) and `CSC_KEY_PASSWORD`, and pass
-  them as environment variables to the `npm run release` step. electron-builder signs when they are present.
-- **Azure Trusted Signing**: add `azureSignOptions` under `win:` in `electron-builder.yml` with your account's
-  endpoint, account and profile names, and the `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_SECRET` secrets.
+1. Apply at https://signpath.org (the SignPath Foundation signs open-source projects for free). Name this repository and
+   say releases are built by GitHub Actions.
+2. Once approved, add these repository secrets (Settings → Secrets and variables → Actions): `SIGNPATH_API_TOKEN`,
+   `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_POLICY_SLUG`.
+3. Add `publisherName` under `win:` in `electron-builder.yml`: the subject of the certificate SignPath signs with. Updates
+   then also check that a new version is signed by the same publisher.
 
-Once signed, set `win.publisherName` so updates check the signature too.
+The next tag is then signed. SignPath may ask for its own GitHub Action instead of the PowerShell submission used here;
+build/sign.cjs is the one place to change.
+
+## Release notes
+
+Write them in `docs/releases/v<version>.md` before tagging; the workflow uses that file (else GitHub's list of changes).
 
 ## Store packages
 

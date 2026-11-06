@@ -67,6 +67,8 @@ export interface ExtrasState {
   system: { cpu: number; ram: number }
   radios: { wifi?: boolean; bluetooth?: boolean } | null
   drop: Drop | null
+  /** the speakers' volume (0–100), as Windows has it: the Music page's slider follows it */
+  volume: { level: number; muted: boolean } | null
 }
 
 /** Everything the island can ask main to do with the extras (validated in main). */
