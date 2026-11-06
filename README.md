@@ -16,6 +16,8 @@ and shell again. Releasing: [docs/RELEASING.md](docs/RELEASING.md).
 npm install
 npm run build:native   # native/publish (and native/out) pebble-native.exe: needs the .NET 10 SDK + Visual Studio C++ tools
 npm run dev        # Electron + Vite with hot reload (main-process changes restart the app)
+npm run app        # builds and starts the real Pebble.exe (dist/win-unpacked), as installed copies run
+npm run icon       # redraws the icons from build/icons/*.svg (.ico files for the exe, tray and windows)
 npm test           # vitest (on Windows also runs the real PowerShell hooks and the CLI)
 npm run typecheck  # svelte-check over all TypeScript and Svelte
 npm run capture    # renders every test scene off-screen into docs/screens
@@ -221,6 +223,9 @@ Theme tokens become CSS variables (`fontSize` → `--font-size`; numbers are px)
 again, or `Pebble --welcome`. **Languages**: English and Arabic, everywhere: the island, Settings, the tour, the tray
 and notifications (Arabic lays Settings and the tour out right to left). The words are in [i18n/](i18n); a language
 is its file there plus a line in [app/shared/i18n.ts](app/shared/i18n.ts), and a missing word falls back to English.
+
+**App icon** (Settings → Look & Pip): Pip as a lavender, cream or graphite pebble, for the tray and Pebble's
+windows. The installer and its shortcut keep lavender, since Windows reads that one from the exe file itself.
 
 **Living skins** (Settings → Island): the island glows hot with embers while the processor works hard, frosts over
 when the PC idles, grows a spider web at night (23:00–05:00) and vines after a long day (8+ hours since its first start

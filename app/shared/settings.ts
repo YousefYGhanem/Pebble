@@ -17,6 +17,8 @@ export const settingsSchema = z.object({
     /** the welcome tour was shown */
     welcomed: z.boolean(),
     startWithWindows: z.boolean(),
+    /** the tray's and the windows' icon (the installer and the exe file keep lavender) */
+    icon: z.enum(['lavender', 'cream', 'graphite']),
     /** download new versions from GitHub Releases by themselves */
     updates: z.boolean(),
     toggleShortcut: z.string(),
@@ -110,7 +112,7 @@ export type Settings = z.infer<typeof settingsSchema>
 export const DEFAULTS: Settings = {
   version: 1,
   theme: 'default',
-  general: { language: 'en', welcomed: false, startWithWindows: false, updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space' },
+  general: { language: 'en', welcomed: false, startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space' },
   island: {
     style: 'notch', openOn: 'hover', display: 'main',
     restingWidth: 180, restingHeight: 32, width: 340, height: 36, askWidth: 460, openWidth: 680,

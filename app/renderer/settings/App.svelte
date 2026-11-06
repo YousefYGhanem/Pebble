@@ -26,6 +26,9 @@
   const num = (e: Event) => Number((e.currentTarget as HTMLInputElement).value)
   const text = (e: Event) => (e.currentTarget as HTMLInputElement).value
 
+  // the icons you can choose, shown as they look (build/icons)
+  const ICONS = Object.fromEntries(Object.entries(import.meta.glob<string>('../../../build/icons/*.svg', { query: '?url', import: 'default', eager: true }))
+    .flatMap(([p, url]) => { const m = /\/(\w+)\.svg$/.exec(p); return m ? [[m[1]!, url]] : [] }))
   const TABS = ['general', 'island', 'look', 'agents', 'chat', 'extras', 'connectors', 'advanced'] as const
   const SHELLS: Record<string, string> = { powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' }
   const SHORTCUTS = ['toggleShortcut', 'tuckShortcut', 'buddyShortcut', 'voiceShortcut'] as const
@@ -160,6 +163,13 @@
           <label class="row"><span>{t('look.speed')}<small>{s.motion.speed.toFixed(2)}×</small></span>
             <input type="range" min="0.5" max="2" step="0.05" value={s.motion.speed} onchange={e => set('motion.speed', num(e))} /></label>
           <button class="link" onclick={() => act({ do: 'open', what: 'themes' })}>{t('look.themesFolder')}</button>
+          <div class="col"><span>{t('look.icon')}<small>{t('look.iconHint')}</small></span>
+            <div class="icons" role="radiogroup" aria-label={t('look.icon')}>
+              {#each ['lavender', 'cream', 'graphite'] as const as id}
+                <button class="icon" class:on={s.general.icon === id} role="radio" aria-checked={s.general.icon === id} onclick={() => set('general.icon', id)}>
+                  <img src={ICONS[id]} alt="" width="56" height="56" /><span>{t(`icon.${id}`)}</span></button>
+              {/each}
+            </div></div>
         </section>
         <h2>{pip} <span class="muted">· {t('pip.done', { count: v.pip.done })}</span></h2>
         <section>
@@ -405,6 +415,9 @@
   .outfit.on small { color: inherit; }
   .error, .problem { border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; background: color-mix(in srgb, var(--error) 18%, transparent); }
   .problem { margin: 0 0 8px; font-size: 13px; }
+  .icons { display: flex; gap: 10px; }
+  .icon { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 14px; border: 2px solid transparent; }
+  .icon.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
   .pickbar { display: flex; gap: 8px; align-items: center; }
   .picks { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
   .pick { display: flex; justify-content: space-between; gap: 16px; text-align: start; background: none; padding: 7px 10px; }

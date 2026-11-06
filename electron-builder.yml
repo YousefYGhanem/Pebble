@@ -18,9 +18,13 @@ extraResources:
     to: plugins
   - from: extensions/chat
     to: extensions/chat
+  # the icons you can choose in Settings (tray and windows)
+  - from: build/icons
+    to: icons
+    filter: ['*.ico']
 win:
   target: nsis
-  icon: build/icon.png
+  icon: build/icon.ico
   signAndEditExecutable: true
   # signed through SignPath once its secrets are set (build/sign.cjs; unsigned until then, and Windows warns on the
   # first run). Once signed, add publisherName (the certificate's subject) so updates check the signature too.

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- the cream icon for the tray and small sizes (16-32 px) -->
+  <defs><linearGradient id="b2t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#f1e4cf"/></linearGradient></defs>
+  <path d="M128 22 C 196 20 240 72 238 136 C 236 200 190 236 128 236 C 64 236 18 200 18 136 C 18 74 60 24 128 22 Z" fill="url(#b2t)" stroke="#a3855f" stroke-width="14"/>
+  <rect x="40" y="96" width="176" height="84" rx="42" fill="#120d1a"/>
+  <rect x="82" y="112" width="24" height="52" rx="12" fill="#d9c8ff"/>
+  <rect x="150" y="112" width="24" height="52" rx="12" fill="#d9c8ff"/>
+</svg>

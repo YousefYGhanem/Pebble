@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- Pip, as in app/renderer/island/pip.ts: a pebble, its visor, two eyes and the gem on top -->
-  <path fill="#ece9f6" d="M30.5 147 v-21.5 a84 84 0 0 1 84 -84 h27 a84 84 0 0 1 84 84 v21.5 a63 63 0 0 1 -63 63 h-69 a63 63 0 0 1 -63 -63 z"/>
-  <rect x="52" y="97" width="152" height="70" rx="31" fill="#15151c"/>
-  <rect x="85" y="113" width="14" height="38" rx="7" fill="#f3f3f6"/>
-  <rect x="157" y="113" width="14" height="38" rx="7" fill="#f3f3f6"/>
-  <path fill="#7c5cff" d="M128 14 l13 15 -13 15 -13 -15 z"/>
-</svg>

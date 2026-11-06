@@ -394,5 +394,10 @@
   "m.speechFailedBody": "لا يوجد صوت في Windows لهذا، أو أن الكلام غير متاح. الإعدادات ← الوقت واللغة ← الكلام لإضافة أصوات.",
   "i.agents.usageOf": "استهلاك {name}",
   "i.agents.session": "الجلسة {n}%",
-  "i.agents.tokens": "الجلسة {session} · الأسبوع {week} رمز"
+  "i.agents.tokens": "الجلسة {session} · الأسبوع {week} رمز",
+  "look.icon": "أيقونة التطبيق",
+  "look.iconHint": "في شريط المهام ونوافذ Pebble؛ يحتفظ المثبّت واختصاره بالأيقونة البنفسجية",
+  "icon.lavender": "بنفسجي",
+  "icon.cream": "كريمي",
+  "icon.graphite": "رمادي داكن"
 }

@@ -92,6 +92,9 @@ const vault = {
   decrypt: (v: string) => safeStorage.decryptString(Buffer.from(v, 'base64'))
 }
 
+/** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
+const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
+
 const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
@@ -322,6 +325,7 @@ const settingsWin = new SettingsWindow({
   clearHistory: () => { history.clear(); push() },
   playScene,
   setChatKey: (p, key) => chat.setKey(p as ProviderId, key),
+  icon: () => iconFile(`${store.settings.general.icon}.ico`),
   updates: updater,
   chatModels: () => ({ provider: store.settings.chat.provider, list: chat.models() }),
   diagnose: () => diagnose({
@@ -335,7 +339,7 @@ const settingsWin = new SettingsWindow({
 /** Call after anything the tray or the Settings window shows has changed. */
 function refreshTray() {
   const u = updater.status
-  buildTray({ toggleIsland, toggleTuck, openSettings: () => settingsWin.open(), t: tr, update: u.state === 'ready' ? { version: u.version, install: () => updater.install() } : undefined }, store.theme.tokens.accent)
+  buildTray({ toggleIsland, toggleTuck, openSettings: () => settingsWin.open(), t: tr, update: u.state === 'ready' ? { version: u.version, install: () => updater.install() } : undefined }, iconFile(`${store.settings.general.icon}-tray.ico`))
   settingsWin.push()
 }
 

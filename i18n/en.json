@@ -394,5 +394,10 @@
   "m.speechFailedBody": "Windows has no voice for this, or speech is not available. Settings → Time & language → Speech adds voices.",
   "i.agents.usageOf": "{name} usage",
   "i.agents.session": "session {n}%",
-  "i.agents.tokens": "session {session} · week {week} tokens"
+  "i.agents.tokens": "session {session} · week {week} tokens",
+  "look.icon": "App icon",
+  "look.iconHint": "the tray and Pebble's windows; the installer and its shortcut keep lavender",
+  "icon.lavender": "Lavender",
+  "icon.cream": "Cream",
+  "icon.graphite": "Graphite"
 }

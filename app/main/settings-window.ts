@@ -25,6 +25,8 @@ export interface SettingsDeps {
   /** the chosen chat provider and its models */
   chatModels(): { provider: string; list: Promise<{ id: string; name: string }[]> }
   updates: { check(): void; install(): void }
+  /** the windows' icon, as chosen in Settings */
+  icon(): string
 }
 
 /**
@@ -60,7 +62,7 @@ export class SettingsWindow {
   openWelcome(offscreen = false) {
     if (this.welcome && !this.welcome.isDestroyed()) { this.welcome.focus(); return this.welcome }
     this.welcome = new BrowserWindow({
-      width: 600, height: 560, resizable: false, maximizable: false, minimizable: false, title: 'Welcome to Pebble', show: false, alwaysOnTop: true,
+      width: 600, height: 560, resizable: false, maximizable: false, minimizable: false, title: 'Welcome to Pebble', show: false, alwaysOnTop: true, icon: this.d.icon(),
       backgroundColor: this.d.view().theme.tokens.background,
       webPreferences: { preload: path.join(__dirname, '../preload/settings.js'), contextIsolation: true, sandbox: true, offscreen }
     })
@@ -74,7 +76,7 @@ export class SettingsWindow {
   open(offscreen = false) {
     if (this.win && !this.win.isDestroyed()) { if (this.win.isMinimized()) this.win.restore(); this.win.focus(); return this.win }
     this.win = new BrowserWindow({
-      width: 940, height: 680, minWidth: 760, minHeight: 520, title: 'Pebble Settings', show: false, autoHideMenuBar: true,
+      width: 940, height: 680, minWidth: 760, minHeight: 520, title: 'Pebble Settings', show: false, autoHideMenuBar: true, icon: this.d.icon(),
       backgroundColor: this.d.view().theme.tokens.background,
       webPreferences: { preload: path.join(__dirname, '../preload/settings.js'), contextIsolation: true, sandbox: true, offscreen }
     })
@@ -89,7 +91,7 @@ export class SettingsWindow {
     const open = [this.win, this.welcome].filter(w => w && !w.isDestroyed()) as BrowserWindow[]
     if (!open.length) return
     const view = { ...this.d.view(), chatModels: this.models, connectorPick: this.pick, diagnostics: this.diagnostics, error: this.error } satisfies SettingsView
-    for (const w of open) w.webContents.send('settings:view', view)
+    for (const w of open) { w.webContents.send('settings:view', view); w.setIcon(this.d.icon()) } // a newly chosen icon shows at once
   }
 
   private async act(a: SettingsAction) {
