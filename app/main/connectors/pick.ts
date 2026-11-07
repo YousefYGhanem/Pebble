@@ -36,7 +36,7 @@ const NUMBER = '(\\d[\\d.,]*\\d|\\d)'
 function fromPage(html: string): Found[] {
   const text = html.replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<(br|\/p|\/div|\/li|\/h\d|\/tr|\/td|\/th)[^>]*>/gi, '\n').replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&') // &amp; last: "&amp;lt;" is the text "&lt;"
   const out: Found[] = [], seen = new Set<string>()
   let prev = ''
   for (const raw of text.split('\n')) {
