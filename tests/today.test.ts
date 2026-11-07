@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { test, expect, vi } from 'vitest'
-import { addTask, addUsage, daysAt, emptyDay, spentOf, usageAlerts } from '../app/shared/today'
+import { addTask, addUsage, daysAt, emptyDay, spentOf, usageAlerts, type Days } from '../app/shared/today'
 import { restLevel } from '../app/main/rest'
 import { moodFor } from '../app/shared/pip'
 import { validSettingsAction } from '../app/shared/settings-ui'
@@ -23,7 +23,7 @@ test('usage alerts: once when passing 80% and 95%; the first report is only the 
 })
 
 test('the day: tasks add up, usage counts from the first report, a reset keeps what went before, a new day starts fresh', () => {
-  let d = { today: emptyDay(at('2026-11-07T09:00')), yesterday: null }
+  let d: Days = { today: emptyDay(at('2026-11-07T09:00')), yesterday: null }
   d = addTask(d, at('2026-11-07T10:00'), { agent: 'claude', seconds: 600, files: 3 })
   d = addTask(d, at('2026-11-07T11:00'), { agent: 'codex', seconds: 60, files: 0 })
   expect([d.today.tasks, d.today.seconds, d.today.files, d.today.agents.claude?.tasks]).toEqual([2, 660, 3, 1])
