@@ -155,7 +155,7 @@
   .steps li span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .steps li :global(svg) { flex: none; }
   .steps li.current { color: var(--text); }
-  .steps li.current :global(svg) { color: var(--running); animation: pulse 1.2s ease-in-out infinite; }
+  .steps li.current :global(svg) { color: var(--running); animation: pulse 1.2s steps(5, jump-none) infinite; }
   .steps li.failed { color: var(--error); }
   @keyframes up { from { opacity: 0; transform: translateY(4px); } }
 

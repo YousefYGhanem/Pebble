@@ -24,6 +24,7 @@ import { DropServer } from './extras/drop'
 import { allowInFirewall, checkReach } from './extras/reach'
 import { FocusGuard, guardPage, guardPreload } from './extras/guard'
 import type { ExtrasState } from '../shared/extras'
+import { sharedSpawner, type Child } from './connectors/shared'
 import { ConnectorHost } from './connectors/host'
 import { describePermissions } from '../shared/connectors'
 import { translate, translateOr } from '../shared/i18n'
@@ -107,18 +108,11 @@ const hub = new Hub(token, {
   webhook: (plugin, key, body) => connectors.deliver(plugin, key, body),
   extension: (key, body): unknown => chatApps.fromExtension(key, body)
 })
-// Connectors (docs/PLUGINS.md): built-in ones next to the app, yours in userData/plugins; each runs in its own process
+// Connectors (docs/PLUGINS.md): built-in ones next to the app (sharing one process), yours in userData/plugins (one each)
 const connectors = new ConnectorHost({
   dataDir: userData,
   builtInDir: app.isPackaged ? path.join(process.resourcesPath, 'plugins') : path.join(app.getAppPath(), 'plugins'),
-  spawn: () => {
-    const child = utilityProcess.fork(path.join(__dirname, 'connector-runner.js'), [], { serviceName: 'Pebble connector', stdio: 'ignore' })
-    return {
-      post: m => child.postMessage(m),
-      on: (e: 'message' | 'exit', fn: (x: never) => void) => { child.on(e as 'message', fn as (m: unknown) => void) },
-      kill: () => { child.kill() }
-    }
-  },
+  spawn: sharedSpawner(() => utilityProcess.fork(path.join(__dirname, 'connector-runner.js'), [], { serviceName: 'Pebble connector', stdio: 'ignore' }) as unknown as Child),
   vault,
   approve: async m => {
     const r = await dialog.showMessageBox({
@@ -152,11 +146,22 @@ let shownAnyway = false // you opened the island yourself while a game runs: it 
 const fromIsland = (e: Electron.IpcMainEvent) => !!island && !island.isDestroyed() && e.sender === island.webContents
 const send = (channel: string, ...args: unknown[]) => { if (island && !island.isDestroyed()) island.webContents.send(channel, ...args) }
 
-function push() {
+// coalesced (a burst of changes is one message) and skipped when nothing changed: each state the island gets is a
+// clone, a re-render and a frame
+let pushTimer: NodeJS.Timeout | undefined, lastState = ''
+function push(force = false) {
+  if (force) lastState = ''
+  pushTimer ??= setTimeout(sendState, 40) // also paces a streaming chat reply
+}
+function sendState() {
+  pushTimer = undefined
   const state: IslandState = { sessions: hub.list(), settings: store.settings, theme: store.theme, usage: hub.usage, history: history.items,
     pip: { done: pip.stats.done, achievements: pip.stats.achievements, custom: pip.custom, sleepy, playing: !!extras.state.media?.playing },
     extras: { ...extras.state, drop: drop.state },
     widgets: [...connectors.widgets.values()], connectors: connectors.list(), chat: chat.state() }
+  const json = JSON.stringify(state)
+  if (json === lastState) return
+  lastState = json
   send(CH.state, state)
 }
 
@@ -343,7 +348,7 @@ function refreshTray() {
   settingsWin.push()
 }
 
-ipcMain.on(CH.ready, e => { if (fromIsland(e)) { push(); if (scene) send(CH.scene, scene) } })
+ipcMain.on(CH.ready, e => { if (fromIsland(e)) { push(true); if (scene) send(CH.scene, scene) } })
 ipcMain.on(CH.catchMouse, (e, on: unknown) => {
   if (fromIsland(e)) island!.setIgnoreMouseEvents(on !== true, { forward: true })
 })
@@ -515,9 +520,8 @@ app.whenReady().then(async () => {
   extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) })))
   drop.on('change', push)
   // an answer streams in many small pieces: show them at most ~20 times a second
-  let chatTimer: NodeJS.Timeout | undefined
   chat.on('answered', (text: string) => { if (store.settings.chat.readAloud) void say(text) })
-  chat.on('change', () => { settingsWin.push(); chatTimer ??= setTimeout(() => { chatTimer = undefined; push() }, 50) })
+  chat.on('change', () => { settingsWin.push(); push() })
   connectors.discover()
   connectors.loadConfig()
   void connectors.startAll()

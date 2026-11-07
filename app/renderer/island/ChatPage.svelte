@@ -127,7 +127,7 @@
   .say:hover, .say.on { opacity: 1; }
   .say.on { color: var(--accent); }
   .thinking { display: flex; gap: 4px; }
-  .thinking i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: dot 1s infinite ease-in-out; }
+  .thinking i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: dot 1s infinite steps(5, jump-none); }
   .thinking i:nth-child(2) { animation-delay: 0.15s; }
   .thinking i:nth-child(3) { animation-delay: 0.3s; }
   .error { color: var(--error); font-size: 12px; }

@@ -245,3 +245,33 @@ test('the hub passes /in/<connector>?k=… to the connectors, without the hook t
     expect(got[0]).toEqual(['webhook', 'right', { title: 'Deploy' }])
   } finally { hub.close() }
 })
+
+test('built-in connectors share one process; yours get their own; it ends with its last connector', async () => {
+  const { EventEmitter } = await import('node:events')
+  const { sharedSpawner } = await import('../app/main/connectors/shared')
+  const forks: (InstanceType<typeof EventEmitter> & { posted: unknown[]; killed: boolean })[] = []
+  const spawn = sharedSpawner(() => {
+    const c = Object.assign(new EventEmitter(), { posted: [] as unknown[], killed: false, postMessage(m: unknown) { c.posted.push(m) }, kill() { c.killed = true; return true } })
+    forks.push(c)
+    return c as never
+  })
+  const a = spawn('a', true), b = spawn('b', true), mine = spawn('mine', false)
+  expect(forks.length).toBe(2) // a and b together, mine alone
+  const got: ToMain[] = [], exits: number[] = []
+  a.on('message', m => got.push(m)); b.on('exit', c => exits.push(c))
+  a.post({ type: 'webhook', body: 1 })
+  expect(forks[0]!.posted).toEqual([{ type: 'webhook', body: 1, plugin: 'a' }])
+  forks[0]!.emit('message', { type: 'ready', plugin: 'b' }) // b's message is not a's
+  forks[0]!.emit('message', { type: 'remove', id: 'x', plugin: 'a' })
+  expect(got).toEqual([{ type: 'remove', id: 'x', plugin: 'a' }])
+  forks[0]!.emit('message', { type: 'exit', code: 1, plugin: 'b' }) // b could not start: only b ends
+  expect(exits).toEqual([1])
+  expect(forks[0]!.killed).toBe(false)
+  a.kill() // the last one in the shared process
+  expect(forks[0]!.posted.at(-1)).toEqual({ type: 'stop', plugin: 'a' })
+  expect(forks[0]!.killed).toBe(true)
+  spawn('c', true)
+  expect(forks.length).toBe(3) // a fresh shared process
+  mine.kill()
+  expect(forks[1]!.killed).toBe(true)
+})

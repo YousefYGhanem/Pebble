@@ -121,11 +121,12 @@ export class Extras extends EventEmitter {
     this.reading = true
     let text = ''
     try {
-      for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) return
       text = await clipboard.readText()
+      if (text === this.lastClip) return // the usual case, each second: nothing new (the format checks only for new text)
+      this.lastClip = text
+      for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) return
     } catch { return } finally { this.reading = false }
-    if (!text.trim() || text === this.lastClip) return
-    this.lastClip = text
+    if (!text.trim()) return
     this.state.clipboard = [{ id: ++this.clipId, text: text.slice(0, 5000), at: Date.now() }, ...this.state.clipboard.filter(c => c.text !== text.slice(0, 5000))].slice(0, MAX_CLIPS)
     this.changed()
   }
@@ -145,7 +146,7 @@ export class Extras extends EventEmitter {
     this.cpuPrev = now
     const cpu = total ? Math.round((busy / total) * 100) : 0
     const ram = Math.round((1 - os.freemem() / os.totalmem()) * 100)
-    if (Math.abs(cpu - this.state.system.cpu) >= 2 || Math.abs(ram - this.state.system.ram) >= 1) { this.state.system = { cpu, ram }; this.changed() }
+    if (Math.abs(cpu - this.state.system.cpu) >= 5 || Math.abs(ram - this.state.system.ram) >= 1) { this.state.system = { cpu, ram }; this.changed() }
   }
 
   private async readRadios() {

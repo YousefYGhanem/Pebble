@@ -96,7 +96,7 @@ pebble.widget('id', {
 
 ## What a connector can and cannot do
 
-Each connector runs in its own process, in a context that has only `pebble`: no `require`, no `process`, no files,
+Each connector you add runs in its own process (the built-in ones share one), in a context that has only `pebble`: no `require`, no `process`, no files,
 no network except through `pebble.fetch` to the hosts it declared, and redirects are checked against them too. That
 keeps mistakes contained (a crash or a hang stops only that connector, which Pebble restarts up to 5 times). It is
 **not** a wall against hostile code: only add connectors you trust, the same as any program.

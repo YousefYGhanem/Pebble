@@ -248,6 +248,8 @@
   function kick() { if (!reduced) { kickAt = performance.now(); wake() } }
 
   // ---------- the frame loop: runs only while something moves (0 fps when the island rests) ----------
+  // at most ~60 fps: a 144/240 Hz screen would otherwise draw (and the GPU compose) every motion 2-4 times as often
+  const next = () => setTimeout(() => requestAnimationFrame(frame), 12)
   function wake() {
     if (running) return
     running = true
@@ -276,7 +278,7 @@
     const moving = !rect.settled || [top0, splitW, eyes, eyeDx, eyeY, lookX, lookY].some(sp => !sp.settled)
     const blinking = t - blinkAt < 160
     const lively = mood === 'dizzy' || mood === 'dancing' || particlesAlive() // moods that move by themselves
-    if (moving || blinking || lively || kickAt >= 0 || phase === 'hello' || phase === 'bye' || splitW.value > 0) requestAnimationFrame(frame)
+    if (moving || blinking || lively || kickAt >= 0 || phase === 'hello' || phase === 'bye' || splitW.value > 0) next()
     else running = false
   }
 
@@ -579,7 +581,7 @@
   .count { color: var(--muted); font-size: 0.85em; }
 
   .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--c, var(--ready)); }
-  .running { --c: var(--running); animation: pulse 1.2s ease-in-out infinite; }
+  .running { --c: var(--running); animation: pulse 1.2s steps(5, jump-none) infinite; } /* steps: a smooth endless animation repaints the see-through window at the screen's full rate */
   .done { --c: var(--done); }
   .error { --c: var(--error); }
   .question { --c: var(--question); }

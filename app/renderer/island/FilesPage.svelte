@@ -64,7 +64,7 @@
 
 <style>
   .shelf { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
-  .file { position: relative; flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 14px; background: #ffffff0b; cursor: grab; animation: float 3.2s ease-in-out infinite; }
+  .file { position: relative; flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 14px; background: #ffffff0b; cursor: grab; animation: float 3.2s steps(8, jump-none) infinite; }
   .file:nth-child(2n) { animation-delay: -1.6s; }
   .file:hover { background: #ffffff16; }
   .file img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }

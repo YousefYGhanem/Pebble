@@ -127,7 +127,7 @@ static class Server
                 "audio" => Poll(cts.Token, 300, AudioState, d => Event("audio", d)),
                 "peaks" => Peaks(cts.Token),
                 // while the left button is down: where the mouse is (dragging a file onto the island); one last event on release
-                "drag" => Poll(cts.Token, 40, () => { var c = Windows.Cursor(); return c["down"]!.GetValue<bool>() ? c : null; }, d => Event("drag", d)),
+                "drag" => Poll(cts.Token, 40, () => { var c = Windows.Cursor(); return c["down"]!.GetValue<bool>() ? c : null; }, d => Event("drag", d), idleMs: 150),
                 "media" => WatchMedia(cts.Token),
                 _ => throw new ArgumentException("unknown topic " + topic)
             };
@@ -135,8 +135,8 @@ static class Server
         }
     }
 
-    /// <summary>Asks every interval; emits only when the answer changed.</summary>
-    static Task Poll(CancellationToken stop, int ms, Func<JsonNode?> read, Action<JsonNode?> emit) => Task.Run(async () =>
+    /// <summary>Asks every interval (idleMs while the answer is null: nothing going on); emits only when the answer changed.</summary>
+    static Task Poll(CancellationToken stop, int ms, Func<JsonNode?> read, Action<JsonNode?> emit, int? idleMs = null) => Task.Run(async () =>
     {
         string? last = "";
         while (!stop.IsCancellationRequested)
@@ -148,7 +148,7 @@ static class Server
                 if (text != last) { last = text; emit(now); }
             }
             catch { /* the device went away for a moment: try again next time */ }
-            await Task.Delay(ms, stop).ContinueWith(_ => { });
+            await Task.Delay(last == null && idleMs is int idle ? idle : ms, stop).ContinueWith(_ => { });
         }
     });
 

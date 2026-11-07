@@ -18,8 +18,13 @@ const CHIRPS: Record<string, Note[]> = {
 
 export type Chirp = keyof typeof CHIRPS
 
+let quiet: ReturnType<typeof setTimeout> | undefined
+
 export function chirp(kind: Chirp, volume = 0.07) {
   ctx ??= new AudioContext()
+  // an open AudioContext keeps a sound stream (and Chromium's audio process busy): closed a few seconds after the last chirp
+  clearTimeout(quiet)
+  quiet = setTimeout(() => { void ctx?.close(); ctx = undefined }, 4000)
   const t0 = ctx.currentTime + 0.01
   const jitter = kind === 'poke' ? 0.85 + Math.random() * 0.3 : 1 // pokes never sound exactly the same
   for (const [from, to, start, length] of CHIRPS[kind]!) {

@@ -11,7 +11,7 @@ const log = logger('connectors')
 
 /** How a connector process is started (Electron's utilityProcess in the app; a fake in tests). */
 export interface Spawner {
-  (pluginId: string): { post(m: FromMain): void; on(e: 'message', f: (m: ToMain) => void): void; on(e: 'exit', f: (code: number) => void): void; kill(): void }
+  (pluginId: string, builtIn?: boolean): { post(m: FromMain): void; on(e: 'message', f: (m: ToMain) => void): void; on(e: 'exit', f: (code: number) => void): void; kill(): void }
 }
 
 /** Encrypting secrets at rest (Electron safeStorage = Windows DPAPI in the app). */
@@ -173,7 +173,7 @@ export class ConnectorHost extends EventEmitter {
     if (missing) { this.problems.set(id, missing); log.info(`${f.manifest.name}: ${missing}`); return }
     if (f.manifest.permissions.webhook && !entry.webhookKey) { entry.webhookKey = randomBytes(12).toString('hex'); this.saveConfig() }
 
-    const child = this.o.spawn(id)
+    const child = this.o.spawn(id, f.builtIn)
     this.running.set(id, child)
     const settings: Record<string, unknown> = {}
     for (const s of f.manifest.settings) if (!f.manifest.permissions.secrets.includes(s.key)) settings[s.key] = entry.settings?.[s.key] ?? s.default

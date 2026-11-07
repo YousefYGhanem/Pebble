@@ -16,11 +16,13 @@ export type ToMain =
   | { type: 'store'; data: Record<string, unknown> }
   | { type: 'windows' }
   | { type: 'ready' }
+  | { type: 'exit'; code: number } // this plugin ended (its process may run on, for the others)
 
 export type FromMain =
   | { type: 'init'; manifest: Manifest; file: string; settings: Record<string, unknown>; secrets: Record<string, string>; store: Record<string, unknown> }
   | { type: 'webhook'; body: unknown }
   | { type: 'windows'; list: { title: string; process: string }[] }
+  | { type: 'stop' }
 
 type Auth = string | { header: string; secret: string; prefix?: string }
 interface FetchOptions { method?: string; headers?: Record<string, string>; body?: string; auth?: Auth }
@@ -168,17 +170,19 @@ export async function startPlugin(code: string, filename: string, pebble: object
   await start(pebble)
 }
 
-// ---------- the utility process ----------
-const port = (process as unknown as { parentPort?: { on(e: 'message', f: (e: { data: FromMain }) => void): void; postMessage(m: ToMain): void } }).parentPort
+// ---------- the utility process: one or more plugins, each message names its plugin (shared.ts) ----------
+const port = (process as unknown as { parentPort?: { on(e: 'message', f: (e: { data: FromMain & { plugin: string } }) => void): void; postMessage(m: ToMain & { plugin: string }): void } }).parentPort
 if (port) {
-  let handle: ReturnType<typeof makeApi> | undefined
-  const send = (m: ToMain) => port.postMessage(m)
+  const plugins = new Map<string, ReturnType<typeof makeApi>>()
   port.on('message', async ({ data }) => {
+    const id = data.plugin, send = (m: ToMain) => port.postMessage({ ...m, plugin: id })
     if (data.type === 'init') {
-      handle = makeApi({ manifest: data.manifest, settings: data.settings, secrets: data.secrets, store: data.store, send })
+      const handle = makeApi({ manifest: data.manifest, settings: data.settings, secrets: data.secrets, store: data.store, send })
+      plugins.set(id, handle)
       try { await startPlugin(fs.readFileSync(data.file, 'utf8'), data.file, handle.api); send({ type: 'ready' }) }
-      catch (err) { send({ type: 'log', level: 'error', text: `could not start: ${(err as Error).message}` }); process.exit(1) }
-    } else if (data.type === 'webhook') handle?.webhook(data.body)
-    else if (data.type === 'windows') handle?.windows(data.list)
+      catch (err) { handle.stop(); plugins.delete(id); send({ type: 'log', level: 'error', text: `could not start: ${(err as Error).message}` }); send({ type: 'exit', code: 1 }) }
+    } else if (data.type === 'stop') { plugins.get(id)?.stop(); plugins.delete(id) }
+    else if (data.type === 'webhook') plugins.get(id)?.webhook(data.body)
+    else if (data.type === 'windows') plugins.get(id)?.windows(data.list)
   })
 }
