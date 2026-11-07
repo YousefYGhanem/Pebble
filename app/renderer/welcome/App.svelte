@@ -1,17 +1,18 @@
 <script lang="ts">
-  // The welcome tour (first start): language → which AIs → terminals → Pip's name → done. Every choice is saved at once,
+  // The welcome tour (first start): language → which AIs → terminals → Pip's name → how the island works → done. Every choice is saved at once,
   // like in Settings; closing the window early keeps what was chosen so far.
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t } from '../i18n.svelte'
   import { drawPip } from '../island/pip'
   import { pipColors, type Mood } from '../../shared/pip'
+  import IslandDemo from './IslandDemo.svelte'
   import type { SettingsAction, SettingsView } from '../../shared/settings-ui'
 
   let v = $state<SettingsView>()
   let step = $state(0)
   let name = $state('')
   let canvas = $state<HTMLCanvasElement>()
-  const STEPS = 5
+  const STEPS = 6
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
 
   window.settingsApi.onView(next => {
@@ -56,7 +57,8 @@
 {#if v}
   {@const s = v.settings}
   <main>
-    <canvas bind:this={canvas} width="240" height="200" style="width:120px;height:100px" aria-hidden="true"></canvas>
+    <!-- the demo step has its own little island (and needs the room) -->
+    {#if step !== 4}<canvas bind:this={canvas} width="240" height="200" style="width:120px;height:100px" aria-hidden="true"></canvas>{/if}
     {#key step}
       <div class="step">
         {#if step === 0}
@@ -90,6 +92,9 @@
           <p>{t('welcome.nameHint')}</p>
           <!-- svelte-ignore a11y_autofocus -->
           <input class="name" type="text" maxlength="24" bind:value={name} autofocus aria-label={t('pip.name')} />
+        {:else if step === 4}
+          <h1>{t('welcome.how')}</h1>
+          <IslandDemo openOn={s.island.openOn} toggle={s.general.toggleShortcut.replace('Control', 'Ctrl')} tuck={s.general.tuckShortcut.replace('Control', 'Ctrl')} />
         {:else}
           <h1>{t('welcome.ready', { name: name.trim() || 'Pip' })}</h1>
           <p>{t('welcome.readyHint', { toggle: s.general.toggleShortcut.replace('Control', 'Ctrl'), buddy: s.general.buddyShortcut.replace('Control', 'Ctrl') })}</p>

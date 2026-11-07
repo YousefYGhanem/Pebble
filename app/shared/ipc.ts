@@ -26,7 +26,8 @@ export const CH = {
   peak: 'island:peak',
   page: 'island:page',
   play: 'island:play',
-  worry: 'island:worry'
+  worry: 'island:worry',
+  tucked: 'island:tucked'
 } as const
 
 /** Your decision on what a session asks. */
@@ -119,6 +120,8 @@ export interface IslandApi {
   onPage(fn: (page: string, listen: boolean) => void): void
   /** play a sound (a data: URL), or stop with null */
   onPlay(fn: (url: string | null) => void): void
+  /** the island is tucked away (true) or back: main lets every service rest meanwhile */
+  tucked(on: boolean): void
   /** a usage limit is near: Pip looks worried */
   onWorry(fn: () => void): void
   /** where dropped files are on disk */

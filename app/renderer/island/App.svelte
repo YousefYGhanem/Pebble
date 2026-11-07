@@ -109,7 +109,8 @@
   const later = (ms: number) => setTimeout(wake, ms)
 
   function scheduleBlink() {
-    setTimeout(() => { blinkAt = performance.now(); wink = Math.random() < 1 / 6; wake(); scheduleBlink() }, 2000 + Math.random() * 4000)
+    // tucked away, Pip is not drawn: no blinks to draw either
+    setTimeout(() => { if (mode !== 'tucked') { blinkAt = performance.now(); wink = Math.random() < 1 / 6; wake() } scheduleBlink() }, 2000 + Math.random() * 4000)
   }
   scheduleBlink()
 
@@ -174,6 +175,9 @@
     const read = () => (battery = { level: Math.round(b.level * 100), charging: b.charging })
     read(); b.addEventListener('levelchange', read); b.addEventListener('chargingchange', read)
   }).catch(() => {})
+
+  // tucked away: every service rests (main), until the island comes back
+  $effect(() => { const on = mode === 'tucked'; if (!scene) window.pebble.tucked(on) })
 
   // opening the island: the Agents page when an agent has something to show, else the page you were on
   $effect(() => {
@@ -479,7 +483,8 @@
 
 {#if view}
   <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <div class="clip" class:reduced bind:this={clip} role="presentation" onclick={onClick} oncontextmenu={onRightClick}>
+  <div class="clip" class:reduced bind:this={clip} role="presentation" onclick={onClick} oncontextmenu={onRightClick}
+    title={mode === 'resting' || mode === 'medium' ? t('i.island.hint') : mode === 'tucked' ? t('i.island.tuckedHint') : undefined}>
     <div class="content mode-{mode}" bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
       {#if mode === 'resting' && chipCount}
         <!-- the resting island's chips, left and right of Pip -->

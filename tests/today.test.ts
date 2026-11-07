@@ -43,13 +43,14 @@ test('the day: tasks add up, usage counts from the first report, a reset keeps w
   expect(daysAt(d, at('2026-11-10T08:00')).yesterday).toBeNull() // older than yesterday: gone
 })
 
-test('rest: deep while away or in a game, light on battery, each as the settings allow', () => {
+test('rest: off while tucked, deep while away or in a game, light on battery, each as the settings allow', () => {
   const all = { away: true, games: true, battery: true }
   expect(restLevel({ away: false, game: false, battery: false }, all)).toBe('awake')
   expect(restLevel({ away: true, game: false, battery: true }, all)).toBe('deep')
   expect(restLevel({ away: false, game: true, battery: false }, all)).toBe('deep')
   expect(restLevel({ away: false, game: false, battery: true }, all)).toBe('light')
   expect(restLevel({ away: true, game: false, battery: false }, { ...all, away: false })).toBe('awake')
+  expect(restLevel({ away: false, game: false, battery: false, tucked: true }, { away: false, games: false, battery: false })).toBe('off') // tucked: always
 })
 
 test('Pip looks worried for a moment when a limit is near', () => {

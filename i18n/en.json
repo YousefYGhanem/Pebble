@@ -319,7 +319,7 @@
   "i.island.focus": "Focus · {time} {state}",
   "i.ask.wantsToUse": "{project} wants to use {tool}",
   "m.tray.open": "Open / close island",
-  "m.tray.tuck": "Tuck away / bring back",
+  "m.tray.tuck": "Tuck away / bring back (or right-click the island)",
   "m.tray.settings": "Settings…",
   "m.tray.update": "Restart to update to {version}",
   "m.tray.restart": "Restart",
@@ -438,5 +438,16 @@
   "colors.done": "Done",
   "colors.error": "Error",
   "colors.question": "Needs you",
-  "colors.radius": "Corner roundness"
+  "colors.radius": "Corner roundness",
+  "i.island.hint": "Right-click to tuck away",
+  "i.island.tuckedHint": "Tucked away (resting): point here to bring it back",
+  "general.tuckHint": "or right-click the island; everything rests while it is tucked away",
+  "welcome.how": "Open, close, tuck away",
+  "demo.openHover": "1. Point at the island to open it",
+  "demo.openClick": "1. Click the island to open it",
+  "demo.close": "2. Move the mouse away to close it",
+  "demo.tuck": "3. Right-click to tuck it away: it rests and uses almost nothing",
+  "demo.back": "4. Point at the thin tab to bring it back",
+  "demo.rightClick": "right-click",
+  "demo.keys": "From anywhere: {toggle} opens it, {tuck} tucks it away."
 }

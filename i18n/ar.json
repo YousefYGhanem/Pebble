@@ -319,7 +319,7 @@
   "i.island.focus": "التركيز · {time} {state}",
   "i.ask.wantsToUse": "{project} يريد استخدام {tool}",
   "m.tray.open": "فتح / إغلاق الجزيرة",
-  "m.tray.tuck": "إخفاء / إظهار",
+  "m.tray.tuck": "طيّ / إعادة (أو انقر بالزر الأيمن على الجزيرة)",
   "m.tray.settings": "الإعدادات…",
   "m.tray.update": "أعد التشغيل للتحديث إلى {version}",
   "m.tray.restart": "إعادة التشغيل",
@@ -438,5 +438,16 @@
   "colors.done": "انتهى",
   "colors.error": "خطأ",
   "colors.question": "يحتاجك",
-  "colors.radius": "استدارة الزوايا"
+  "colors.radius": "استدارة الزوايا",
+  "i.island.hint": "انقر بالزر الأيمن للطيّ",
+  "i.island.tuckedHint": "مطوية (في راحة): أشر هنا لإعادتها",
+  "general.tuckHint": "أو انقر بالزر الأيمن على الجزيرة؛ يرتاح كل شيء ما دامت مطوية",
+  "welcome.how": "افتح، أغلق، اطوِ",
+  "demo.openHover": "1. أشر إلى الجزيرة لفتحها",
+  "demo.openClick": "1. انقر على الجزيرة لفتحها",
+  "demo.close": "2. أبعد الفأرة لإغلاقها",
+  "demo.tuck": "3. انقر بالزر الأيمن لطيّها: ترتاح ولا تستهلك شيئًا تقريبًا",
+  "demo.back": "4. أشر إلى الشريط الرفيع لإعادتها",
+  "demo.rightClick": "زر أيمن",
+  "demo.keys": "من أي مكان: {toggle} يفتحها، و{tuck} يطويها."
 }

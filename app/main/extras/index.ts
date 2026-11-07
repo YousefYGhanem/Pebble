@@ -58,14 +58,15 @@ export class Extras extends EventEmitter {
   /** Music on/off from the settings. */
   applySettings() {
     const on = this.settings().music.enabled
-    this.native.watch('media', on)
-    this.native.watch('audio', on && this.rest !== 'deep')
+    this.native.watch('media', on && this.rest !== 'off') // watching again sends the song playing now
+    this.native.watch('audio', on && !this.deep())
     if (!on && this.state.media) { this.state.media = null; this.state.art = null; this.state.lyrics = null; this.changed() }
     this.peaks()
   }
 
-  /** Resting (rest.ts): 'light' stops the PC readings, 'deep' also the clipboard, the volume and the sound wave. */
+  /** Resting (rest.ts): 'light' stops the PC readings, 'deep' also the clipboard, the volume and the sound wave, 'off' music too. */
   rest: RestLevel = 'awake'
+  private deep = () => this.rest === 'deep' || this.rest === 'off'
   setRest(level: RestLevel) {
     if (level === this.rest) return
     this.rest = level
@@ -76,7 +77,7 @@ export class Extras extends EventEmitter {
   // the sound level only while something plays (the island's wave), and not while resting deeply
   private peaksOn = false
   private peaks() {
-    const on = !!this.state.media?.playing && this.rest !== 'deep'
+    const on = !!this.state.media?.playing && !this.deep()
     if (on !== this.peaksOn) { this.peaksOn = on; this.native.watch('peaks', on) }
   }
 
@@ -134,7 +135,7 @@ export class Extras extends EventEmitter {
   private reading = false
   private async readClipboard() {
     if (!this.settings().clipboard.enabled) { if (this.state.clipboard.length) { this.state.clipboard = []; this.changed() } return }
-    if (this.reading || this.rest === 'deep') return // away or in a game: nothing new gets copied
+    if (this.reading || this.deep()) return // away or in a game: nothing new gets copied
     this.reading = true
     let text = ''
     try {
@@ -168,7 +169,7 @@ export class Extras extends EventEmitter {
   }
 
   private async readRadios() {
-    if (!this.native.available || this.rest === 'deep') return
+    if (!this.native.available || this.deep()) return
     try {
       const list = await this.native.request<{ kind: string; on: boolean }[]>('radios.get')
       const r = { wifi: list.find(x => x.kind === 'wifi')?.on, bluetooth: list.find(x => x.kind === 'bluetooth')?.on }

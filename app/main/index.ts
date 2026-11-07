@@ -300,9 +300,9 @@ function applySettings() {
 }
 
 // ---------- resting: away, a full-screen game, on battery (settings: features.rest) ----------
-let onBattery = false, rest: RestLevel = 'awake'
+let onBattery = false, tucked = false, rest: RestLevel = 'awake'
 function applyRest() {
-  const level = restLevel({ away: sleepy, game: fullscreen.current !== null, battery: onBattery }, store.settings.features.rest)
+  const level = restLevel({ away: sleepy, game: fullscreen.current !== null, battery: onBattery, tucked }, store.settings.features.rest)
   if (level === rest) return
   rest = level
   log.info(`tools ${level === 'awake' ? 'awake' : `resting (${level})`}`)
@@ -379,6 +379,7 @@ function refreshTray() {
 }
 
 ipcMain.on(CH.ready, e => { if (fromIsland(e)) { push(true); if (scene) send(CH.scene, scene) } })
+ipcMain.on(CH.tucked, (e, on: unknown) => { if (fromIsland(e)) { tucked = on === true; applyRest() } })
 ipcMain.on(CH.catchMouse, (e, on: unknown) => {
   if (fromIsland(e)) island!.setIgnoreMouseEvents(on !== true, { forward: true })
 })

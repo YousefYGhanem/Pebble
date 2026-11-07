@@ -89,7 +89,7 @@
           <label class="row"><span>{t('general.startWithWindows')}</span>
             <input type="checkbox" class="switch" checked={s.general.startWithWindows} onchange={() => set('general.startWithWindows', !s.general.startWithWindows)} /></label>
           {#each SHORTCUTS as key}
-            <div class="row"><span>{t(`general.${key}`, { pip })}</span>
+            <div class="row"><span>{t(`general.${key}`, { pip })}{#if key === 'tuckShortcut'}<small>{t('general.tuckHint')}</small>{/if}</span>
               <button class="key" class:rec={recording === key} onclick={() => (recording = recording === key ? null : key)}>
                 {recording === key ? t('general.pressKeys') : s.general[key] || t('general.none')}
               </button></div>
