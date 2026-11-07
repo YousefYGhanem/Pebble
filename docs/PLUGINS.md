@@ -64,7 +64,7 @@ That is this whole connector: it is in [examples/plugins/hacker-news](../example
 | | |
 | --- | --- |
 | `pebble.settings` | the user's settings (secrets left out) |
-| `pebble.every(interval, fn)` | runs `fn` now and then every `'30s'`, `'5m'`, `'1h'` (at least 15 s); errors are logged and shown, the next run still happens |
+| `pebble.every(interval, fn)` | runs `fn` now and then every `'30s'`, `'5m'`, `'1h'` (at least 15 s); errors are logged and shown, the next run still happens. While Pebble rests (tucked away, you are away, a game, on battery) the runs wait, and `fn` runs once when it wakes |
 | `pebble.after(ms, fn)` | runs `fn` once, later |
 | `pebble.fetchJSON(url, options?)` | GET and parse JSON (throws on a non-2xx answer) |
 | `pebble.fetchText(url, options?)` | GET as text |

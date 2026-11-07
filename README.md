@@ -40,12 +40,14 @@ Restart agent sessions that were already running.
 | **OpenCode** (any model, DeepSeek too) | prompt, steps, answer, model, "needs you" | (asks in its own UI) | a plugin file `~/.config/opencode/plugins/pebble.js` |
 | **Aider** | "Aider is waiting for you" | — | `notifications-command` in `~/.aider.conf.yml` (your own one wins) |
 | **DeepSeek Harness** | prompt, steps, answer, "needs you", errors, tokens this session and this week | (asks in its own window) | nothing installed: Pebble reads its session logs in `~/.dsh/sessions` |
-| **Any MCP agent** | your agent's messages and questions | questions (`ask_user`) | `claude mcp add pebble -- "<path>
-ativeoutpebble-native.exe" mcp` (or your agent's MCP config) |
+| **Any MCP agent** | your agent's messages and questions | questions (`ask_user`) | `claude mcp add pebble -- "<path>\native\out\pebble-native.exe" mcp` (or your agent's MCP config) |
 
 Why only Claude Code is answered from the island: Gemini's permission hook can only observe; Cursor treats a missing
 answer as "block" and an "allow" would skip its own allowlist; OpenCode's reply API differs between versions. So those
 keep asking in their own UI and Pebble tells you they wait (with "Jump to terminal").
+
+**Usage alerts**: when Claude Code or Codex passes 80% and 95% of its session or weekly limit, a notification says
+so (with the time it resets) and Pip looks worried for a moment. Settings → General → Notifications switches it off.
 
 **DeepSeek** (and other providers): when Claude Code or OpenCode runs on a DeepSeek model, the island says so
 ("Claude Code · DeepSeek · deepseek-chat"), read from the model name.
@@ -77,6 +79,7 @@ Pip lives in the island. His eyes take the colour of what your agent does, and h
 | Mood | When |
 | --- | --- |
 | focused / asks you / sad | an agent works / needs you / stopped with an error |
+| worried | a CLI just passed 80% or 95% of its session or weekly limit |
 | happy (+ confetti after long tasks) | a task just finished |
 | love (+ hearts) | you answered or replied from the island |
 | curious, eyes follow your mouse | you point at the island (Settings → Look & Pip → Eyes follow my mouse) |
@@ -87,7 +90,8 @@ Pip lives in the island. His eyes take the colour of what your agent does, and h
 He blinks and winks now and then, and chirps (no words; off with `features.sound`). Finished tasks earn outfits
 (glasses 10, cap 25, headphones 50, crown 100) and achievements; seasonal hats come by themselves (`pip.outfit: "auto"`).
 Settings → **Look & Pip** picks an outfit. **Your own outfits**: drop an SVG into `%APPDATA%\Pebble\outfits` (it sits on his
-head) and pick it in the same menu. His colours are the theme tokens `pipBody` and `pipVisor`; his shape is
+head) and pick it in the same menu. **Pip's look** (same page) sets his colours: the theme's (`pipBody`, `pipVisor`),
+lavender, cream or graphite like the app icons, or your own body and visor colours. His shape is
 [pip.ts](app/renderer/island/pip.ts). While `npm run dev` runs, http://localhost:5173/pip-gallery/index.html shows every
 mood live as you edit. Settings → Advanced → Test mode → **Pip: …** plays each mood in the island.
 
@@ -121,12 +125,11 @@ The open island has a page row at the bottom: **Home, Agents, Music, Files, Clip
 
 | Page | What it does |
 | --- | --- |
-| Home | Time and date, Wi-Fi and Bluetooth switches (right-click: Windows' own lists), a tile per page, CPU and memory |
+| Home | Time and date, Wi-Fi and Bluetooth switches (right-click: Windows' own lists), a tile per page, **today with your agents** (tasks done, time worked, files changed, how much of each CLI's week went today; kept in `%APPDATA%\Pebble\today.json`), CPU and memory |
 | Music | Whatever plays on this PC (Spotify, a browser, any player) from Windows' media controls: cover, seekable progress, controls, volume, timed lyrics (LRCLIB). The island shows the cover, the line being sung and a real sound wave; an agent then moves to the split pill |
 | Files | Drop files on the island to keep them on a shelf; drag them out into any app. **Phone**: a QR code for your phone's camera (same Wi-Fi): save what is on the shelf, or "Send to PC" into Downloads |
 | Clipboard | Your last 25 copied texts, in memory only (never on disk); copies marked private by password managers are skipped |
-| Notes | Quick notes, saved as you type (`%APPDATA%Pebble
-otes.json`) |
+| Notes | Quick notes, saved as you type (`%APPDATA%\Pebble\notes.json`) |
 | Focus | A timer; the island shows it as a ring around Pip and chimes at the end |
 
 **Focus guard** (Settings → Extras, off by default): when you open a site or app from `focusGuard.sites` (a word in a
@@ -161,9 +164,9 @@ there moves into encrypted storage (Windows DPAPI) when you save, and the file t
 | Windows apps | – | a meeting in Teams or Zoom, OBS recording… (window titles, nothing leaves the PC) |
 
 **Write your own** in a few lines: [docs/PLUGINS.md](docs/PLUGINS.md) (the example there is
-[examples/plugins/hacker-news](examples/plugins/hacker-news), and the tests run it as written). Each connector runs in
-its own process with only the Pebble API (no files, no other network than the hosts it declares). Pebble asks before
-running one you added, and again when its permissions change.
+[examples/plugins/hacker-news](examples/plugins/hacker-news), and the tests run it as written). A connector runs with
+only the Pebble API (no files, no other network than the hosts it declares): the built-in ones share one process, and
+each one you add gets its own. Pebble asks before running one you added, and again when its permissions change.
 
 ## From scripts: the `pebble` CLI
 
@@ -195,7 +198,7 @@ If the exe is missing, Pebble still runs; game mode and jump to terminal are off
 | Do | What happens |
 | --- | --- |
 | Point at it (or click, with "Open when I point at it" off) | Opens the Agents page; it closes when the mouse leaves (not while you type) |
-| Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line; clicks pass through. Point at the line to bring it back |
+| Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line; clicks pass through, and every service rests (below). Point at the line to bring it back |
 | **Ctrl+Alt+P** | Opens or closes it |
 | An agent needs you | It grows into a card (Allow/Deny, or the answer buttons), even when tucked, plus a Windows notification |
 | Something runs full screen on its screen | It hides (game mode) and comes back after |
@@ -207,6 +210,20 @@ Settings → **Island** switches notch/floating, hover/click, game mode and scre
 animation setting, or forces full/reduced. Settings → Advanced → **Test mode** plays every state without a real session; from a
 terminal, `electron . --scene=plan` does the same (`--scene=off` to stop) and `electron . --quit` quits Pebble.
 
+## Always on, kept light
+
+Pebble runs all day, so it does as little as it can. At rest the island draws no frames; when something moves it
+draws at most 60 a second. Built-in connectors share one process. With an agent working it uses about 6% of one CPU
+core, and about 0.1% while tucked away.
+
+**Rest** (Settings → General → *Rest when*): what nobody needs pauses, and connectors refresh once when Pebble wakes.
+
+| When | What pauses |
+| --- | --- |
+| The island is tucked away (always) | everything: music, volume, sound wave, clipboard, PC readings, Wi-Fi/Bluetooth, connectors. Agents still reach Pebble; a question brings the island back |
+| You are away (as long as Pip takes to fall asleep), or a game runs full screen (with game mode on) | the same, except music |
+| On battery | connectors and PC readings |
+
 ## Make it yours
 
 Everything lives in `%APPDATA%\Pebble` and applies the moment you save:
@@ -214,12 +231,13 @@ Everything lives in `%APPDATA%\Pebble` and applies the moment you save:
 | File | What |
 | --- | --- |
 | `settings.json` | Only what differs from the defaults in [app/shared/settings.ts](app/shared/settings.ts). A broken edit is logged and ignored |
-| `themes/*.json` | Your themes. `custom.json` starts as a copy of the default; select it with `"theme": "custom"` or from Settings → Look & Pip |
+| `themes/*.json` | Your themes. `custom.json` starts as a copy of the default; select it with `"theme": "custom"` or from Settings → Look & Pip, where **Island colours** edits it with a live preview (a change starts from the theme in use) |
 | `logs/pebble.log` | The log (tokens and keys are masked) |
 
 Theme tokens become CSS variables (`fontSize` → `--font-size`; numbers are px). Built-in themes are in [themes/](themes).
 
-**First start** shows a short welcome tour (language, which AIs, terminals, Pip's name); Settings → General shows it
+**First start** shows a short welcome tour (language, which AIs, terminals, Pip's name, and a small demo of opening,
+closing and tucking away the island); Settings → General shows it
 again, or `Pebble --welcome`. **Languages**: English and Arabic, everywhere: the island, Settings, the tour, the tray
 and notifications (Arabic lays Settings and the tour out right to left). The words are in [i18n/](i18n); a language
 is its file there plus a line in [app/shared/i18n.ts](app/shared/i18n.ts), and a missing word falls back to English.
@@ -258,7 +276,8 @@ are used only to say what Pebble works with.
 | Path | Role |
 | --- | --- |
 | `app/main/index.ts` | Startup, IPC handlers, notifications, settings → autostart and shortcuts, `--capture` |
-| `app/main/store.ts`, `history.ts` | settings.json + themes folder (validated, watched); finished turns |
+| `app/main/store.ts`, `history.ts`, `today.ts` | settings.json + themes folder (validated, watched); finished turns; today's summary |
+| `app/main/rest.ts`, `app/shared/today.ts` | When tools rest; usage alerts and the day's counts (pure) |
 | `app/main/agents/hub.ts` | Local server (127.0.0.1, token): hooks, held decisions, reply waits, status line, CLI |
 | `app/main/agents/registry.ts` | Every agent Pebble connects to (Settings and start-up use this list) |
 | `app/main/agents/claude.ts`, `codex.ts`, `gemini.ts`, `cursor.ts`, `opencode.ts`, `aider.ts` | Add/remove Pebble in each agent's config |
@@ -269,7 +288,7 @@ are used only to say what Pebble works with.
 | `app/main/extras/` | Music + lyrics, shelf, clipboard, notes, focus timer, PC stats, radios (`index.ts`); phone drop (`drop.ts`); focus guard (`guard.ts`) |
 | `app/renderer/island/*Page.svelte` | The pages: Home, Agents, Music, Files, Clipboard, Notes, Focus |
 | `app/renderer/guard/` | The focus guard's calm screen |
-| `app/main/connectors/` | The connector host (config, secrets, permissions, webhooks) and the runner each connector process uses |
+| `app/main/connectors/` | The connector host (config, secrets, permissions, webhooks), the runner a connector process uses, and the shared process for built-ins (`shared.ts`) |
 | `plugins/` | The built-in connectors (written with the same SDK as yours) |
 | `docs/PLUGINS.md`, `examples/plugins/` | How to write a connector, and its example |
 | `app/main/island.ts`, `tray.ts`, `log.ts` | Window (fixed, see-through, click-through), tray menu, logging |
