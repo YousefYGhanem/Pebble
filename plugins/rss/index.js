@@ -1,9 +1,11 @@
 // RSS and Atom without a parser library: the <item>/<entry> blocks and their title, link and id.
 function decode(s) {
   // tags go after the entities are decoded (an escaped <b> in a title is a tag too), &amp; last ("&amp;lt;" is the text "&lt;")
-  return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+  let t = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
-    .replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').trim()
+  // until none is left: removing one tag can join the pieces of another ("<scr<b>ipt>")
+  for (let before = ''; before !== t;) { before = t; t = t.replace(/<[^>]+>/g, '') }
+  return t.replace(/&amp;/g, '&').trim()
 }
 
 function parseFeed(xml) {
