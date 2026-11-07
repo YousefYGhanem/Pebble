@@ -61,6 +61,8 @@ export const settingsSchema = z.object({
   clipboard: z.object({ enabled: z.boolean() }),
   focusGuard: z.object({
     enabled: z.boolean(),
+    /** only while a focus timer runs (not paused); off: always */
+    onlyDuringFocus: z.boolean(),
     /** apps (program name) or sites (word in a browser tab's title) */
     sites: z.array(z.string()).max(50),
     snoozeMinutes: z.number().int().min(1).max(120)
@@ -129,7 +131,7 @@ export const DEFAULTS: Settings = {
   },
   music: { enabled: true, lyrics: true },
   clipboard: { enabled: true },
-  focusGuard: { enabled: false, sites: ['youtube', 'tiktok', 'instagram', 'reddit', 'netflix', 'twitch', 'facebook'], snoozeMinutes: 5 },
+  focusGuard: { enabled: false, onlyDuringFocus: true, sites: ['youtube', 'tiktok', 'instagram', 'reddit', 'netflix', 'twitch', 'facebook'], snoozeMinutes: 5 },
   pip: { name: 'Pip', outfit: 'auto', followMouse: true, look: 'theme', body: '#ece9f6', visor: '#15151c', sleepAfterMinutes: 10 },
   motion: { mode: 'system', speed: 1 },
   agents: {

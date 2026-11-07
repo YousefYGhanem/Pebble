@@ -141,7 +141,7 @@ const extensionDir = app.isPackaged ? path.join(process.resourcesPath, 'extensio
 useDsh(new DshWatch({ event: e => hub.ingest(e, 'dsh'), usage: u => hub.setUsage('dsh', u) }))
 const chatApps = new ChatApps(hub, extensionKey, { native, followed: () => store.settings.chatApps.desktop, problem: (title, body) => toast(title, body) })
 const drop = new DropServer(() => extras.state.shelf, app.getPath('downloads'))
-const guard = new FocusGuard(native, () => store.settings, guardPreload(), guardPage)
+const guard = new FocusGuard(native, () => store.settings, () => !!extras.state.focus && extras.state.focus.left === undefined, guardPreload(), guardPage)
 const fullscreen = new FullscreenWatch(native)
 const agents = () => adapters({ port: store.settings.server.port, token, nativeExe: nativeExe(app.getAppPath(), app.isPackaged) })
 const documents = () => app.getPath('documents')
@@ -546,7 +546,7 @@ app.whenReady().then(async () => {
   // Pip dances while music plays, and falls asleep when you are away
   extras.start()
   native.watch('drag', true, 'drop-target')
-  extras.on('change', push)
+  extras.on('change', () => { push(); guard.apply() }) // the focus timer started, paused or ended
   extras.on('peak', (p: number) => send(CH.peak, p))
   extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) })))
   drop.on('change', push)

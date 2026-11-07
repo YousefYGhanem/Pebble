@@ -318,6 +318,8 @@
         <section>
           <label class="row"><span>{t('guard.enabled')}</span>
             <input type="checkbox" class="switch" checked={s.focusGuard.enabled} onchange={() => set('focusGuard.enabled', !s.focusGuard.enabled)} /></label>
+          <label class="row"><span>{t('guard.onlyDuringFocus')}<small>{t('guard.onlyDuringFocusHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.focusGuard.onlyDuringFocus} onchange={() => set('focusGuard.onlyDuringFocus', !s.focusGuard.onlyDuringFocus)} /></label>
           <label class="col"><span>{t('guard.sites')}<small>{t('guard.sitesHint')}</small></span>
             <textarea rows="5" value={s.focusGuard.sites.join('\n')}
               onchange={e => set('focusGuard.sites', text(e).split('\n').map(x => x.trim()).filter(Boolean))}></textarea></label>

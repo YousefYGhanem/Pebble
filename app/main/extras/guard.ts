@@ -23,6 +23,9 @@ export function matchSite(w: { title?: string; process?: string }, sites: string
   return null
 }
 
+/** Whether the guard acts now: switched on, and (unless set to always) while a focus timer runs. */
+export const guardActive = (g: Settings['focusGuard'], focusing: boolean) => g.enabled && (!g.onlyDuringFocus || focusing)
+
 /**
  * The focus guard ("one sec"): when you open a site or app from your list, a calm screen asks you to breathe once; then
  * go back (the window is minimised) or open it anyway (left alone for snoozeMinutes). Looks only at the title and
@@ -34,7 +37,7 @@ export class FocusGuard {
   private shownFor = 0 // the window it is shown for (hwnd)
   today: Record<string, number> = {}
 
-  constructor(private native: Native, private settings: () => Settings, private preload: string, private page: () => { url?: string; file: string }) {
+  constructor(private native: Native, private settings: () => Settings, private focusing: () => boolean, private preload: string, private page: () => { url?: string; file: string }) {
     native.on('foreground', (w: WinInfo | null) => this.check(w))
     ipcMain.on('guard:choose', (e, choice: unknown) => {
       if (!this.win || e.sender !== this.win.webContents) return
@@ -42,12 +45,13 @@ export class FocusGuard {
     })
   }
 
-  apply() { this.native.watch('foreground', this.settings().focusGuard.enabled, 'guard') }
+  /** Watches the window in front only while the guard may act (call again when the settings or the focus timer change). */
+  apply() { this.native.watch('foreground', guardActive(this.settings().focusGuard, this.focusing()), 'guard') }
 
   private site = ''
   private check(w: WinInfo | null) {
     const g = this.settings().focusGuard
-    if (!g.enabled || !w || this.win) return
+    if (!guardActive(g, this.focusing()) || !w || this.win) return
     const site = matchSite(w, g.sites)
     if (!site || (this.snoozed.get(site) ?? 0) > Date.now()) return
     this.site = site

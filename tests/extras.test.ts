@@ -4,7 +4,7 @@ import path from 'node:path'
 import { describe, test, expect } from 'vitest'
 import { focusLeft, lyricIndex, positionNow, type Media } from '../app/shared/extras'
 import { Lyrics, parseLrc, plainTitle } from '../app/main/extras/lyrics'
-import { matchSite } from '../app/main/extras/guard'
+import { guardActive, matchSite } from '../app/main/extras/guard'
 import { DropServer, lanAddress, safeName } from '../app/main/extras/drop'
 import { validAction } from '../app/main/extras'
 
@@ -113,4 +113,12 @@ describe.skipIf(!lanAddress())('phone drop server', () => {
     } finally { drop.stop() }
     expect(drop.state).toBeNull()
   })
+})
+
+test('focus guard: only while a focus timer runs, unless set to always', () => {
+  const g = { enabled: true, onlyDuringFocus: true, sites: [], snoozeMinutes: 5 }
+  expect(guardActive(g, false)).toBe(false)
+  expect(guardActive(g, true)).toBe(true)
+  expect(guardActive({ ...g, onlyDuringFocus: false }, false)).toBe(true)
+  expect(guardActive({ ...g, enabled: false }, true)).toBe(false)
 })
