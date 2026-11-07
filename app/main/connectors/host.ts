@@ -193,6 +193,15 @@ export class ConnectorHost extends EventEmitter {
       setTimeout(() => void this.start(id), Math.min(60_000, 2000 * 2 ** n)).unref()
     })
     child.post({ type: 'init', manifest: f.manifest, file: path.join(f.dir, f.manifest.main), settings, secrets: this.secrets[id] ?? {}, store })
+    if (this.paused) child.post({ type: 'pause', on: true })
+  }
+
+  /** Resting: every connector's regular jobs wait (each runs once when it ends). */
+  private paused = false
+  pause(on: boolean) {
+    if (on === this.paused) return
+    this.paused = on
+    for (const child of this.running.values()) child.post({ type: 'pause', on })
   }
 
   stop(id: string) {

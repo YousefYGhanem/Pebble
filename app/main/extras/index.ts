@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { EventEmitter } from 'node:events'
 import { app, clipboard, nativeImage, shell } from 'electron'
+import type { RestLevel } from '../rest'
 import type { Action, ExtrasState, Media, Note, ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
 import type { Native } from '../native'
@@ -58,8 +59,25 @@ export class Extras extends EventEmitter {
   applySettings() {
     const on = this.settings().music.enabled
     this.native.watch('media', on)
-    this.native.watch('audio', on)
-    if (!on && this.state.media) { this.state.media = null; this.state.art = null; this.state.lyrics = null; this.native.watch('peaks', false); this.changed() }
+    this.native.watch('audio', on && this.rest !== 'deep')
+    if (!on && this.state.media) { this.state.media = null; this.state.art = null; this.state.lyrics = null; this.changed() }
+    this.peaks()
+  }
+
+  /** Resting (rest.ts): 'light' stops the PC readings, 'deep' also the clipboard, the volume and the sound wave. */
+  rest: RestLevel = 'awake'
+  setRest(level: RestLevel) {
+    if (level === this.rest) return
+    this.rest = level
+    this.applySettings()
+    if (level === 'awake') this.sampleSystem()
+  }
+
+  // the sound level only while something plays (the island's wave), and not while resting deeply
+  private peaksOn = false
+  private peaks() {
+    const on = !!this.state.media?.playing && this.rest !== 'deep'
+    if (on !== this.peaksOn) { this.peaksOn = on; this.native.watch('peaks', on) }
   }
 
   // ---------- music ----------
@@ -80,8 +98,7 @@ export class Extras extends EventEmitter {
         }
       }
     }
-    // the sound level only while something plays (the island's wave)
-    if (!!this.state.media?.playing !== wasPlaying) this.native.watch('peaks', !!this.state.media?.playing)
+    if (!!this.state.media?.playing !== wasPlaying) this.peaks()
     this.changed()
   }
 
@@ -117,7 +134,7 @@ export class Extras extends EventEmitter {
   private reading = false
   private async readClipboard() {
     if (!this.settings().clipboard.enabled) { if (this.state.clipboard.length) { this.state.clipboard = []; this.changed() } return }
-    if (this.reading) return
+    if (this.reading || this.rest === 'deep') return // away or in a game: nothing new gets copied
     this.reading = true
     let text = ''
     try {
@@ -134,6 +151,7 @@ export class Extras extends EventEmitter {
   // ---------- PC ----------
 
   private sampleSystem() {
+    if (this.rest !== 'awake') return
     const now = os.cpus()
     let busy = 0, total = 0
     now.forEach((c, i) => {
@@ -150,7 +168,7 @@ export class Extras extends EventEmitter {
   }
 
   private async readRadios() {
-    if (!this.native.available) return
+    if (!this.native.available || this.rest === 'deep') return
     try {
       const list = await this.native.request<{ kind: string; on: boolean }[]>('radios.get')
       const r = { wifi: list.find(x => x.kind === 'wifi')?.on, bluetooth: list.find(x => x.kind === 'bluetooth')?.on }

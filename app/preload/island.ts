@@ -20,6 +20,7 @@ const api: IslandApi = {
   act: a => ipcRenderer.send(CH.act, a),
   onPage: fn => { ipcRenderer.on(CH.page, (_e, p: string, listen: boolean) => fn(p, listen)) },
   onPlay: fn => { ipcRenderer.on(CH.play, (_e, url: string | null) => fn(url)) },
+  onWorry: fn => { ipcRenderer.on(CH.worry, () => fn()) },
   onPeak: fn => { ipcRenderer.on(CH.peak, (_e, p: number) => fn(p)) },
   pathsOf: files => files.map(f => webUtils.getPathForFile(f)).filter(Boolean)
 }

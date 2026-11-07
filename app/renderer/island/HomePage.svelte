@@ -9,8 +9,16 @@
   import type { Widget } from '../../shared/connectors'
   import WidgetCard from './WidgetCard.svelte'
   import { locale, t } from '../i18n.svelte'
+  import { AGENT_NAMES, type Agent } from '../../shared/state'
+  import { daysAt, spentOf, type Days, type Spent } from '../../shared/today'
 
-  let { sessions, extras, widgets = [], now, act, go }: { sessions: Session[]; extras: ExtrasState; widgets?: Widget[]; now: number; act: (a: Action) => void; go: (p: Page) => void } = $props()
+  let { sessions, extras, widgets = [], day, now, act, go }: { sessions: Session[]; extras: ExtrasState; widgets?: Widget[]; day: Days; now: number; act: (a: Action) => void; go: (p: Page) => void } = $props()
+  // what your agents did today (yesterday's, until today has something)
+  const days = $derived(daysAt(day, now))
+  const shownDay = $derived(days.today.tasks || Object.values(days.today.spent).some(x => spentOf(x!) > 0) ? { d: days.today, label: t('i.day.today') } : days.yesterday ? { d: days.yesterday, label: t('i.day.yesterday') } : null)
+  const span = (s: number) => s >= 3600 ? t('i.day.h', { h: Math.floor(s / 3600), m: Math.round((s % 3600) / 60) }) : t('i.day.m', { m: Math.max(1, Math.round(s / 60)) })
+  const compact = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n)
+  const spentLine = (a: string, s: Spent) => s.unit === '%' ? t('i.day.week', { agent: AGENT_NAMES[a as Agent], n: Math.round(spentOf(s)) }) : t('i.day.tokens', { agent: AGENT_NAMES[a as Agent], n: compact(spentOf(s)) })
   const cards = $derived(widgets.filter(w => w.kind === 'card').slice(0, 4))
   const date = $derived(new Date(now))
   const busy = $derived(sessions.filter(s => s.status === 'running' || s.status === 'question'))
@@ -75,6 +83,19 @@
     </div>
   {/if}
 
+  {#if shownDay}
+    {@const d = shownDay.d}
+    <button class="day" onclick={() => go('agents')}>
+      <span class="label"><Icon name="agents" size={13} />{shownDay.label}</span>
+      <span class="facts">
+        <span class="value">{t('i.day.done', { n: d.tasks })}</span>
+        {#if d.seconds}<span>{t('i.day.time', { time: span(d.seconds) })}</span>{/if}
+        {#if d.files}<span>{t('i.day.files', { n: d.files })}</span>{/if}
+        {#each Object.entries(d.spent) as [a, s]}{#if spentOf(s!) > 0}<span class="muted">{spentLine(a, s!)}</span>{/if}{/each}
+      </span>
+    </button>
+  {/if}
+
   <div class="system muted">
     <span>{t('i.home.cpu', { n: extras.system.cpu })}</span><span>{t('i.home.memory', { n: extras.system.ram })}</span>
   </div>
@@ -94,5 +115,8 @@
   .music { display: flex; gap: 8px; align-items: center; min-width: 0; }
   .music img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex: none; }
   .playpause { position: absolute; right: 8px; top: 8px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--background); }
+  .day { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; padding: 10px 12px; border-radius: 16px; background: #ffffff0d; }
+  .day:hover { background: #ffffff17; }
+  .facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9em; }
   .system { display: flex; gap: 16px; font-size: 0.85em; padding-bottom: 6px; }
 </style>

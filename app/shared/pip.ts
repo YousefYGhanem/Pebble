@@ -30,6 +30,8 @@ export interface MoodInput {
   playing: boolean
   /** the mouse is on the island */
   hovering: boolean
+  /** a CLI just passed 80% or 95% of its limit */
+  worriedAt?: number
 }
 
 /** What Pip feels right now. Short reactions (pokes, love, happy) win over the agent's state, which wins over the rest. */
@@ -39,6 +41,7 @@ export function moodFor(i: MoodInput): Mood {
   if (pokes >= 3) return 'grumpy'
   if (i.now - i.lovedAt < 2500) return 'love'
   if (i.now - i.happyAt < 3000) return 'happy'
+  if (i.now - (i.worriedAt ?? 0) < 4000) return 'alert' // a usage limit is near
   if (i.status === 'error') return 'sad'
   if (i.status === 'question') return 'alert'
   if (i.status === 'running') return 'focused'

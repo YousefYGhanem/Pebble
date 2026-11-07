@@ -3,7 +3,7 @@
   // sends the whole view back after each change, so what you see is always what is saved.
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t, tOr } from '../i18n.svelte'
-  import { accelerator, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
+  import { accelerator, THEME_COLORS, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
   import { CHIPS } from '../../shared/settings'
   import { SCENES, type Scene } from '../../shared/island'
   import { OUTFITS, PIP_LOOKS, pipColors, type PipLookId } from '../../shared/pip'
@@ -112,6 +112,15 @@
             <input type="checkbox" class="switch" checked={s.features.sound} onchange={() => set('features.sound', !s.features.sound)} /></label>
           <label class="row"><span>{t('notify.doneSeconds')}<small>{t('unit.seconds')}</small></span>
             <input type="number" min="1" max="600" value={s.features.doneSeconds} onchange={e => set('features.doneSeconds', num(e))} /></label>
+          <label class="row"><span>{t('notify.usage')}<small>{t('notify.usageHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.features.usageAlerts} onchange={() => set('features.usageAlerts', !s.features.usageAlerts)} /></label>
+        </section>
+        <h2>{t('rest.title')} <span class="muted">· {t('rest.hint')}</span></h2>
+        <section>
+          {#each ['away', 'games', 'battery'] as const as k}
+            <label class="row"><span>{t(`rest.${k}`)}{#if k === 'battery'}<small>{t('rest.batteryHint')}</small>{/if}</span>
+              <input type="checkbox" class="switch" checked={s.features.rest[k]} onchange={() => set(`features.rest.${k}`, !s.features.rest[k])} /></label>
+          {/each}
         </section>
 
       {:else if tab === 'island'}
@@ -160,12 +169,26 @@
         </section>
 
       {:else if tab === 'look'}
+        {@const tok = v.theme.tokens}
         <h1>{t('tab.look')}</h1>
         <section>
           <label class="row"><span>{t('look.theme')}</span>
             <select value={s.theme} onchange={e => set('theme', text(e))}>
               {#each v.themes as th}<option value={th.id}>{tOr(`theme.${th.id}`, th.name)}</option>{/each}
             </select></label>
+          <div class="col"><span>{t('colors.title')}<small>{t('colors.hint')}</small></span>
+            <div class="island-preview" style:background={tok.background} style:color={tok.text} style:border-radius="{tok.radius}px">
+              {#each ['ready', 'running', 'done', 'error', 'question'] as const as st}<i style:background={tok[st]}></i>{/each}
+              <b>Claude Code</b><span style:color={tok.muted}>{t('colors.sample')}</span>
+              <em style:background={tok.accent}></em>
+            </div>
+            <div class="swatches">
+              {#each THEME_COLORS as k}
+                <label class="swatch"><input type="color" value={tok[k]} onchange={e => act({ do: 'theme.edit', tokens: { [k]: text(e) } })} /><span>{t(`colors.${k}`)}</span></label>
+              {/each}
+            </div></div>
+          <label class="row"><span>{t('colors.radius')}<small>{tok.radius}px</small></span>
+            <input type="range" min="0" max="40" step="1" value={tok.radius} onchange={e => act({ do: 'theme.edit', tokens: { radius: num(e) } })} /></label>
           <div class="row"><span>{t('look.motion')}</span>
             <div class="seg">
               {#each ['system', 'full', 'reduced'] as const as m}
@@ -444,6 +467,13 @@
   .error, .problem { border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; background: color-mix(in srgb, var(--error) 18%, transparent); }
   .problem { margin: 0 0 8px; font-size: 13px; }
   .icons { display: flex; gap: 10px; }
+  .island-preview { display: flex; align-items: center; gap: 8px; padding: 10px 16px; max-width: 420px; font-size: 13px; border: 1px solid #ffffff14; }
+  .island-preview i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .island-preview b { margin-inline-start: 4px; }
+  .island-preview em { margin-inline-start: auto; width: 26px; height: 14px; border-radius: 7px; flex: none; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+  .swatch { display: flex; align-items: center; gap: 6px; font-size: 0.9em; }
+  .swatch input { width: 30px; height: 24px; padding: 0; border: none; background: none; }
   .icon { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 14px; border: 2px solid transparent; }
   .icon.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
   .pickbar { display: flex; gap: 8px; align-items: center; }

@@ -1,4 +1,5 @@
 import type { Agent, Session } from './state'
+import type { Days } from './today'
 import type { Settings, Theme } from './settings'
 import type { Scene } from './island'
 import type { Action, ExtrasState } from './extras'
@@ -24,7 +25,8 @@ export const CH = {
   act: 'island:act',
   peak: 'island:peak',
   page: 'island:page',
-  play: 'island:play'
+  play: 'island:play',
+  worry: 'island:worry'
 } as const
 
 /** Your decision on what a session asks. */
@@ -80,6 +82,8 @@ export interface IslandState {
   widgets: Widget[]
   connectors: ConnectorInfo[]
   chat: ChatState
+  /** what your agents did today and yesterday (the Home page's summary) */
+  day: Days
 }
 
 /** What window.pebble offers the island renderer (app/preload/island.ts). */
@@ -115,6 +119,8 @@ export interface IslandApi {
   onPage(fn: (page: string, listen: boolean) => void): void
   /** play a sound (a data: URL), or stop with null */
   onPlay(fn: (url: string | null) => void): void
+  /** a usage limit is near: Pip looks worried */
+  onWorry(fn: () => void): void
   /** where dropped files are on disk */
   pathsOf(files: File[]): string[]
 }

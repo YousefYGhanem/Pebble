@@ -72,6 +72,18 @@ export class Store extends EventEmitter {
     this.emit('change')
   }
 
+  /**
+   * Your own colours (Settings → Look): themes/custom.json, started from the theme in use, and selected.
+   * The tokens are checked by validSettingsAction (colours, radius) and again by the theme schema here.
+   */
+  editTheme(tokens: Partial<Theme['tokens']>) {
+    const base = this.theme
+    const next = themeSchema.parse({ ...base, name: 'Custom', tokens: { ...base.tokens, ...tokens } })
+    writeJsonAtomic(path.join(this.themesDir, 'custom.json'), next)
+    if (this.settings.theme !== 'custom') this.update({ theme: 'custom' })
+    else { this.load(); this.emit('change') }
+  }
+
   /** Watches settings.json and the themes folder (Windows fires several events per save: settle for 150 ms). */
   watch() {
     const reload = () => { clearTimeout(this.timer); this.timer = setTimeout(() => { this.load(); this.emit('change') }, 150) }

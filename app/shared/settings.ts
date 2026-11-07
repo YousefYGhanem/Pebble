@@ -103,6 +103,10 @@ export const settingsSchema = z.object({
     sound: z.boolean(),
     /** Windows notifications when an agent finishes or needs you */
     toasts: z.boolean(),
+    /** a notification (and a worried Pip) when a CLI passes 80% and 95% of its session or week */
+    usageAlerts: z.boolean(),
+    /** pause what nobody needs while you are away, a game runs full screen, or the PC is on battery */
+    rest: z.object({ away: z.boolean(), games: z.boolean(), battery: z.boolean() }),
     doneSeconds: z.number().min(1).max(600)
   }),
   /** Pip's chat: who answers (API keys are kept encrypted, outside this file); model '' = the provider's default */
@@ -133,7 +137,7 @@ export const DEFAULTS: Settings = {
     cursor: { enabled: true }, opencode: { enabled: true }, aider: { enabled: true }, dsh: { enabled: true }
   },
   terminals: { minSeconds: 10 },
-  features: { sound: true, toasts: true, doneSeconds: 8 },
+  features: { sound: true, toasts: true, usageAlerts: true, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
   chat: { provider: 'claude-cli', model: '', readAloud: false },
   chatApps: { desktop: [] },
   server: { port: 47901 }

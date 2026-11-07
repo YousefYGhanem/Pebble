@@ -2,9 +2,9 @@ import fs from 'node:fs'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeImage, Notification, powerMonitor, safeStorage, screen, shell, utilityProcess } from 'electron'
-import { CH, type Answer, type IslandState } from '../shared/ipc'
+import { CH, type Answer, type IslandState, type Usage } from '../shared/ipc'
 import { SCENES, type Scene } from '../shared/island'
-import { AGENT_NAMES, type Session } from '../shared/state'
+import { AGENT_NAMES, type Agent, type Session } from '../shared/state'
 import { initLog, logger } from './log'
 import { Store } from './store'
 import { Hub, loadToken } from './agents/hub'
@@ -15,6 +15,9 @@ import { createIsland, islandDisplay, placeIsland } from './island'
 import { FullscreenWatch } from './fullscreen'
 import { Native, nativeExe } from './native'
 import { History } from './history'
+import { Today } from './today'
+import { restLevel, type RestLevel } from './rest'
+import { emptyDay, usageAlerts } from '../shared/today'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
 import { buildTray } from './tray'
@@ -63,7 +66,7 @@ const captureDir = process.argv.find(a => a.startsWith('--capture='))?.slice(10)
 if (captureDir) {
   app.whenReady().then(async () => {
     const win = createIsland(store.settings, true)
-    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { claude: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: NO_EXTRAS, chat: { provider: 'Claude Code', ready: true, messages: [], busy: false } } satisfies IslandState))
+    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { claude: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: NO_EXTRAS, chat: { provider: 'Claude Code', ready: true, messages: [], busy: false }, day: { today: { ...emptyDay(Date.now()), tasks: 6, seconds: 5400, files: 14, agents: { claude: { tasks: 6, seconds: 5400 } }, spent: { claude: { unit: '%', base: 20, prev: 31, acc: 0 } } }, yesterday: null } } satisfies IslandState))
     await new Promise<void>(r => win.webContents.once('did-finish-load', () => r()))
     await new Promise(r => setTimeout(r, 1500)) // hello
     fs.mkdirSync(captureDir, { recursive: true })
@@ -125,6 +128,7 @@ const connectors = new ConnectorHost({
   windows: () => native.request('windows.list')
 })
 const history = new History(userData)
+const today = new Today(userData)
 const pip = new PipStore(userData)
 let sleepy = false
 const native = new Native(nativeExe(app.getAppPath(), app.isPackaged))
@@ -158,7 +162,7 @@ function sendState() {
   const state: IslandState = { sessions: hub.list(), settings: store.settings, theme: store.theme, usage: hub.usage, history: history.items,
     pip: { done: pip.stats.done, achievements: pip.stats.achievements, custom: pip.custom, sleepy, playing: !!extras.state.media?.playing },
     extras: { ...extras.state, drop: drop.state },
-    widgets: [...connectors.widgets.values()], connectors: connectors.list(), chat: chat.state() }
+    widgets: [...connectors.widgets.values()], connectors: connectors.list(), chat: chat.state(), day: today.view() }
   const json = JSON.stringify(state)
   if (json === lastState) return
   lastState = json
@@ -292,6 +296,31 @@ function applySettings() {
   extras.applySettings()
   guard.apply()
   updateVisibility()
+  applyRest()
+}
+
+// ---------- resting: away, a full-screen game, on battery (settings: features.rest) ----------
+let onBattery = false, rest: RestLevel = 'awake'
+function applyRest() {
+  const level = restLevel({ away: sleepy, game: fullscreen.current !== null, battery: onBattery }, store.settings.features.rest)
+  if (level === rest) return
+  rest = level
+  log.info(`tools ${level === 'awake' ? 'awake' : `resting (${level})`}`)
+  extras.setRest(level)
+  connectors.pause(level !== 'awake')
+}
+
+// ---------- usage alerts: 80% and 95% of a CLI's session or week ----------
+function usageAlert(agent: Agent, prev: Usage | undefined, next: Usage) {
+  if (!store.settings.features.usageAlerts) return
+  for (const a of usageAlerts(prev, next)) {
+    const lang = store.settings.general.language
+    const at = new Date(a.resetsAt)
+    const when = a.window === 'fiveHour' ? at.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' })
+      : at.toLocaleString(lang, { weekday: 'long', hour: '2-digit', minute: '2-digit' })
+    toast(tr(a.window === 'fiveHour' ? 'm.usageSession' : 'm.usageWeek', { agent: AGENT_NAMES[agent], n: a.level }), a.resetsAt ? tr('m.usageResets', { when }) : '')
+    send(CH.worry)
+  }
 }
 
 function playScene(s: Scene | null) {
@@ -321,6 +350,7 @@ const settingsWin = new SettingsWindow({
     scene
   }),
   update: patch => { try { store.update(patch) } catch (err) { return (err as Error).message } },
+  editTheme: tokens => { try { store.editTheme(tokens) } catch (err) { return (err as Error).message } },
   toggleAgent: id => { const a = agents().find(x => x.id === id); if (a) setConnected(a, !connected(a)) },
   toggleTerminal: id => { const sh = terminals.shells(documents()).find(x => x === id); if (sh) setTerminal(sh, !terminals.installed(sh, documents())) },
   toggleConnector: id => connectors.setEnabled(id, !connectors.list().find(c => c.id === id)?.enabled),
@@ -534,7 +564,7 @@ app.whenReady().then(async () => {
   drop.on('received', (paths: string[]) => { void extras.shelve(paths); toast(tr('m.fromPhone'), paths.map(p => path.basename(p)).join(', ')) })
   setInterval(() => {
     const now = powerMonitor.getSystemIdleTime() >= store.settings.pip.sleepAfterMinutes * 60
-    if (now !== sleepy) { sleepy = now; push() }
+    if (now !== sleepy) { sleepy = now; push(); applyRest() }
   }, 20_000).unref()
   // your own outfits: dropping an SVG in the folder shows it right away
   try { fs.watch(pip.outfitsDir, () => { pip.loadOutfits(); refreshTray(); push() }) } catch {}
@@ -569,8 +599,13 @@ app.whenReady().then(async () => {
     const s = hub.sessions.get(id)
     if (s) toast(tr('m.needsYou', { agent: agentName(s), project: s.project }), s.ask?.kind === 'plan' ? tr('m.planReady') : s.detail, id)
   })
+  hub.on('usage', (agent: Agent, prev: Usage | undefined, next: Usage) => { today.usage(agent, next); usageAlert(agent, prev, next) })
+  onBattery = powerMonitor.isOnBatteryPower()
+  powerMonitor.on('on-battery', () => { onBattery = true; applyRest() })
+  powerMonitor.on('on-ac', () => { onBattery = false; applyRest() })
   hub.on('finished', (s: Session) => {
     history.add(s)
+    if (s.agent !== 'cli' && s.prompt) today.task({ agent: s.agent, seconds: s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0, files: s.files.length })
     if (s.agent !== 'cli' && s.prompt) {
       for (const id of pip.finish(s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0)) {
         toast(tr('m.earned', { name: store.settings.pip.name }), translateOr(store.settings.general.language, `o.${id}`, ACHIEVEMENTS.find(a => a.id === id)?.name ?? id))
@@ -584,6 +619,7 @@ app.whenReady().then(async () => {
     if (id === null) shownAnyway = false
     log.info(id === null ? 'nothing full screen' : `full screen on display ${id}`)
     updateVisibility()
+    applyRest()
   })
   store.on('change', () => { applySettings(); refreshTray(); push() })
   updater.on('change', (s: { state: string; version?: string }) => {

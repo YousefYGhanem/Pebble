@@ -12,6 +12,8 @@ export interface SettingsDeps {
   view(): Omit<SettingsView, 'error'>
   /** saves a settings.json change; returns the problem in words when it was refused */
   update(patch: Record<string, unknown>): string | undefined
+  /** your own colours (themes/custom.json); the problem in words when refused */
+  editTheme(tokens: Record<string, string | number>): string | undefined
   toggleAgent(id: string): void
   toggleTerminal(id: string): void
   toggleConnector(id: string): Promise<void>
@@ -99,6 +101,7 @@ export class SettingsWindow {
     try {
       switch (a.do) {
         case 'update': this.error = this.d.update(a.patch); break
+        case 'theme.edit': this.error = this.d.editTheme(a.tokens); break
         case 'agent': this.d.toggleAgent(a.id); break
         case 'terminal': this.d.toggleTerminal(a.id); break
         case 'connector': await this.d.toggleConnector(a.id); break

@@ -23,6 +23,7 @@ export type FromMain =
   | { type: 'webhook'; body: unknown }
   | { type: 'windows'; list: { title: string; process: string }[] }
   | { type: 'stop' }
+  | { type: 'pause'; on: boolean }
 
 type Auth = string | { header: string; secret: string; prefix?: string }
 interface FetchOptions { method?: string; headers?: Record<string, string>; body?: string; auth?: Auth }
@@ -50,6 +51,9 @@ export function makeApi(o: {
   const { manifest, send } = o
   const doFetch = o.fetch ?? fetch
   const timers: NodeJS.Timeout[] = []
+  // resting (away, in a game, on battery): the regular jobs wait, and each runs once when Pebble wakes
+  let paused = false
+  const jobs: (() => unknown)[] = []
   let webhook: ((body: unknown) => unknown) | undefined
   let windowsWaiter: ((list: { title: string; process: string }[]) => void) | undefined
   const store = { ...o.store }
@@ -97,8 +101,10 @@ export function makeApi(o: {
   const api = {
     settings: Object.freeze({ ...o.settings }),
     every(every: string | number, fn: () => unknown) {
-      void safely(fn)
-      timers.push(setInterval(() => void safely(fn), interval(every)))
+      const ms = interval(every)
+      jobs.push(fn)
+      if (!paused) void safely(fn)
+      timers.push(setInterval(() => { if (!paused) void safely(fn) }, ms))
     },
     after(ms: number, fn: () => unknown) { timers.push(setTimeout(() => void safely(fn), Math.max(0, ms))) },
     fetch: request,
@@ -146,7 +152,8 @@ export function makeApi(o: {
     api: Object.freeze(api),
     webhook: (body: unknown) => { if (webhook) void safely(() => webhook!(body)) },
     windows: (list: { title: string; process: string }[]) => { windowsWaiter?.(list); windowsWaiter = undefined },
-    stop: () => timers.forEach(t => clearTimeout(t))
+    stop: () => timers.forEach(t => clearTimeout(t)),
+    pause: (on: boolean) => { if (paused && !on) for (const fn of jobs) void safely(fn); paused = on }
   }
 }
 
@@ -182,6 +189,7 @@ if (port) {
       try { await startPlugin(fs.readFileSync(data.file, 'utf8'), data.file, handle.api); send({ type: 'ready' }) }
       catch (err) { handle.stop(); plugins.delete(id); send({ type: 'log', level: 'error', text: `could not start: ${(err as Error).message}` }); send({ type: 'exit', code: 1 }) }
     } else if (data.type === 'stop') { plugins.get(id)?.stop(); plugins.delete(id) }
+    else if (data.type === 'pause') plugins.get(id)?.pause(data.on)
     else if (data.type === 'webhook') plugins.get(id)?.webhook(data.body)
     else if (data.type === 'windows') plugins.get(id)?.windows(data.list)
   })

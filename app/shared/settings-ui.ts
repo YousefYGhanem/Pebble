@@ -56,6 +56,10 @@ export type SettingsAction =
   | { do: 'chat.models' }
   | { do: 'connector.pick'; id: string; key: string }
   | { do: 'connector.pickClose' }
+  | { do: 'theme.edit'; tokens: Record<string, string | number> }
+
+/** the island's colours you can change in Settings (Look → Colours) */
+export const THEME_COLORS = ['background', 'text', 'muted', 'accent', 'ready', 'running', 'done', 'error', 'question'] as const
 
 const OPEN = ['settings', 'themes', 'log', 'connectors', 'plugins', 'outfits', 'extension']
 
@@ -72,6 +76,8 @@ export function validSettingsAction(a: unknown): a is SettingsAction {
     case 'history.clear': case 'restart': case 'quit': case 'copyExtensionKey': case 'diagnose': case 'copyDiagnostics': case 'welcome': case 'welcome.clicked': case 'welcome.done': case 'update.check': case 'update.install': return true
     case 'scene': return o.scene === null || typeof o.scene === 'string'
     case 'chat.models': case 'connector.pickClose': return true
+    case 'theme.edit': return !!o.tokens && typeof o.tokens === 'object' && Object.entries(o.tokens).every(([k, v]) =>
+      k === 'radius' ? typeof v === 'number' && v >= 0 && v <= 40 : (THEME_COLORS as readonly string[]).includes(k) && typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v))
     case 'connector.pick': return id && typeof o.key === 'string' && /^\w{1,40}$/.test(o.key)
     case 'chat.key': return typeof o.provider === 'string' && typeof o.value === 'string' && o.value.length < 500
     default: return false

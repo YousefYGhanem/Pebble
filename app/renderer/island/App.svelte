@@ -98,7 +98,7 @@
 
   // ---------- Pip ----------
   const lookX = new Spring(0), lookY = new Spring(0) // eyes follow the mouse (×100)
-  let pokes: number[] = [], lovedAt = 0, happyAt = 0, pokedAt = 0, blinkAt = -1e9, wink = false
+  let pokes: number[] = [], lovedAt = 0, happyAt = 0, worriedAt = 0, pokedAt = 0, blinkAt = -1e9, wink = false
   let pipAt = { x: 0, y: 0, r: 0 } // where Pip is drawn now (for poking)
   const images = new Map<string, HTMLImageElement>() // your own outfits
   /** test mode can show any mood */
@@ -195,6 +195,7 @@
   let listen = $state(0)
   window.pebble.onPage((p, l) => { tucked = false; open = true; lastPage = p as Page; queueMicrotask(() => (page = p as Page)); if (l) listen++ })
   let voice: HTMLAudioElement | undefined
+  window.pebble.onWorry(() => { worriedAt = Date.now(); kick(); say('question'); later(4100) })
   window.pebble.onPlay(url => { voice?.pause(); voice = url ? new Audio(url) : undefined; void voice?.play() })
   window.pebble.onToggle(() => { if (tucked) { tucked = false; open = true } else open = !open })
   window.pebble.onTuck(() => { tucked = !tucked; open = false })
@@ -334,7 +335,7 @@
         { fill: tok.background, alpha: 1 - s.island.seeThrough / 100, color: status === 'done' ? tok.done : tok.running, t: t / 1600, done: status === 'done' })
     }
 
-    const mood = forced ?? moodFor({ status, now: Date.now(), pokes, lovedAt, happyAt, sleepy: view!.pip.sleepy, playing: view!.pip.playing, hovering })
+    const mood = forced ?? moodFor({ status, now: Date.now(), pokes, lovedAt, happyAt, worriedAt, sleepy: view!.pip.sleepy, playing: view!.pip.playing, hovering })
     const openness = eyes.value / 100
     if (openness > 0.02 && h > 14 && mode !== 'tucked') {
       const hat = !!outfit && (HATS.has(outfit) || images.has(outfit))
@@ -553,7 +554,7 @@
               {#if page === 'agents'}
                 <AgentsPage sessions={shown} usage={view.usage} history={view.history} {now} bind:selected
                   onanswer={answer} onreply={reply} onjump={jump} ondismiss={dismiss} onseen={seen} />
-              {:else if page === 'home' && extras}<HomePage sessions={shown} {extras} {widgets} {now} {act} go={p => (page = p)} />
+              {:else if page === 'home' && extras}<HomePage sessions={shown} {extras} {widgets} day={view.day} {now} {act} go={p => (page = p)} />
               {:else if page === 'music' && extras}<MusicPage {extras} {now} {act} {reduced} color={album} />
               {:else if page === 'files' && extras}<FilesPage {extras} {now} {act} {reduced} />
               {:else if page === 'clipboard' && extras}<ClipboardPage {extras} {now} {act} enabled={view.settings.clipboard.enabled} />

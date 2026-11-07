@@ -46,7 +46,7 @@ interface Held { res: http.ServerResponse; agent: Agent; suggestions?: unknown[]
  *    answers (the socket closes), or the wait runs out (no decision: the agent's own prompt decides);
  *  - reply waits from the Stop hook (pebble-reply), answered with the text you type after the agent stopped;
  *  - `pebble ask` from the CLI.
- * Emits 'change', 'question' (id), 'finished' (session), 'notify' ({title, body, id}), 'pid' (id, pid of the agent's process).
+ * Emits 'change', 'question' (id), 'finished' (session), 'notify' ({title, body, id}), 'pid' (id, pid of the agent's process), 'usage' (agent, before, now).
  */
 export class Hub extends EventEmitter {
   readonly sessions = new Map<string, Session>()
@@ -124,8 +124,15 @@ export class Hub extends EventEmitter {
 
   /** A CLI's usage changed (Codex's session files, DeepSeek Harness's token counts). */
   setUsage(agent: Agent, u: Usage) {
-    this.usage[agent] = { ...u, at: Date.now() }
+    this.noteUsage(agent, u)
     this.emit('change')
+  }
+
+  /** Emits 'usage' (agent, before, now): alerts and the day's summary follow it. */
+  private noteUsage(agent: Agent, u: Usage) {
+    const prev = this.usage[agent]
+    this.usage[agent] = { ...u, at: Date.now() }
+    this.emit('usage', agent, prev, this.usage[agent])
   }
 
   // ---------- chat apps (browser tabs, desktop apps) ----------
@@ -317,7 +324,7 @@ export class Hub extends EventEmitter {
     const obj = (v: unknown) => (v && typeof v === 'object' ? (v as Record<string, unknown>) : {})
     const rl = obj(d.rate_limits), five = obj(rl.five_hour), week = obj(rl.seven_day)
     const window = (w: Record<string, unknown>) => num(w.used_percentage) === undefined ? undefined : { used: num(w.used_percentage)!, resetsAt: (num(w.resets_at) ?? 0) * 1000 }
-    if (rl.five_hour || rl.seven_day) this.usage.claude = { fiveHour: window(five), sevenDay: window(week), at: Date.now() }
+    if (rl.five_hour || rl.seven_day) this.noteUsage('claude', { fiveHour: window(five), sevenDay: window(week) })
     const model = typeof obj(d.model).display_name === 'string' ? String(obj(d.model).display_name) : undefined
     const context = num(obj(d.context_window).used_percentage)
     if (typeof d.session_id === 'string' && this.sessions.has(d.session_id)) this.patch(d.session_id, { model, context, provider: providerOf(model) })
