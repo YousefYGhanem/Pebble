@@ -6,7 +6,8 @@
   import { accelerator, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
   import { CHIPS } from '../../shared/settings'
   import { SCENES, type Scene } from '../../shared/island'
-  import { OUTFITS } from '../../shared/pip'
+  import { OUTFITS, PIP_LOOKS, pipColors, type PipLookId } from '../../shared/pip'
+  import { drawPip } from '../island/pip'
   import { PROVIDERS } from '../../shared/chat'
 
   let v = $state<SettingsView>()
@@ -29,6 +30,17 @@
   // the icons you can choose, shown as they look (build/icons)
   const ICONS = Object.fromEntries(Object.entries(import.meta.glob<string>('../../../build/icons/*.svg', { query: '?url', import: 'default', eager: true }))
     .flatMap(([p, url]) => { const m = /\/(\w+)\.svg$/.exec(p); return m ? [[m[1]!, url]] : [] }))
+  /** a still Pip in the given colours (canvas at 2x) */
+  function paintPip(canvas: HTMLCanvasElement, o: { look: PipLookId; body: string; visor: string; tok: { running?: string; pipBody?: string; pipVisor?: string } }) {
+    const paint = (o: { look: PipLookId; body: string; visor: string; tok: { running?: string; pipBody?: string; pipVisor?: string } }) => {
+      const ctx = canvas.getContext('2d')!
+      ctx.setTransform(2, 0, 0, 2, 0, 0)
+      ctx.clearRect(0, 0, 56, 48)
+      drawPip(ctx, { x: 28, y: 26, size: 26, mood: 'idle', color: o.tok.running ?? '#53e4ff', ...pipColors(o, o.tok), open: 1, t: 0 })
+    }
+    paint(o)
+    return { update: paint }
+  }
   const TABS = ['general', 'island', 'look', 'agents', 'chat', 'extras', 'connectors', 'advanced'] as const
   const SHELLS: Record<string, string> = { powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' }
   const SHORTCUTS = ['toggleShortcut', 'tuckShortcut', 'buddyShortcut', 'voiceShortcut'] as const
@@ -170,6 +182,22 @@
                   <img src={ICONS[id]} alt="" width="56" height="56" /><span>{t(`icon.${id}`)}</span></button>
               {/each}
             </div></div>
+        </section>
+        <h2>{t('pipLook.title', { name: pip })} <span class="muted">· {t('pipLook.hint')}</span></h2>
+        <section>
+          <div class="icons" role="radiogroup" aria-label={t('pipLook.title', { name: pip })}>
+            {#each PIP_LOOKS as id}
+              <button class="icon" class:on={s.pip.look === id} role="radio" aria-checked={s.pip.look === id} onclick={() => set('pip.look', id)}>
+                <canvas width="112" height="96" style:width="56px" style:height="48px" use:paintPip={{ ...s.pip, look: id, tok: v.theme.tokens }}></canvas>
+                <span>{id === 'theme' ? t('pipLook.theme') : id === 'custom' ? t('pipLook.custom') : t(`icon.${id}`)}</span></button>
+            {/each}
+          </div>
+          {#if s.pip.look === 'custom'}
+            <label class="row"><span>{t('pipLook.body')}</span>
+              <input type="color" value={s.pip.body} onchange={e => set('pip.body', text(e))} /></label>
+            <label class="row"><span>{t('pipLook.visor')}</span>
+              <input type="color" value={s.pip.visor} onchange={e => set('pip.visor', text(e))} /></label>
+          {/if}
         </section>
         <h2>{pip} <span class="muted">· {t('pip.done', { count: v.pip.done })}</span></h2>
         <section>

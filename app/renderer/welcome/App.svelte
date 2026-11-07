@@ -4,7 +4,7 @@
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t } from '../i18n.svelte'
   import { drawPip } from '../island/pip'
-  import type { Mood } from '../../shared/pip'
+  import { pipColors, type Mood } from '../../shared/pip'
   import type { SettingsAction, SettingsView } from '../../shared/settings-ui'
 
   let v = $state<SettingsView>()
@@ -36,14 +36,14 @@
   const mood: Mood = $derived(step === STEPS - 1 ? 'happy' : step === 0 ? 'idle' : 'curious')
   $effect(() => {
     if (!canvas || !v) return
-    const ctx = canvas.getContext('2d')!, tok = v.theme.tokens, start = performance.now()
+    const ctx = canvas.getContext('2d')!, tok = v.theme.tokens, look = pipColors(v.settings.pip, tok), start = performance.now()
     let frame = 0
     const draw = (now: number) => {
       const s = (now - start) / 1000
       const blink = (s % 3.6) < 0.14 ? Math.abs(1 - 2 * ((s % 3.6) / 0.14)) : 1
       ctx.setTransform(2, 0, 0, 2, 0, 0)
       ctx.clearRect(0, 0, 120, 100)
-      drawPip(ctx, { x: 60, y: 54 + (reduced ? 0 : Math.sin(s * 2) * 2), size: 52, mood, color: tok.text, body: tok.pipBody, visor: tok.pipVisor, open: blink, t: s })
+      drawPip(ctx, { x: 60, y: 54 + (reduced ? 0 : Math.sin(s * 2) * 2), size: 52, mood, color: tok.text, ...look, open: blink, t: s })
       if (!reduced) frame = requestAnimationFrame(draw)
     }
     frame = requestAnimationFrame(draw)

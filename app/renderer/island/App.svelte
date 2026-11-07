@@ -28,6 +28,7 @@
   import { dayStart, drawSkin, skinFor } from './skins'
   import Icon from './Icon.svelte'
   import { drawPip, HATS } from './pip'
+  import { pipColors } from '../../shared/pip'
   import { confetti, hearts, particlesAlive, stepParticles } from './particles'
   import { moodFor, outfitFor, type Mood } from '../../shared/pip'
   import { sceneSetup } from './scenes'
@@ -345,7 +346,7 @@
       const blink = bt >= 0 && bt < 1 && (mood === 'idle' || mood === 'curious' || mood === 'focused')
       drawPip(ctx, {
         x, y, size, mood, t: t / 1000, squash: k * 1.6,
-        color: status === 'ready' ? tok.text : colorOf(status), body: tok.pipBody, visor: tok.pipVisor,
+        color: status === 'ready' ? tok.text : colorOf(status), ...pipColors(s.pip, tok),
         open: openness * (blink && !wink ? Math.abs(1 - 2 * bt) : 1), wink: blink && wink,
         lookX: lookX.value / 100, lookY: lookY.value / 100,
         outfit, outfitImage: outfit ? images.get(outfit) : undefined

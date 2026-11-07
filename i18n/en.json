@@ -399,5 +399,11 @@
   "look.iconHint": "the tray and Pebble's windows; the installer and its shortcut keep lavender",
   "icon.lavender": "Lavender",
   "icon.cream": "Cream",
-  "icon.graphite": "Graphite"
+  "icon.graphite": "Graphite",
+  "pipLook.title": "{name}'s look",
+  "pipLook.hint": "how he looks in the island",
+  "pipLook.theme": "Theme colours",
+  "pipLook.custom": "Your own",
+  "pipLook.body": "Body",
+  "pipLook.visor": "Visor"
 }

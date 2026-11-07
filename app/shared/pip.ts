@@ -2,6 +2,16 @@ import type { Status } from './state'
 
 // Pip's rules, shared by the main process (stats, unlocks) and the island (drawing). Pure, so they are testable.
 
+/** Pip's colours: the theme's, one of the app icons' (build/icons), or your own (settings: pip.look) */
+export const PIP_LOOKS = ['theme', 'lavender', 'cream', 'graphite', 'custom'] as const
+export type PipLookId = (typeof PIP_LOOKS)[number]
+const ICON_COLORS = { lavender: { body: '#e4dcff', visor: '#1c1730' }, cream: { body: '#f1e4cf', visor: '#1d1628' }, graphite: { body: '#4a4958', visor: '#08070e' } }
+export function pipColors(p: { look: PipLookId; body: string; visor: string }, tok: { pipBody?: string; pipVisor?: string }) {
+  if (p.look === 'custom') return { body: p.body, visor: p.visor }
+  if (p.look !== 'theme') return ICON_COLORS[p.look]
+  return { body: tok.pipBody ?? '#ece9f6', visor: tok.pipVisor ?? '#15151c' }
+}
+
 export type Mood = 'idle' | 'curious' | 'focused' | 'alert' | 'happy' | 'love' | 'sleepy' | 'dizzy' | 'grumpy' | 'dancing' | 'sad'
 export const MOODS: Mood[] = ['idle', 'curious', 'focused', 'alert', 'happy', 'love', 'sleepy', 'dizzy', 'grumpy', 'dancing', 'sad']
 

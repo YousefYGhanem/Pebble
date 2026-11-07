@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { PROVIDER_IDS } from './chat'
+import { PIP_LOOKS } from './pip'
 
 // Everything the user can change. settings.json in userData holds only what differs from DEFAULTS;
 // it is merged over DEFAULTS and then checked against this schema.
@@ -71,6 +72,10 @@ export const settingsSchema = z.object({
     outfit: z.string(),
     /** Pip's eyes follow your mouse near the island */
     followMouse: z.boolean(),
+    /** his colours: the theme's, an app icon's, or 'custom' (body, visor) */
+    look: z.enum(PIP_LOOKS),
+    body: z.string().regex(/^#[0-9a-f]{6}$/i),
+    visor: z.string().regex(/^#[0-9a-f]{6}$/i),
     /** no mouse or keyboard for this long: Pip falls asleep */
     sleepAfterMinutes: z.number().min(1).max(240)
   }),
@@ -121,7 +126,7 @@ export const DEFAULTS: Settings = {
   music: { enabled: true, lyrics: true },
   clipboard: { enabled: true },
   focusGuard: { enabled: false, sites: ['youtube', 'tiktok', 'instagram', 'reddit', 'netflix', 'twitch', 'facebook'], snoozeMinutes: 5 },
-  pip: { name: 'Pip', outfit: 'auto', followMouse: true, sleepAfterMinutes: 10 },
+  pip: { name: 'Pip', outfit: 'auto', followMouse: true, look: 'theme', body: '#ece9f6', visor: '#15151c', sleepAfterMinutes: 10 },
   motion: { mode: 'system', speed: 1 },
   agents: {
     claude: { enabled: true, answerPermissions: true }, codex: { enabled: true }, gemini: { enabled: true },

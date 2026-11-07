@@ -399,5 +399,11 @@
   "look.iconHint": "في شريط المهام ونوافذ Pebble؛ يحتفظ المثبّت واختصاره بالأيقونة البنفسجية",
   "icon.lavender": "بنفسجي",
   "icon.cream": "كريمي",
-  "icon.graphite": "رمادي داكن"
+  "icon.graphite": "رمادي داكن",
+  "pipLook.title": "مظهر {name}",
+  "pipLook.hint": "كيف يبدو في الجزيرة",
+  "pipLook.theme": "ألوان السمة",
+  "pipLook.custom": "ألوانك",
+  "pipLook.body": "الجسم",
+  "pipLook.visor": "القناع"
 }

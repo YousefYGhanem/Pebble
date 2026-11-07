@@ -54,3 +54,12 @@ test('a key press becomes an Electron shortcut', () => {
   expect(k('F9', 'F9')).toBe('F9')
   expect(k(' ', 'Space', { metaKey: true })).toBe('Super+Space')
 })
+
+test("Pip's look: theme colours by default, an icon's, or your own (only real colours)", async () => {
+  const { pipColors } = await import('../app/shared/pip')
+  const tok = { pipBody: '#111111', pipVisor: '#222222' }
+  expect(pipColors(DEFAULTS.pip, tok)).toEqual({ body: '#111111', visor: '#222222' })
+  expect(pipColors({ ...DEFAULTS.pip, look: 'custom', body: '#ff0000', visor: '#00ff00' }, tok)).toEqual({ body: '#ff0000', visor: '#00ff00' })
+  expect(pipColors({ ...DEFAULTS.pip, look: 'cream' }, tok).body).toBe('#f1e4cf')
+  expect(parseSettings({ pip: { look: 'custom', body: 'red' } }).ok).toBe(false)
+})
