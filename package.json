@@ -1,7 +1,7 @@
 {
   "name": "pebble",
   "productName": "Pebble",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A notch-style island for Windows that follows your AI coding agents.",
   "main": "out/main/index.js",
   "private": true,

@@ -82,14 +82,14 @@ Pip lives in the island. His eyes take the colour of what your agent does, and h
 | worried | a CLI just passed 80% or 95% of its session or weekly limit |
 | happy (+ confetti after long tasks) | a task just finished |
 | love (+ hearts) | you answered or replied from the island |
-| curious, eyes follow your mouse | you point at the island (Settings → Look & Pip → Eyes follow my mouse) |
+| curious, eyes follow your mouse | you point at the island (Settings → Pip → Eyes follow my mouse) |
 | dancing | music plays on this PC |
 | sleepy | no mouse or keyboard for 10 minutes (`pip.sleepAfterMinutes`) |
 | grumpy, then dizzy | you poke him (click right on him) 3, then 6 times |
 
 He blinks and winks now and then, and chirps (no words; off with `features.sound`). Finished tasks earn outfits
 (glasses 10, cap 25, headphones 50, crown 100) and achievements; seasonal hats come by themselves (`pip.outfit: "auto"`).
-Settings → **Look & Pip** picks an outfit. **Your own outfits**: drop an SVG into `%APPDATA%\Pebble\outfits` (it sits on his
+Settings → **Pip** picks an outfit. **Your own outfits**: drop an SVG into `%APPDATA%\Pebble\outfits` (it sits on his
 head) and pick it in the same menu. **Pip's look** (same page) sets his colours: the theme's (`pipBody`, `pipVisor`),
 lavender, cream or graphite like the app icons, or your own body and visor colours. His shape is
 [pip.ts](app/renderer/island/pip.ts). While `npm run dev` runs, http://localhost:5173/pip-gallery/index.html shows every
@@ -201,14 +201,14 @@ If the exe is missing, Pebble still runs; game mode and jump to terminal are off
 | Point at it (or click, with "Open when I point at it" off) | Opens the Agents page; it closes when the mouse leaves (not while you type) |
 | Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line (dashed: stopped, dotted: needs you); clicks pass through, and every service rests (below). Point at the line to bring it back |
 | A question during a full-screen game | Only the thin line shows; point at it to answer, and it is gone again after |
-| **Ctrl+Alt+P** | Opens or closes it |
+| **Ctrl+Alt+P** | Opens or closes it, with the keyboard in it: Tab and Enter answer a question, arrows go between pages, **Esc** closes it and gives the keyboard back |
 | An agent needs you | It grows into a card (Allow/Deny, or the answer buttons), even when tucked, plus a Windows notification |
 | Something runs full screen on its screen | It hides (game mode) and comes back after |
 
 "Done" stays on the island until you have looked at it, then fades. The clock icon on the Agents page shows the last
 40 finished turns (kept in `%APPDATA%\Pebble\history.json`; Settings → Advanced → Clear history).
 
-Settings → **Island** switches notch/floating, hover/click, game mode and screen. Settings → Look & Pip → **Motion** follows Windows'
+Settings → **Island** switches notch/floating, hover/click, game mode, screen, and which pages show. Settings has a search (Ctrl+F); Windows notifications switch on or off by source (Settings → General). Settings → Appearance → **Motion** follows Windows'
 animation setting, or forces full/reduced. Settings → Advanced → **Test mode** plays every state without a real session; from a
 terminal, `electron . --scene=plan` does the same (`--scene=off` to stop) and `electron . --quit` quits Pebble.
 
@@ -233,7 +233,7 @@ Everything lives in `%APPDATA%\Pebble` and applies the moment you save:
 | File | What |
 | --- | --- |
 | `settings.json` | Only what differs from the defaults in [app/shared/settings.ts](app/shared/settings.ts). A broken edit is logged and ignored |
-| `themes/*.json` | Your themes. `custom.json` starts as a copy of the default; select it with `"theme": "custom"` or from Settings → Look & Pip, where **Island colours** edits it with a live preview (a change starts from the theme in use) |
+| `themes/*.json` | Your themes. `custom.json` starts as a copy of the default; select it with `"theme": "custom"` or from Settings → Appearance, where **Customize colours** edits it with a live preview (a change starts from the theme in use) |
 | `logs/pebble.log` | The log (tokens and keys are masked) |
 
 Theme tokens become CSS variables (`fontSize` → `--font-size`; numbers are px). Built-in themes are in [themes/](themes).
@@ -245,7 +245,7 @@ again, or `Pebble --welcome`. **Languages**: English and Arabic, everywhere: the
 and notifications (Arabic lays Settings and the tour out right to left). The words are in [i18n/](i18n); a language
 is its file there plus a line in [app/shared/i18n.ts](app/shared/i18n.ts), and a missing word falls back to English.
 
-**App icon** (Settings → Look & Pip): Pip as a lavender, cream or graphite pebble, for the tray and Pebble's
+**App icon** (Settings → Appearance): Pip as a lavender, cream or graphite pebble, for the tray and Pebble's
 windows. The installer and its shortcut keep lavender, since Windows reads that one from the exe file itself.
 
 **Living skins** (Settings → Island): the island glows hot with embers while the processor works hard, frosts over
