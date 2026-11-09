@@ -161,6 +161,12 @@ export const themeSchema = z.object({
     done: z.string(),
     error: z.string(),
     question: z.string(),
+    // optional: the shared layers (app/renderer/tokens.css works them out from `text` and `accent` otherwise)
+    surface1: z.string().optional(),
+    surface2: z.string().optional(),
+    surface3: z.string().optional(),
+    stroke: z.string().optional(),
+    accentText: z.string().optional(),
     radius: z.number(),
     font: z.string(),
     fontSize: z.number()

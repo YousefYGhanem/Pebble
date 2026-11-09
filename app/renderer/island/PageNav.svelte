@@ -33,8 +33,8 @@
 <style>
   .nav { display: flex; justify-content: center; gap: 4px; padding: 4px 0 10px; }
   button { position: relative; width: 34px; height: 28px; padding: 0; display: grid; place-items: center; background: none; color: var(--muted); border-radius: 10px; }
-  button:hover { color: var(--text); background: #ffffff0f; }
+  button:hover { color: var(--text); background: var(--surface1); }
   button.group { margin-inline-start: 12px; }
-  button.on { color: var(--text); background: #ffffff1a; }
+  button.on { color: var(--text); background: var(--surface2); }
   .badge { position: absolute; top: 4px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--question); }
 </style>

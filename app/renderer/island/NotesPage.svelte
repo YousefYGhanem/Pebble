@@ -67,8 +67,8 @@
   .item { display: flex; flex-direction: column; text-align: start; background: none; border-radius: 10px; padding: 6px 10px; color: var(--muted); }
   .item .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .item small { font-size: 0.78em; opacity: 0.7; }
-  .item.on { background: #ffffff16; color: var(--text); }
+  .item.on { background: var(--surface2); color: var(--text); }
   .editor { position: relative; display: flex; }
-  textarea { flex: 1; resize: none; font: inherit; line-height: 1.5; color: var(--text); background: #ffffff0b; border: 1px solid #ffffff14; border-radius: 12px; padding: 10px 12px; }
+  textarea { flex: 1; resize: none; font: inherit; line-height: 1.5; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: 12px; padding: 10px 12px; }
   textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 </style>

@@ -46,7 +46,7 @@
 <style>
   .list { display: flex; flex-direction: column; max-height: 270px; overflow: auto; margin: 0 -8px 8px; }
   .row { display: flex; align-items: flex-start; border-radius: 10px; }
-  .row:hover, .row:focus-within { background: #ffffff10; }
+  .row:hover, .row:focus-within { background: var(--surface2); }
   .copy { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: flex-start; text-align: start; background: none; padding: 7px 8px; }
   .secret { font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.04em; }
   .remove { flex: none; padding: 6px; margin: 2px 4px 0 0; opacity: 0.45; }

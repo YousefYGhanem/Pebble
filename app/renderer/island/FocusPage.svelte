@@ -55,13 +55,13 @@
   .focus { display: flex; gap: 22px; align-items: center; padding-bottom: 10px; }
   .dial { position: relative; width: 130px; height: 130px; flex: none; display: grid; place-items: center; }
   .dial svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-  .track { fill: none; stroke: #ffffff17; stroke-width: 7; }
+  .track { fill: none; stroke: var(--surface2); stroke-width: 7; }
   .arc { fill: none; stroke: var(--accent); stroke-width: 7; stroke-linecap: round; transition: stroke-dasharray 1s linear; }
   .time { font-size: 1.7em; font-weight: 700; font-variant-numeric: tabular-nums; }
   .side { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
   .presets { display: flex; flex-wrap: wrap; gap: 6px; }
   .presets .on { background: var(--accent); color: var(--on-accent); }
-  .custom input { width: 60px; font: inherit; color: var(--text); background: #ffffff0d; border: 1px solid #ffffff1a; border-radius: 8px; padding: 3px 6px; }
+  .custom input { width: 60px; font: inherit; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: 8px; padding: 3px 6px; }
   .row { display: flex; gap: 8px; }
   .start { min-width: 120px; }
 </style>

@@ -392,7 +392,7 @@
         ctx.save()
         ctx.lineWidth = 2.2
         ctx.lineCap = 'round'
-        ctx.strokeStyle = 'rgba(255,255,255,0.14)'
+        ctx.strokeStyle = 'var(--surface3)'
         ctx.beginPath(); ctx.arc(x, y, size * 0.86, 0, Math.PI * 2); ctx.stroke()
         ctx.strokeStyle = tok.accent
         ctx.beginPath(); ctx.arc(x, y, size * 0.86, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left); ctx.stroke()
@@ -619,7 +619,7 @@
   .content { position: absolute; left: 0; top: 0; }
   .reduced .content { transition: opacity 0.15s ease-out; }
 
-  .undo { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: 999px; background: #ffffff1a; font-size: 0.88em; }
+  .undo { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: 999px; background: var(--surface2); font-size: 0.88em; }
   .undo button { padding: 3px 12px; }
   .line { display: flex; align-items: center; gap: 10px; padding: 0 56px 0 16px; }
   .title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -640,7 +640,7 @@
   .mini-cover { width: 22px; height: 22px; border-radius: 6px; object-fit: cover; flex: none; }
   .lyric { position: relative; height: 1.4em; overflow: hidden; }
   .wchip { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-  .act-progress { width: 60px; height: 4px; border-radius: 2px; background: #ffffff22; overflow: hidden; flex: none; }
+  .act-progress { width: 60px; height: 4px; border-radius: 2px; background: var(--surface3); overflow: hidden; flex: none; }
   .act-progress i { display: block; height: 100%; background: var(--accent); }
   .roll { position: absolute; inset: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .buttons { display: flex; gap: 8px; margin-top: 10px; }

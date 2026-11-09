@@ -77,23 +77,23 @@
 <style>
   .ask { display: flex; flex-direction: column; gap: 10px; }
   .title { line-height: 1.35; }
-  .command { margin: 0; padding: 8px 10px; border-radius: 10px; background: #ffffff0d; font: 12px/1.45 'Cascadia Mono', Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow: auto; }
+  .command { margin: 0; padding: 8px 10px; border-radius: 10px; background: var(--surface1); font: 12px/1.45 'Cascadia Mono', Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 120px; overflow: auto; }
   .buttons { display: flex; gap: 8px; }
   .buttons button { flex: 1; }
   .question { display: flex; flex-direction: column; gap: 6px; }
-  .chip { align-self: flex-start; font-size: 0.8em; padding: 1px 8px; border-radius: 999px; background: #ffffff14; color: var(--muted); }
+  .chip { align-self: flex-start; font-size: 0.8em; padding: 1px 8px; border-radius: 999px; background: var(--surface2); color: var(--muted); }
   .q { font-weight: 600; }
   .options { display: flex; flex-wrap: wrap; gap: 6px; }
   .option { display: flex; flex-direction: column; align-items: flex-start; border-radius: 12px; text-align: left; max-width: 100%; }
   .option small { color: var(--muted); font-size: 0.82em; }
   .option.on { background: var(--accent); color: var(--on-accent); }
   .option.on small { color: inherit; opacity: 0.8; }
-  .plan { max-height: 170px; overflow: auto; padding: 8px 12px; border-radius: 10px; background: #ffffff0a; line-height: 1.45; }
+  .plan { max-height: 170px; overflow: auto; padding: 8px 12px; border-radius: 10px; background: var(--surface1); line-height: 1.45; }
   .plan :global(h3), .plan :global(h4), .plan :global(h5) { margin: 6px 0 2px; font-size: 1em; }
   .plan :global(p) { margin: 2px 0; }
   .plan :global(ul), .plan :global(ol) { margin: 2px 0; padding-left: 20px; }
-  .plan :global(code) { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 0.92em; background: #ffffff12; padding: 0 4px; border-radius: 4px; }
+  .plan :global(code) { font-family: 'Cascadia Mono', Consolas, monospace; font-size: 0.92em; background: var(--surface2); padding: 0 4px; border-radius: 4px; }
   .plan :global(pre) { background: #00000055; padding: 6px 8px; border-radius: 8px; overflow: auto; }
-  input, textarea { font: inherit; color: var(--text); background: #ffffff0d; border: 1px solid #ffffff1a; border-radius: 10px; padding: 6px 10px; resize: none; }
+  input, textarea { font: inherit; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: 10px; padding: 6px 10px; resize: none; }
   input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 </style>

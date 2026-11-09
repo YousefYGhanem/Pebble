@@ -73,7 +73,7 @@
   .music { background: linear-gradient(to top, rgba(var(--album), 0.22), transparent 70%); border-radius: 0 0 26px 26px; }
   .top { display: flex; gap: 14px; align-items: center; }
   .cover { width: 84px; height: 84px; border-radius: 14px; object-fit: cover; flex: none; box-shadow: 0 8px 24px rgba(var(--album), 0.35); }
-  .cover.none { display: grid; place-items: center; background: #ffffff10; color: var(--muted); }
+  .cover.none { display: grid; place-items: center; background: var(--surface2); color: var(--muted); }
   .info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
   .title { font-weight: 700; font-size: 1.12em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .controls { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
@@ -81,7 +81,7 @@
   .vol { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
   .vol input { width: 90px; }
   /* a 5 px line in a 21 px target (Fitts; WCAG 2.5.8) */
-  .progress { height: 5px; padding: 8px 0; margin: -8px 0; background: #ffffff1c content-box; }
+  .progress { height: 5px; padding: 8px 0; margin: -8px 0; background: var(--surface2) content-box; }
   .progress.seekable { cursor: pointer; }
   .fill { height: 100%; border-radius: 3px; background: rgb(var(--album)); transition: width 1s linear; }
   .times { display: flex; justify-content: space-between; font-size: 0.82em; margin-top: -6px; font-variant-numeric: tabular-nums; }

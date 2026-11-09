@@ -138,7 +138,7 @@
   .tabs { flex: 1; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
   .pip-room { width: 52px; flex: none; } /* where Pip sits */
   .tab { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: none; color: var(--muted); white-space: nowrap; }
-  .tab.on { background: #ffffff17; color: var(--text); }
+  .tab.on { background: var(--surface2); color: var(--text); }
   .time { color: var(--muted); flex: none; }
 
   .body { display: grid; grid-template-columns: 250px 1fr; gap: 16px; min-height: 0; }
@@ -161,14 +161,14 @@
   @keyframes up { from { opacity: 0; transform: translateY(4px); } }
 
   .right { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-  .card { border-radius: 12px; padding: 10px 12px; background: #ffffff0d; max-height: 170px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+  .card { border-radius: 12px; padding: 10px 12px; background: var(--surface1); max-height: 170px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
   .card.muted { color: var(--muted); }
   .reply { display: flex; gap: 8px; align-items: flex-end; }
-  .reply textarea { flex: 1; font: inherit; color: var(--text); background: #ffffff0d; border: 1px solid #ffffff1a; border-radius: 12px; padding: 6px 10px; resize: none; max-height: 90px; field-sizing: content; }
+  .reply textarea { flex: 1; font: inherit; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: 12px; padding: 6px 10px; resize: none; max-height: 90px; field-sizing: content; }
   .reply textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 
   .history { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow: auto; }
-  .h-item { padding: 7px 0; border-top: 1px solid #ffffff12; }
+  .h-item { padding: 7px 0; border-top: 1px solid var(--stroke); }
   .h-top { display: flex; gap: 10px; align-items: baseline; }
   .h-top span { color: var(--muted); font-size: 0.85em; }
   .h-prompt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -178,7 +178,7 @@
   footer { display: flex; align-items: center; gap: 12px; font-size: 0.85em; color: var(--muted); min-height: 24px; }
   .usage { display: inline-flex; align-items: center; gap: 6px; }
   .usage svg { transform: rotate(-90deg); }
-  .track { fill: none; stroke: #ffffff1f; stroke-width: 3; }
+  .track { fill: none; stroke: var(--surface3); stroke-width: 3; }
   .arc { fill: none; stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 0.6s ease-out; }
   .grow { flex: 1; }
   .link { display: inline-flex; align-items: center; gap: 5px; background: none; color: var(--muted); padding: 2px 6px; }

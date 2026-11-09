@@ -106,11 +106,11 @@
 <style>
   .when { display: flex; align-items: baseline; gap: 10px; }
   .big { font-size: 1.5em; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .radio { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; background: #ffffff12; color: var(--muted); }
-  .radio.on { background: #0a84ff; color: #fff; }
+  .radio { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; background: var(--surface2); color: var(--muted); }
+  .radio.on { background: var(--accent); color: var(--on-accent); }
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .tile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; min-height: 92px; padding: 10px 12px; border-radius: 16px; background: #ffffff0d; }
-  .tile:hover { background: #ffffff17; }
+  .tile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; min-height: 92px; padding: 10px 12px; border-radius: 16px; background: var(--surface1); }
+  .tile:hover { background: var(--surface2); }
   .label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.85em; }
   .value { font-weight: 600; }
   .line { max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.86em; }
@@ -118,8 +118,8 @@
   .music img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex: none; }
   .tilewrap { position: relative; display: grid; }
   .playpause { position: absolute; inset-inline-end: 8px; top: 8px; width: 28px; height: 28px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--background); }
-  .day { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; padding: 10px 12px; border-radius: 16px; background: #ffffff0d; }
-  .day:hover { background: #ffffff17; }
+  .day { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; padding: 10px 12px; border-radius: 16px; background: var(--surface1); }
+  .day:hover { background: var(--surface2); }
   .facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9em; }
   .system { display: flex; gap: 16px; font-size: 0.85em; padding-bottom: 6px; }
 </style>

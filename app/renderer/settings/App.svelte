@@ -529,11 +529,11 @@
   .search { margin: 0 2px 10px; min-width: 0 !important; width: auto; }
   .result { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: start; background: none; padding: 10px 4px; border-radius: 8px; }
   .result > span:first-child { display: flex; flex-direction: column; gap: 2px; }
-  .result + .result { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); border-radius: 0; }
+  .result + .result { border-top: 1px solid var(--stroke); border-radius: 0; }
   :global(.found) { animation: found 1.8s ease-out; border-radius: 8px; }
   @keyframes found { 0%, 40% { background: color-mix(in srgb, var(--accent) 26%, transparent); } }
   details.more { margin-top: 22px; }
-  details.more.inner { margin: 0; padding: 4px 0; border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+  details.more.inner { margin: 0; padding: 4px 0; border-top: 1px solid var(--stroke); }
   details.more > summary { cursor: pointer; font-weight: 600; padding: 6px 0 10px; color: var(--text); }
   details.more.inner > summary { font-weight: 400; padding: 10px 0; }
   .inline { display: flex; align-items: center; gap: 8px; }
@@ -548,23 +548,23 @@
   h1 { font-size: 22px; font-weight: 600; margin: 0 0 16px; }
   h2 { font-size: 14px; font-weight: 600; margin: 26px 0 8px; }
   .muted, small { color: var(--muted); font-weight: 400; }
-  section { background: color-mix(in srgb, var(--text) 4%, transparent); border-radius: 12px; padding: 4px 16px; display: flex; flex-direction: column; animation: rise 0.18s ease-out; }
+  section { background: color-mix(in srgb, var(--text) 4%, transparent); border-radius: var(--r-l); padding: 4px 16px; display: flex; flex-direction: column; animation: rise 0.18s ease-out; }
   section.card { margin-bottom: 12px; }
   section.actions { flex-direction: row; flex-wrap: wrap; gap: 8px; padding: 14px 16px; margin-top: 12px; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 11px 0; min-height: 48px; }
-  .row + .row, .col + .row, .row + .col { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+  .row + .row, .col + .row, .row + .col { border-top: 1px solid var(--stroke); }
   .col { display: flex; flex-direction: column; gap: 8px; padding: 11px 0; }
   .row > span, .col > span { display: flex; flex-direction: column; gap: 2px; }
-  .head em { font-style: normal; font-size: 11px; color: var(--accent); }
+  .head em { font-style: normal; font-size: 11px; color: var(--accent-text); }
   button, input, select, textarea { font: inherit; color: inherit; }
-  button { border: 0; cursor: pointer; border-radius: 8px; padding: 8px 14px; background: color-mix(in srgb, var(--text) 9%, transparent); transition: background 0.12s; }
+  button { border: 0; cursor: pointer; border-radius: var(--r-m); padding: 8px 14px; background: color-mix(in srgb, var(--text) 9%, transparent); transition: background 0.12s; }
   button:hover { background: color-mix(in srgb, var(--text) 14%, transparent); }
   button:disabled { opacity: 0.45; cursor: default; }
-  button.link { background: none; padding: 10px 0; color: var(--accent); align-self: flex-start; }
+  button.link { background: none; padding: 10px 0; color: var(--accent-text); align-self: flex-start; }
   button.danger { color: var(--error); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   input[type='number'], input[type='text'], input[type='password'], input[type='search'], select, textarea {
-    background: color-mix(in srgb, var(--text) 7%, var(--background)); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); border-radius: 8px; padding: 7px 10px;
+    background: color-mix(in srgb, var(--text) 7%, var(--background)); border: 1px solid var(--stroke); border-radius: var(--r-m); padding: 7px 10px;
   }
   input[type='number'] { width: 100px; }
   input[type='text'], input[type='password'], select { min-width: 240px; }
@@ -591,7 +591,7 @@
   .error, .problem { border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; background: color-mix(in srgb, var(--error) 18%, transparent); }
   .problem { margin: 0 0 8px; font-size: 13px; }
   .icons { display: flex; gap: 10px; }
-  .island-preview { display: flex; align-items: center; gap: 8px; padding: 10px 16px; max-width: 420px; font-size: 13px; border: 1px solid #ffffff14; }
+  .island-preview { display: flex; align-items: center; gap: 8px; padding: 10px 16px; max-width: 420px; font-size: 13px; border: 1px solid var(--stroke); }
   .island-preview i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
   .island-preview b { margin-inline-start: 4px; }
   .island-preview em { margin-inline-start: auto; width: 26px; height: 14px; border-radius: 7px; flex: none; }

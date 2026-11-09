@@ -1,0 +1,25 @@
+/*
+ * The shared visual language of every window (island, Settings, welcome tour). Layers and strokes come from the theme's
+ * own text colour, so they suit any theme; a theme may still set them itself (surface1, surface2, surface3, stroke,
+ * accentText in its tokens). Use these instead of fixed white transparencies.
+ */
+:root {
+  --surface1: color-mix(in srgb, var(--text) 5%, transparent);   /* a card on the background */
+  --surface2: color-mix(in srgb, var(--text) 9%, transparent);   /* a card under the mouse, a control */
+  --surface3: color-mix(in srgb, var(--text) 13%, transparent);  /* the chosen one, a pressed control */
+  --stroke: color-mix(in srgb, var(--text) 12%, transparent);    /* lines between rows, field borders */
+  /* the accent as text (links, labels) is lighter than the accent as a fill: WCAG 1.4.3 needs 4.5:1 for text */
+  --accent-text: color-mix(in srgb, var(--accent) 70%, var(--text));
+  /* one radius scale */
+  --r-s: 6px;
+  --r-m: 10px;
+  --r-l: 14px;
+  --r-pill: 999px;
+}
+
+/* Windows contrast themes: controls get the system's colours and visible edges (the island's canvas keeps the theme) */
+@media (forced-colors: active) {
+  button, input, select, textarea, section, .card, .tile, .file { border: 1px solid ButtonText; }
+  button.likely, button.go, .seg button.on, .switch:checked { forced-color-adjust: none; background: Highlight; color: HighlightText; }
+  :focus-visible { outline: 2px solid Highlight !important; }
+}

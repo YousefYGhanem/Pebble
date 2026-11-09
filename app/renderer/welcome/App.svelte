@@ -139,7 +139,7 @@
   .dots { display: flex; gap: 6px; margin-inline-end: auto; }
   .dots i { width: 7px; height: 7px; border-radius: 50%; background: color-mix(in srgb, var(--text) 22%, transparent); transition: width 0.2s, background 0.2s; }
   .dots i.on { width: 20px; border-radius: 4px; background: var(--accent); }
-  button { font: inherit; color: inherit; border: 0; border-radius: 10px; padding: 9px 18px; cursor: pointer; }
+  button { font: inherit; color: inherit; border: 0; border-radius: var(--r-m); padding: 9px 18px; cursor: pointer; }
   .ghost { background: none; color: var(--muted); }
   .ghost:hover { color: var(--text); }
   .go { background: var(--accent); color: var(--on-accent); font-weight: 600; }

@@ -123,7 +123,7 @@
 
 <style>
   .starters { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
-  .starters button { display: inline-flex; align-items: center; gap: 6px; font-size: 0.86em; padding: 5px 12px; border-radius: 999px; background: #ffffff0d; }
+  .starters button { display: inline-flex; align-items: center; gap: 6px; font-size: 0.86em; padding: 5px 12px; border-radius: 999px; background: var(--surface1); }
   .who { font-size: 11px; }
   .log { height: 190px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 2px 2px 8px; }
   .msg { position: relative; max-width: 85%; padding: 8px 12px; border-radius: 14px; line-height: 1.45; overflow-wrap: anywhere; animation: pop 0.2s ease-out; }

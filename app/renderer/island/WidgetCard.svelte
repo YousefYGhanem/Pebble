@@ -14,9 +14,9 @@
 </button>
 
 <style>
-  .card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: start; min-height: 84px; padding: 10px 12px; border-radius: 16px; background: #ffffff0d; border-inline-start: 3px solid var(--tone, transparent); min-width: 0; }
+  .card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: start; min-height: 84px; padding: 10px 12px; border-radius: 16px; background: var(--surface1); border-inline-start: 3px solid var(--tone, transparent); min-width: 0; }
   .card:disabled { cursor: default; opacity: 1; }
-  .card:not(:disabled):hover { background: #ffffff17; }
+  .card:not(:disabled):hover { background: var(--surface2); }
   .tone-ok { --tone: var(--done); }
   .tone-warn { --tone: var(--question); }
   .tone-error { --tone: var(--error); }
