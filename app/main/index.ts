@@ -219,7 +219,7 @@ async function checkDrop() {
   log.info(`phone drop: network ${r.profile}, firewall ${r.allowed ? 'allows' : 'has no rule for'} ${path.basename(process.execPath)}`)
 }
 
-function toggleIsland() { bringBack(); send(CH.toggle) }
+function toggleIsland() { bringBack(); island?.focus(); send(CH.toggle) } // the keyboard comes along (Esc gives it back)
 /** Opens the island on a page, with the keyboard (listen: start voice typing in its message box). */
 function showPage(page: string, listen = false) { bringBack(); island?.focus(); send(CH.page, page, listen) }
 
@@ -395,6 +395,7 @@ function refreshTray() {
 }
 
 ipcMain.on(CH.ready, e => { if (fromIsland(e)) { push(true); if (scene) send(CH.scene, scene) } })
+ipcMain.on(CH.release, e => { if (fromIsland(e) && island?.isFocused()) island.blur() })
 ipcMain.on(CH.tucked, (e, on: unknown) => { if (fromIsland(e)) { tucked = on === true; applyRest() } })
 ipcMain.on(CH.catchMouse, (e, on: unknown) => {
   if (fromIsland(e)) island!.setIgnoreMouseEvents(on !== true, { forward: true })

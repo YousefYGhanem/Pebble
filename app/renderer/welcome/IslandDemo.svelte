@@ -35,7 +35,15 @@
     timers = TIMELINE.map(([at, fn]) => setTimeout(fn, at))
     timers.push(setTimeout(run, LOOP))
   }
-  run()
+  // it can be paused (WCAG 2.2.2); with reduced motion it starts paused and the captions say it all
+  let paused = $state(reduced)
+  function pauseOrPlay() {
+    paused = !paused
+    timers.forEach(clearTimeout)
+    timers = []
+    if (!paused) run()
+  }
+  if (!reduced) run()
   onDestroy(() => timers.forEach(clearTimeout))
 
   const captions = $derived([openOn === 'click' ? t('demo.openClick') : t('demo.openHover'), t('demo.close'), t('demo.tuck'), t('demo.back')])
@@ -60,6 +68,7 @@
   {#each captions as c, i}<li class:on={i === caption}>{c}</li>{/each}
 </ol>
 <p class="keys">{t('demo.keys', { toggle, tuck })}</p>
+<button class="pause" onclick={pauseOrPlay}>{paused ? t('demo.play') : t('demo.pause')}</button>
 
 <style>
   .demo { width: 360px; margin: 0 auto 12px; }
@@ -88,4 +97,6 @@
   .captions li { color: var(--muted); font-size: 13px; padding: 3px 10px; border-radius: 8px; transition: background 0.2s, color 0.2s; }
   .captions li.on { color: var(--text); background: color-mix(in srgb, var(--accent) 18%, transparent); }
   .keys { font-size: 12px; margin: 10px 0 0; }
+  .pause { margin-top: 6px; font-size: 12px; padding: 4px 12px; background: none; color: var(--muted); }
+  .pause:hover { color: var(--text); }
 </style>

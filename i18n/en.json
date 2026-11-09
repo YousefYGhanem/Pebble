@@ -466,5 +466,15 @@
   "i.undo.shelf": "Shelf cleared",
   "i.undo.file": "File removed from the shelf",
   "i.undo.note": "Note deleted",
-  "advanced.historyCleared": "History cleared"
+  "advanced.historyCleared": "History cleared",
+  "i.sr.done": "{project} is done",
+  "i.sr.stopped": "{project} stopped with an error",
+  "i.sr.asks": "{project} needs you: {text}",
+  "i.island.name": "Pebble island",
+  "i.page.attention": "needs attention",
+  "i.music.next": "Next",
+  "i.music.previous": "Previous",
+  "i.home.openMusic": "Open music",
+  "demo.pause": "Pause the demo",
+  "demo.play": "Play the demo"
 }

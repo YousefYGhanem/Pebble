@@ -18,6 +18,15 @@
   let dragging = false
   $effect(() => { if (!dragging && extras.volume) volume = extras.volume.level })
 
+  // the keyboard: arrows 5 s, Page Up/Down 30 s, Home/End the start and the end
+  function seekKey(e: KeyboardEvent) {
+    if (!m?.canSeek || !m.durationMs) return
+    const step = { ArrowRight: 5000, ArrowUp: 5000, ArrowLeft: -5000, ArrowDown: -5000, PageUp: 30000, PageDown: -30000 }[e.key]
+    const to = e.key === 'Home' ? 0 : e.key === 'End' ? m.durationMs - 1000 : step !== undefined ? pos + step : null
+    if (to === null) return
+    e.preventDefault()
+    act({ do: 'media', action: 'seek', positionMs: Math.max(0, Math.min(m.durationMs, Math.round(to))) })
+  }
   function seek(e: MouseEvent) {
     if (!m?.canSeek || !m.durationMs) return
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
@@ -36,15 +45,15 @@
         <div class="title">{m.title}</div>
         <div class="muted">{m.artist}{m.album ? ` · ${m.album}` : ''}</div>
         <div class="controls">
-          <button class="icon ghost" aria-label="Previous" disabled={!m.canPrevious} onclick={() => act({ do: 'media', action: 'previous' })}><Icon name="previous" size={16} /></button>
+          <button class="icon ghost" aria-label={t('i.music.previous')} disabled={!m.canPrevious} onclick={() => act({ do: 'media', action: 'previous' })}><Icon name="previous" size={16} /></button>
           <button class="icon play" aria-label={m.playing ? t('i.common.pause') : t('i.common.play')} onclick={() => act({ do: 'media', action: 'toggle' })}><Icon name={m.playing ? 'pause' : 'play'} size={16} /></button>
-          <button class="icon ghost" aria-label="Next" disabled={!m.canNext} onclick={() => act({ do: 'media', action: 'next' })}><Icon name="next" size={16} /></button>
+          <button class="icon ghost" aria-label={t('i.music.next')} disabled={!m.canNext} onclick={() => act({ do: 'media', action: 'next' })}><Icon name="next" size={16} /></button>
           {#if m.playing}<Wave color="rgb(var(--album))" bars={7} height={20} />{/if}
           <label class="vol" title={t('i.music.volume')}><Icon name="volume" size={14} /><input type="range" min="0" max="100" bind:value={volume} oninput={() => { dragging = true; act({ do: 'volume', volume }) }} onchange={() => (dragging = false)} aria-label={t('i.music.volume')} /></label>
         </div>
       </div>
     </div>
-    <div class="progress" role="slider" tabindex="0" aria-label={t('i.music.position')} aria-valuenow={Math.round(pos / 1000)} onclick={seek} onkeydown={() => {}} class:seekable={m.canSeek}>
+    <div class="progress" role="slider" tabindex="0" aria-label={t('i.music.position')} aria-valuemin={0} aria-valuemax={Math.round((m.durationMs ?? 0) / 1000)} aria-valuenow={Math.round(pos / 1000)} aria-valuetext={clock(pos)} onclick={seek} onkeydown={seekKey} class:seekable={m.canSeek}>
       <div class="fill" style:width="{m.durationMs ? (pos / m.durationMs) * 100 : 0}%"></div>
     </div>
     <div class="times muted"><span>{clock(pos)}</span><span>{m.durationMs ? clock(m.durationMs) : ''}</span></div>
@@ -71,9 +80,10 @@
   .play { background: var(--text); color: var(--background); }
   .vol { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
   .vol input { width: 90px; }
-  .progress { height: 5px; border-radius: 3px; background: #ffffff1c; overflow: hidden; }
+  /* a 5 px line in a 21 px target (Fitts; WCAG 2.5.8) */
+  .progress { height: 5px; padding: 8px 0; margin: -8px 0; background: #ffffff1c content-box; }
   .progress.seekable { cursor: pointer; }
-  .fill { height: 100%; background: rgb(var(--album)); transition: width 1s linear; }
+  .fill { height: 100%; border-radius: 3px; background: rgb(var(--album)); transition: width 1s linear; }
   .times { display: flex; justify-content: space-between; font-size: 0.82em; margin-top: -6px; font-variant-numeric: tabular-nums; }
   .lyrics { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 6px; text-align: center; }
   .ly { min-height: 1.4em; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

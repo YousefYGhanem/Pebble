@@ -50,18 +50,20 @@
       {:else}<span class="value muted">{t('i.home.quiet')}</span>{/if}
     </button>
 
-    <button class="tile" onclick={() => go('music')}>
+    <div class="tilewrap">
+    <button class="tile" onclick={() => go('music')} aria-label={extras.media ? `${t('i.home.openMusic')}: ${extras.media.title}` : undefined}>
       <span class="label"><Icon name="music" size={13} />{t('i.page.music')}</span>
       {#if extras.media}
         <span class="music">
           {#if extras.art}<img src={extras.art} alt="" />{/if}
           <span class="line"><b>{extras.media.title}</b><br /><span class="muted">{extras.media.artist}</span></span>
         </span>
-        <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-        <span class="playpause" role="button" tabindex="-1" aria-label={extras.media.playing ? t('i.common.pause') : t('i.common.play')}
-          onclick={e => { e.stopPropagation(); act({ do: 'media', action: 'toggle' }) }}><Icon name={extras.media.playing ? 'pause' : 'play'} size={13} /></span>
       {:else}<span class="value muted">{t('i.home.nothingPlaying')}</span>{/if}
     </button>
+      <!-- its own button, next to the tile (not inside it): the keyboard reaches it too -->
+      {#if extras.media}<button class="playpause" aria-label={extras.media.playing ? t('i.common.pause') : t('i.common.play')}
+        onclick={() => act({ do: 'media', action: 'toggle' })}><Icon name={extras.media.playing ? 'pause' : 'play'} size={13} /></button>{/if}
+    </div>
 
     <button class="tile" onclick={() => go('focus')}>
       <span class="label"><Icon name="focus" size={13} />{t('i.page.focus')}</span>
@@ -114,7 +116,8 @@
   .line { max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 0.86em; }
   .music { display: flex; gap: 8px; align-items: center; min-width: 0; }
   .music img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex: none; }
-  .playpause { position: absolute; right: 8px; top: 8px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--background); }
+  .tilewrap { position: relative; display: grid; }
+  .playpause { position: absolute; inset-inline-end: 8px; top: 8px; width: 28px; height: 28px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: var(--text); color: var(--background); }
   .day { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; padding: 10px 12px; border-radius: 16px; background: #ffffff0d; }
   .day:hover { background: #ffffff17; }
   .facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9em; }

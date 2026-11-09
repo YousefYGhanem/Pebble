@@ -23,6 +23,9 @@
   })
   window.settingsApi.ready()
   const act = (a: SettingsAction) => window.settingsApi.act(a)
+  // each step's heading takes the focus when the step changes (not on the first), so screen readers read the new step
+  let moved = false
+  function focusOnShow(h: HTMLElement) { if (moved) h.focus(); moved = true }
   // its first click: it may go behind other windows from now on
   let clicked = false
   const firstClick = () => { if (!clicked) { clicked = true; act({ do: 'welcome.clicked' }) } }
@@ -62,14 +65,14 @@
     {#key step}
       <div class="step">
         {#if step === 0}
-          <h1>{t('welcome.hello')}</h1>
+          <h1 tabindex="-1" use:focusOnShow>{t('welcome.hello')}</h1>
           <p>{t('welcome.helloHint')}</p>
           <label class="field"><span>{t('welcome.language')}</span>
             <select value={s.general.language} onchange={e => act({ do: 'update', patch: { general: { language: (e.currentTarget as HTMLSelectElement).value } } })}>
               {#each LANGUAGES as l}<option value={l.id}>{l.name}</option>{/each}
             </select></label>
         {:else if step === 1}
-          <h1>{t('welcome.agents')}</h1>
+          <h1 tabindex="-1" use:focusOnShow>{t('welcome.agents')}</h1>
           <p>{t('welcome.agentsHint')}</p>
           <div class="list">
             {#each v.agents.filter(g => g.available || g.connected) as g}
@@ -79,7 +82,7 @@
             {/each}
           </div>
         {:else if step === 2}
-          <h1>{t('welcome.terminals')}</h1>
+          <h1 tabindex="-1" use:focusOnShow>{t('welcome.terminals')}</h1>
           <p>{t('welcome.terminalsHint')}</p>
           <div class="list">
             {#each v.terminals as term}
@@ -88,21 +91,21 @@
             {/each}
           </div>
         {:else if step === 3}
-          <h1>{t('welcome.name')}</h1>
+          <h1 tabindex="-1" use:focusOnShow>{t('welcome.name')}</h1>
           <p>{t('welcome.nameHint')}</p>
           <!-- svelte-ignore a11y_autofocus -->
           <input class="name" type="text" maxlength="24" bind:value={name} autofocus aria-label={t('pip.name')} />
         {:else if step === 4}
-          <h1>{t('welcome.how')}</h1>
+          <h1 tabindex="-1" use:focusOnShow>{t('welcome.how')}</h1>
           <IslandDemo openOn={s.island.openOn} toggle={s.general.toggleShortcut.replace('Control', 'Ctrl')} tuck={s.general.tuckShortcut.replace('Control', 'Ctrl')} />
         {:else}
-          <h1>{t('welcome.ready', { name: name.trim() || 'Pip' })}</h1>
+          <h1 tabindex="-1" use:focusOnShow>{t('welcome.ready', { name: name.trim() || 'Pip' })}</h1>
           <p>{t('welcome.readyHint', { toggle: s.general.toggleShortcut.replace('Control', 'Ctrl'), buddy: s.general.buddyShortcut.replace('Control', 'Ctrl') })}</p>
         {/if}
       </div>
     {/key}
     <footer>
-      <div class="dots" aria-label={t('welcome.step', { n: step + 1, total: STEPS })}>
+      <div class="dots" role="img" aria-label={t('welcome.step', { n: step + 1, total: STEPS })}>
         {#each Array(STEPS) as _, i}<i class:on={i === step}></i>{/each}
       </div>
       {#if step > 0 && step < STEPS - 1}<button class="ghost" onclick={() => step--}>{t('welcome.back')}</button>{/if}
@@ -117,6 +120,7 @@
   :global(*) { box-sizing: border-box; }
   main { height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 28px 40px 22px; text-align: center; }
   .step { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; animation: in 0.28s cubic-bezier(.2, .9, .3, 1.2); }
+  h1:focus { outline: none; }
   h1 { font-size: 21px; font-weight: 600; margin: 10px 0 6px; }
   p { color: var(--muted); margin: 0 0 18px; line-height: 1.5; max-width: 420px; }
   .muted { color: var(--muted); }

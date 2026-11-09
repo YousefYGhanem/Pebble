@@ -134,13 +134,13 @@
         <section>
           <div class="row"><span>{t('island.shape')}</span>
             <div class="seg">
-              <button class:on={s.island.style === 'notch'} onclick={() => set('island.style', 'notch')}>{t('island.notch')}</button>
-              <button class:on={s.island.style === 'floating'} onclick={() => set('island.style', 'floating')}>{t('island.floating')}</button>
+              <button class:on={s.island.style === 'notch'} aria-pressed={s.island.style === 'notch'} onclick={() => set('island.style', 'notch')}>{t('island.notch')}</button>
+              <button class:on={s.island.style === 'floating'} aria-pressed={s.island.style === 'floating'} onclick={() => set('island.style', 'floating')}>{t('island.floating')}</button>
             </div></div>
           <div class="row"><span>{t('island.opens')}</span>
             <div class="seg">
-              <button class:on={s.island.openOn === 'hover'} onclick={() => set('island.openOn', 'hover')}>{t('island.hover')}</button>
-              <button class:on={s.island.openOn === 'click'} onclick={() => set('island.openOn', 'click')}>{t('island.click')}</button>
+              <button class:on={s.island.openOn === 'hover'} aria-pressed={s.island.openOn === 'hover'} onclick={() => set('island.openOn', 'hover')}>{t('island.hover')}</button>
+              <button class:on={s.island.openOn === 'click'} aria-pressed={s.island.openOn === 'click'} onclick={() => set('island.openOn', 'click')}>{t('island.click')}</button>
             </div></div>
           {#if v.displays.length > 1}
             <label class="row"><span>{t('island.screen')}</span>
@@ -198,7 +198,7 @@
           <div class="row"><span>{t('look.motion')}</span>
             <div class="seg">
               {#each ['system', 'full', 'reduced'] as const as m}
-                <button class:on={s.motion.mode === m} onclick={() => set('motion.mode', m)}>{t(`motion.${m}`)}</button>
+                <button class:on={s.motion.mode === m} aria-pressed={s.motion.mode === m} onclick={() => set('motion.mode', m)}>{t(`motion.${m}`)}</button>
               {/each}
             </div></div>
           <label class="row"><span>{t('look.speed')}<small>{s.motion.speed.toFixed(2)}×</small></span>
@@ -236,7 +236,7 @@
             {#each [{ id: 'auto', name: t('pip.auto'), ok: true, hint: '' }, { id: 'none', name: t('pip.none'), ok: true, hint: '' },
               ...OUTFITS.map(o => ({ id: o.id, name: tOr(`o.${o.id}`, o.name), ok: v!.pip.wearable.includes(o.id), hint: o.tasks !== undefined ? t('pip.tasks', { count: o.tasks }) : t('pip.inSeason') })),
               ...v.pip.custom.map(id => ({ id, name: id, ok: true, hint: t('pip.yours') }))] as o}
-              <button class="outfit" class:on={s.pip.outfit === o.id} disabled={!o.ok} onclick={() => set('pip.outfit', o.id)}>
+              <button class="outfit" class:on={s.pip.outfit === o.id} aria-pressed={s.pip.outfit === o.id} disabled={!o.ok} onclick={() => set('pip.outfit', o.id)}>
                 {o.name}{#if o.hint && (!o.ok || o.hint === t('pip.yours'))}<small>{o.hint}</small>{/if}
               </button>
             {/each}

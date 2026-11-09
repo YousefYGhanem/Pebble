@@ -145,14 +145,19 @@
 
   // ---------- events from main ----------
   let lastStatus: Record<string, Status> = {}
+  // read out by screen readers (WCAG 4.1.3): what finished or stopped (polite), what needs you (an alert)
+  let said = $state(''), alerted = $state('')
+
   function noticeChanges(list: Session[]) {
     for (const x of list) {
       const before = lastStatus[x.id]
       if (x.status === 'done' && before && before !== 'done') {
+        said = t('i.sr.done', { project: x.project })
         happyAt = Date.now(); kick(); say('done'); later(3100)
         if (x.startedAt && Date.now() - x.startedAt > 120_000) confetti(innerWidth / 2, top0.value + rect.value.h) // a long task
       }
-      if (x.ask && before !== 'question') { kick(); say('question') }
+      if (x.ask && before !== 'question') { alerted = t('i.sr.asks', { project: x.project, text: x.ask.kind === 'permission' ? x.ask.summary : x.detail }); kick(); say('question') }
+      if (x.status === 'error' && before && before !== 'error') said = t('i.sr.stopped', { project: x.project })
     }
     lastStatus = Object.fromEntries(list.map(x => [x.id, x.status]))
   }
@@ -203,7 +208,20 @@
   let voice: HTMLAudioElement | undefined
   window.pebble.onWorry(() => { worriedAt = Date.now(); kick(); say('question'); later(4100) })
   window.pebble.onPlay(url => { voice?.pause(); voice = url ? new Audio(url) : undefined; void voice?.play() })
-  window.pebble.onToggle(() => { if (tucked) { tucked = false; open = true } else open = !open })
+  window.pebble.onToggle(() => {
+    if (tucked) { tucked = false; open = true } else open = !open
+    if (open) focusFirst(); else window.pebble.release()
+  })
+  // the toggle shortcut gave the island the keyboard (main): start on the question if there is one, else the page row
+  function focusFirst() {
+    setTimeout(() => (clip?.querySelector<HTMLElement>('.ask button, .buttons button, [role=tab][tabindex="0"]'))?.focus(), 80)
+  }
+  // Esc closes the island and gives the keyboard back to the app you were in (a question stays unanswered)
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return
+    open = false
+    window.pebble.release()
+  })
   window.pebble.onTuck(() => { tucked = !tucked; open = false })
   window.pebble.onBye(() => startBye(() => window.pebble.byeDone()))
   window.pebble.onScene(s => {
@@ -497,8 +515,10 @@
 <canvas bind:this={canvas}></canvas>
 
 {#if view}
-  <!-- svelte-ignore a11y_click_events_have_key_events -->
-  <div class="clip" class:reduced bind:this={clip} role="presentation" onclick={onClick} oncontextmenu={onRightClick}
+  <div class="sr-only" role="status">{said}</div>
+  <div class="sr-only" role="alert">{alerted}</div>
+  <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+  <div class="clip" class:reduced bind:this={clip} role="region" aria-label={t('i.island.name')} onclick={onClick} oncontextmenu={onRightClick}
     title={mode === 'resting' || mode === 'medium' ? t('i.island.hint') : mode === 'tucked' ? t('i.island.tuckedHint') : undefined}>
     <div class="content mode-{mode}" bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
       {#if mode === 'resting' && chipCount}

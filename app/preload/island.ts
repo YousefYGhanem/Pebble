@@ -13,6 +13,7 @@ const api: IslandApi = {
   byeDone: () => ipcRenderer.send(CH.byeDone),
   catchMouse: on => ipcRenderer.send(CH.catchMouse, on),
   tucked: on => ipcRenderer.send(CH.tucked, on),
+  release: () => ipcRenderer.send(CH.release),
   answer: (id, answer) => ipcRenderer.send(CH.answer, id, answer),
   reply: (id, text) => ipcRenderer.send(CH.reply, id, text),
   jump: id => ipcRenderer.send(CH.jump, id),

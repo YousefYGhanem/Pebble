@@ -466,5 +466,15 @@
   "i.undo.shelf": "تم مسح الرف",
   "i.undo.file": "تمت إزالة الملف من الرف",
   "i.undo.note": "تم حذف الملاحظة",
-  "advanced.historyCleared": "تم مسح السجل"
+  "advanced.historyCleared": "تم مسح السجل",
+  "i.sr.done": "انتهى {project}",
+  "i.sr.stopped": "توقف {project} بسبب خطأ",
+  "i.sr.asks": "{project} يحتاجك: {text}",
+  "i.island.name": "جزيرة Pebble",
+  "i.page.attention": "يحتاج انتباهك",
+  "i.music.next": "التالي",
+  "i.music.previous": "السابق",
+  "i.home.openMusic": "افتح الموسيقى",
+  "demo.pause": "أوقف العرض مؤقتًا",
+  "demo.play": "شغّل العرض"
 }
