@@ -287,11 +287,14 @@ function setTerminal(sh: terminals.Shell, on: boolean) {
 }
 
 const shortcuts: Record<string, string> = {}
+/** shortcuts another app already holds (Settings says so next to them) */
+const takenShortcuts = new Set<string>()
 function bindShortcut(name: string, keys: string, fn: () => void) {
   if (shortcuts[name] === keys) return
   if (shortcuts[name]) globalShortcut.unregister(shortcuts[name]!)
   shortcuts[name] = keys
-  if (keys && !globalShortcut.register(keys, fn)) log.warn(`shortcut ${keys} is taken by another app`)
+  takenShortcuts.delete(name)
+  if (keys && !globalShortcut.register(keys, fn)) { takenShortcuts.add(name); log.warn(`shortcut ${keys} is taken by another app`) }
 }
 
 function applySettings() {
@@ -350,6 +353,7 @@ const updater = new Updater(() => store.settings.general.updates)
 
 const settingsWin = new SettingsWindow({
   view: () => ({
+    shortcutsTaken: [...takenShortcuts],
     version: app.getVersion(),
     settings: store.settings,
     theme: store.theme,

@@ -16,6 +16,8 @@ export interface ConnectorView {
 }
 
 export interface SettingsView {
+  /** the shortcut settings another app holds ('toggleShortcut', …) */
+  shortcutsTaken?: string[]
   /** main asks for a tab (the island's "Fix in Settings") */
   openTab?: { tab: string; n: number }
   version: string

@@ -4,7 +4,8 @@
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t, tOr } from '../i18n.svelte'
   import { accelerator, THEME_COLORS, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
-  import { CHIPS } from '../../shared/settings'
+  import { CHIPS, DEFAULTS } from '../../shared/settings'
+  import { WORDS } from '../../shared/i18n'
   import { SCENES, type Scene } from '../../shared/island'
   import { OUTFITS, PIP_LOOKS, pipColors, type PipLookId } from '../../shared/pip'
   import { drawPip } from '../island/pip'
@@ -50,7 +51,67 @@
     paint(o)
     return { update: paint }
   }
-  const TABS = ['general', 'island', 'look', 'agents', 'chat', 'extras', 'connectors', 'advanced'] as const
+  const TABS = ['general', 'island', 'look', 'pip', 'agents', 'chat', 'extras', 'connectors', 'advanced'] as const
+  type Tab = (typeof TABS)[number]
+
+  // ---------- search (about 70 settings in 9 tabs: people search before they guess a tab) ----------
+  let query = $state('')
+  let searchBox = $state<HTMLInputElement>()
+  /** which tab a word lives in, by its key's first part */
+  const HOME: Record<string, Tab> = {
+    general: 'general', update: 'general', notify: 'general', rest: 'general', island: 'island', size: 'island', chip: 'island',
+    look: 'look', colors: 'look', motion: 'look', icon: 'look', pipLook: 'pip', pip: 'pip', agents: 'agents', terminals: 'agents',
+    chat: 'chat', apps: 'chat', extras: 'extras', guard: 'extras', connectors: 'connectors', advanced: 'advanced', diag: 'advanced'
+  }
+  /** words that are states, not settings (shown only sometimes: nothing to go to) */
+  const NOT_FOUND = new Set(['colors.custom', 'colors.revert', 'connectors.on', 'connectors.off', 'connectors.attention', 'connectors.starting', 'general.taken', 'general.reset', 'size.reset', 'advanced.restartNow', 'advanced.historyCleared'])
+  const results = $derived.by(() => {
+    const q = query.trim().toLowerCase()
+    if (q.length < 2 || !v) return []
+    const vars = { pip: v.settings.pip.name, name: v.settings.pip.name, count: '', n: '', min: '', max: '', version: '', port: '', error: '', percent: '' }
+    const out: { tab: Tab; label: string; hint?: string }[] = [], seen = new Set<string>()
+    const add = (tab: Tab, label: string, hint?: string) => { const id = tab + label; if (!seen.has(id) && out.length < 30) { seen.add(id); out.push({ tab, label, hint }) } }
+    for (const key of Object.keys(WORDS.en!)) {
+      const home = HOME[key.split('.')[0]!]
+      if (!home || NOT_FOUND.has(key)) continue
+      const text = t(key, vars)
+      if (!text.toLowerCase().includes(q)) continue
+      // a hint finds its setting: the result names the setting, with the hint under it
+      const base = key.endsWith('Hint') ? key.slice(0, -4) : null
+      if (base && base in WORDS.en!) add(home, t(base, vars), text)
+      else add(home, text)
+    }
+    for (const c of v.connectors) {
+      const name = tOr(`c.${c.id}.name`, c.name), desc = tOr(`c.${c.id}.desc`, c.description)
+      if ((name + ' ' + desc).toLowerCase().includes(q)) add('connectors', name, desc)
+    }
+    return out
+  })
+  /** a result: its tab, then its row in view (a folded part opens), lit for a moment */
+  function go(r: { tab: Tab; label: string }) {
+    query = ''
+    tab = r.tab
+    setTimeout(() => {
+      const el = [...document.querySelectorAll<HTMLElement>('main .row > span, main .col > span, main h2, main summary, main .icon span, main .seg button')]
+        .find(e => e.textContent?.includes(r.label))
+      if (!el) return
+      el.closest('details')?.setAttribute('open', '')
+      const target = el.closest<HTMLElement>('.row, .col, h2, summary, .icons, .seg') ?? el
+      target.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      target.classList.add('found')
+      setTimeout(() => target.classList.remove('found'), 1800)
+    }, 60)
+  }
+  function keys(e: KeyboardEvent) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); searchBox?.focus(); return }
+    if (e.key === 'Escape' && query && document.activeElement === searchBox) { query = ''; return }
+    record(e)
+  }
+
+  /** shortcuts as Windows writes them ("Ctrl+Alt+P") */
+  const keysLabel = (k: string) => k.replace(/\bCommandOrControl\b|\bControl\b/g, 'Ctrl')
+  /** the port typed this session: Pebble listens on it after a restart */
+  let portEdited = $state(false)
   const SHELLS: Record<string, string> = { powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' }
   const SHORTCUTS = ['toggleShortcut', 'tuckShortcut', 'buddyShortcut', 'voiceShortcut'] as const
   const SIZES = [['restingWidth', 60, 600], ['restingHeight', 20, 60], ['width', 120, 1200], ['height', 24, 80], ['askWidth', 200, 1200], ['openWidth', 300, 1400], ['offsetTop', 0, 200]] as const
@@ -72,7 +133,7 @@
   const diagnosis = $derived(v?.diagnostics && v.diagnostics !== 'running' ? v.diagnostics : null)
 </script>
 
-<svelte:window onkeydown={record} />
+<svelte:window onkeydown={keys} />
 
 {#if v}
   {@const s = v.settings}
@@ -80,15 +141,26 @@
   <div class="shell">
     <nav aria-label={t('nav.label')}>
       <div class="brand">Pebble <span class="muted">{v.version}</span></div>
+      <input class="search" type="search" bind:this={searchBox} bind:value={query} placeholder={t('search.placeholder')} aria-label={t('search.placeholder')} />
       {#each TABS as id}
-        <button class:active={tab === id} aria-current={tab === id ? 'page' : undefined} onclick={() => (tab = id)}>{t(`tab.${id}`)}</button>
+        <button class:active={tab === id && !query} aria-current={tab === id ? 'page' : undefined} onclick={() => { query = ''; tab = id }}>{t(`tab.${id}`)}</button>
       {/each}
     </nav>
 
     <main>
       {#if v.error}<div class="error" role="alert">{t('notSaved', { error: v.error })}</div>{/if}
 
-      {#if tab === 'general'}
+      {#if query.trim().length >= 2}
+        <h1>{t('search.results', { q: query.trim() })}</h1>
+        <section>
+          {#each results as r (r.tab + r.label)}
+            <button class="result" onclick={() => go(r)}><span>{r.label}<small>{t(`tab.${r.tab}`)}{#if r.hint} · {r.hint}{/if}</small></span><span aria-hidden="true">›</span></button>
+          {:else}
+            <div class="row"><span class="muted">{t('search.none')}</span></div>
+          {/each}
+        </section>
+
+      {:else if tab === 'general'}
         <h1>{t('tab.general')}</h1>
         <section>
           <label class="row"><span>{t('general.language')}<small>{t('general.languageHint')}</small></span>
@@ -98,10 +170,13 @@
           <label class="row"><span>{t('general.startWithWindows')}</span>
             <input type="checkbox" class="switch" checked={s.general.startWithWindows} onchange={() => set('general.startWithWindows', !s.general.startWithWindows)} /></label>
           {#each SHORTCUTS as key}
-            <div class="row"><span>{t(`general.${key}`, { pip })}{#if key === 'tuckShortcut'}<small>{t('general.tuckHint')}</small>{/if}</span>
-              <button class="key" class:rec={recording === key} onclick={() => (recording = recording === key ? null : key)}>
-                {recording === key ? t('general.pressKeys') : s.general[key] || t('general.none')}
-              </button></div>
+            <div class="row"><span>{t(`general.${key}`, { pip })}{#if key === 'tuckShortcut'}<small>{t('general.tuckHint')}</small>{/if}
+                {#if v.shortcutsTaken?.includes(key)}<small class="warn">{t('general.taken')}</small>{/if}</span>
+              <span class="inline">
+                {#if s.general[key] !== DEFAULTS.general[key]}<button class="ghost" title={t('general.reset')} aria-label={t('general.reset')} onclick={() => set(`general.${key}`, DEFAULTS.general[key])}>↺</button>{/if}
+                <button class="key" class:rec={recording === key} onclick={() => (recording = recording === key ? null : key)}>
+                  {recording === key ? t('general.pressKeys') : keysLabel(s.general[key]) || t('general.none')}
+                </button></span></div>
           {/each}
           <button class="link" onclick={() => act({ do: 'welcome' })}>{t('general.welcome')}</button>
         </section>
@@ -169,13 +244,16 @@
               </select></label>
           {/each}
         </section>
-        <h2>{t('island.size')}</h2>
-        <section>
-          {#each SIZES as [key, min, max]}
-            <label class="row"><span>{t(`size.${key}`)}<small>{t('unit.px', { min, max })}</small></span>
-              <input type="number" {min} {max} value={s.island[key]} onchange={e => set(`island.${key}`, num(e))} /></label>
-          {/each}
-        </section>
+        <details class="more">
+          <summary>{t('island.size')}</summary>
+          <section>
+            {#each SIZES as [key, min, max]}
+              <label class="row"><span>{t(`size.${key}`)}<small>{t('unit.px', { min, max })}</small></span>
+                <input type="number" {min} {max} value={s.island[key]} onchange={e => set(`island.${key}`, num(e))} /></label>
+            {/each}
+            <button class="link" onclick={() => set('island', Object.fromEntries(SIZES.map(([k]) => [k, DEFAULTS.island[k]])))}>{t('size.reset')}</button>
+          </section>
+        </details>
 
       {:else if tab === 'look'}
         {@const tok = v.theme.tokens}
@@ -185,6 +263,9 @@
             <select value={s.theme} onchange={e => set('theme', text(e))}>
               {#each v.themes as th}<option value={th.id}>{tOr(`theme.${th.id}`, th.name)}</option>{/each}
             </select></label>
+          {#if s.theme === 'custom'}<div class="row"><span>{t('colors.custom')}</span><button onclick={() => set('theme', 'default')}>{t('colors.revert')}</button></div>{/if}
+          <details class="more inner" open={s.theme === 'custom'}>
+          <summary>{t('colors.customize')}</summary>
           <div class="col"><span>{t('colors.title')}<small>{t('colors.hint')}</small></span>
             <div class="island-preview" style:background={tok.background} style:color={tok.text} style:border-radius="{tok.radius}px">
               {#each ['ready', 'running', 'done', 'error', 'question'] as const as st}<i style:background={tok[st]}></i>{/each}
@@ -198,6 +279,7 @@
             </div></div>
           <label class="row"><span>{t('colors.radius')}<small>{tok.radius}px</small></span>
             <input type="range" min="0" max="40" step="1" value={tok.radius} onchange={e => act({ do: 'theme.edit', tokens: { radius: num(e) } })} /></label>
+          </details>
           <div class="row"><span>{t('look.motion')}</span>
             <div class="seg">
               {#each ['system', 'full', 'reduced'] as const as m}
@@ -215,6 +297,9 @@
               {/each}
             </div></div>
         </section>
+
+      {:else if tab === 'pip'}
+        <h1>{pip} <span class="muted">· {t('pip.done', { count: v.pip.done })}</span></h1>
         <h2>{t('pipLook.title', { name: pip })} <span class="muted">· {t('pipLook.hint')}</span></h2>
         <section>
           <div class="icons" role="radiogroup" aria-label={t('pipLook.title', { name: pip })}>
@@ -231,7 +316,7 @@
               <input type="color" value={s.pip.visor} onchange={e => set('pip.visor', text(e))} /></label>
           {/if}
         </section>
-        <h2>{pip} <span class="muted">· {t('pip.done', { count: v.pip.done })}</span></h2>
+        <h2>{t('pip.about', { name: pip })}</h2>
         <section>
           <label class="row"><span>{t('pip.name')}<small>{t('pip.nameHint')}</small></span>
             <input type="text" maxlength="24" value={s.pip.name} onchange={e => set('pip.name', text(e).trim() || 'Pip')} /></label>
@@ -292,11 +377,15 @@
         <h2>{t('chat.keys')} <span class="muted">· {t('chat.keysHint')}</span></h2>
         <section>
           {#each PROVIDERS.filter(x => x.key) as x}
-            <label class="row"><span>{x.name}</span>
-              <input type="password" autocomplete="off" placeholder={t(v.chatKeys[x.id] ? 'secret.saved' : 'secret.notSet')}
-                onchange={e => { const k = text(e); (e.currentTarget as HTMLInputElement).value = ''; act({ do: 'chat.key', provider: x.id, value: k }) }} /></label>
+            <div class="row"><span>{x.name}<small class:okay={v.chatKeys[x.id]}>{t(v.chatKeys[x.id] ? 'secret.savedState' : 'secret.notSetState')}</small></span>
+              <span class="inline">
+                {#if v.chatKeys[x.id]}<button class="ghost" onclick={() => act({ do: 'chat.key', provider: x.id, value: '' })}>{t('secret.remove')}</button>{/if}
+                <input type="password" autocomplete="off" aria-label={x.name} placeholder={t(v.chatKeys[x.id] ? 'secret.replace' : 'secret.paste')}
+                  onchange={e => { const k = text(e); (e.currentTarget as HTMLInputElement).value = ''; act({ do: 'chat.key', provider: x.id, value: k }) }} /></span></div>
           {/each}
         </section>
+        <details class="more" open={s.chatApps.desktop.length > 0}>
+        <summary>{t('apps.experimental')}</summary>
         <h2>{t('apps.title')} <span class="muted">· {t('apps.hint')}</span></h2>
         <div class="problem" role="note">{t('apps.warning')}</div>
         <section>
@@ -312,6 +401,7 @@
                 onchange={() => set('chatApps.desktop', s.chatApps.desktop.includes(id) ? s.chatApps.desktop.filter(x => x !== id) : [...s.chatApps.desktop, id])} /></label>
           {/each}
         </section>
+        </details>
 
       {:else if tab === 'extras'}
         <h1>{t('tab.extras')}</h1>
@@ -340,9 +430,12 @@
         <h1>{t('tab.connectors')}</h1>
         {#each v.connectors as c (c.id)}
           <section class="card">
-            <label class="row head"><span><b>{tOr(`c.${c.id}.name`, c.name)}</b>{#if !c.builtIn}<em>{t('connectors.yours')}</em>{/if}<small>{tOr(`c.${c.id}.desc`, c.description)}</small></span>
+            <label class="row head"><span><b>{tOr(`c.${c.id}.name`, c.name)}</b>{#if !c.builtIn}<em>{t('connectors.yours')}</em>{/if}<small>{tOr(`c.${c.id}.desc`, c.description)}</small>
+              <small class="state" class:okay={c.enabled && c.running && !c.problem} class:warn={c.enabled && !!c.problem}>{t(!c.enabled ? 'connectors.off' : c.problem ? 'connectors.attention' : c.running ? 'connectors.on' : 'connectors.starting')}</small></span>
               <input type="checkbox" class="switch" checked={c.enabled} onchange={() => act({ do: 'connector', id: c.id })} /></label>
             {#if c.enabled && c.problem}<div class="problem">{c.problem}</div>{/if}
+            <!-- what a connector needs shows when it is on (the tab is a list, not a wall of forms) -->
+            {#if c.enabled}
             {#each c.fields as f (f.key)}
               {#if f.pick}
                 {@const open = v.connectorPick?.id === c.id && v.connectorPick.key === f.key ? v.connectorPick : undefined}
@@ -365,9 +458,9 @@
                 <label class="row"><span>{tOr(`c.${c.id}.${f.key}`, f.label)}</span>
                   <input type="checkbox" class="switch" checked={f.value === true} onchange={() => act({ do: 'connector.set', id: c.id, key: f.key, value: f.value !== true })} /></label>
               {:else}
-                <label class="row"><span>{tOr(`c.${c.id}.${f.key}`, f.label)}{#if f.required}<small>{t('connectors.needed')}</small>{/if}</span>
+                <label class="row"><span>{tOr(`c.${c.id}.${f.key}`, f.label)}{#if f.secret}<small class:okay={f.set}>{t(f.set ? 'secret.savedState' : 'secret.notSetState')}</small>{:else if f.required}<small>{t('connectors.needed')}</small>{/if}</span>
                   {#if f.secret}
-                    <input type="password" autocomplete="off" placeholder={t(f.set ? 'secret.saved' : 'secret.notSet')}
+                    <input type="password" autocomplete="off" placeholder={t(f.set ? 'secret.replace' : 'secret.paste')}
                       onchange={e => { const x = text(e); (e.currentTarget as HTMLInputElement).value = ''; act({ do: 'connector.set', id: c.id, key: f.key, value: x }) }} />
                   {:else if f.type === 'number'}
                     <input type="number" value={f.value as number} onchange={e => act({ do: 'connector.set', id: c.id, key: f.key, value: num(e) })} />
@@ -380,6 +473,7 @@
               {/if}
             {/each}
             {#if c.webhook && c.running}<button class="link" onclick={() => act({ do: 'copyWebhook', id: c.id })}>{t('connectors.webhook')}</button>{/if}
+            {/if}
           </section>
         {/each}
         <section class="actions">
@@ -396,7 +490,8 @@
               {#each Object.entries(SCENES) as [id, label]}<option value={id}>{label}</option>{/each}
             </select></label>
           <label class="row"><span>{t('advanced.port')}<small>{t('advanced.portHint')}</small></span>
-            <input type="number" min="1024" max="65535" value={s.server.port} onchange={e => set('server.port', num(e))} /></label>
+            <span class="inline">{#if portEdited}<button onclick={() => act({ do: 'restart' })}>{t('advanced.restartNow')}</button>{/if}
+              <input type="number" min="1024" max="65535" value={s.server.port} onchange={e => { portEdited = true; set('server.port', num(e)) }} /></span></label>
         </section>
         <h2>{t('diag.title')} <span class="muted">· {t('diag.hint')}</span></h2>
         <section>
@@ -414,6 +509,9 @@
           <button onclick={() => act({ do: 'open', what: 'settings' })}>{t('advanced.settings')}</button>
           <button onclick={() => act({ do: 'open', what: 'log' })}>{t('advanced.log')}</button>
           <button onclick={clearHistory}>{clearing ? `${t('advanced.historyCleared')} · ${t('i.common.undo')}` : t('advanced.history')}</button>
+        </section>
+        <!-- apart from the everyday buttons, so a slip does not end Pebble -->
+        <section class="actions apart">
           <button onclick={() => act({ do: 'restart' })}>{t('advanced.restart')}</button>
           <button class="danger" onclick={() => act({ do: 'quit' })}>{t('advanced.quit')}</button>
         </section>
@@ -427,7 +525,22 @@
   :global(*) { box-sizing: border-box; }
   .shell { display: grid; grid-template-columns: 200px 1fr; height: 100vh; }
   nav { display: flex; flex-direction: column; gap: 2px; padding: 18px 10px; background: color-mix(in srgb, var(--text) 4%, var(--background)); border-inline-end: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
-  .brand { font-weight: 600; font-size: 16px; padding: 4px 12px 16px; }
+  .brand { font-weight: 600; font-size: 16px; padding: 4px 12px 12px; }
+  .search { margin: 0 2px 10px; min-width: 0 !important; width: auto; }
+  .result { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: start; background: none; padding: 10px 4px; border-radius: 8px; }
+  .result > span:first-child { display: flex; flex-direction: column; gap: 2px; }
+  .result + .result { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); border-radius: 0; }
+  :global(.found) { animation: found 1.8s ease-out; border-radius: 8px; }
+  @keyframes found { 0%, 40% { background: color-mix(in srgb, var(--accent) 26%, transparent); } }
+  details.more { margin-top: 22px; }
+  details.more.inner { margin: 0; padding: 4px 0; border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+  details.more > summary { cursor: pointer; font-weight: 600; padding: 6px 0 10px; color: var(--text); }
+  details.more.inner > summary { font-weight: 400; padding: 10px 0; }
+  .inline { display: flex; align-items: center; gap: 8px; }
+  .ghost { background: none; }
+  small.okay { color: var(--done); }
+  small.warn { color: var(--question); }
+  section.actions.apart { margin-top: 28px; }
   nav button { text-align: start; padding: 9px 12px; border-radius: 8px; background: none; }
   nav button:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
   nav button.active { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--text); font-weight: 600; }
@@ -450,7 +563,7 @@
   button.link { background: none; padding: 10px 0; color: var(--accent); align-self: flex-start; }
   button.danger { color: var(--error); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  input[type='number'], input[type='text'], input[type='password'], select, textarea {
+  input[type='number'], input[type='text'], input[type='password'], input[type='search'], select, textarea {
     background: color-mix(in srgb, var(--text) 7%, var(--background)); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); border-radius: 8px; padding: 7px 10px;
   }
   input[type='number'] { width: 100px; }
@@ -493,5 +606,5 @@
   .pick span { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pick b { font-weight: 600; white-space: nowrap; }
   @keyframes rise { from { opacity: 0; transform: translateY(4px); } }
-  @media (prefers-reduced-motion: reduce) { section { animation: none; } .switch::after { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { section { animation: none; } .switch::after { transition: none; } :global(.found) { animation: none; outline: 2px solid var(--accent); } }
 </style>
