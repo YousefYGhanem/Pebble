@@ -51,6 +51,8 @@ export interface Session {
   ask?: Ask
   /** a reply hook is waiting: you can answer the agent from the island after it stopped */
   replyable?: boolean
+  /** what the agent suggests next, as a question with ready answers (the Claude app's next-step box); a click replies */
+  suggest?: { ask: string; options: string[] }
   /** the window (terminal, VS Code) that runs this session, for "jump to terminal" */
   windowPid?: number
   /** that window itself (a process can have several) */
@@ -160,9 +162,15 @@ export function apply(prev: Session | undefined, e: HookEvent, agent: Agent = 'c
     case 'SessionStart': return { ...s, status: 'ready', detail: 'Session started' }
     case 'UserPromptSubmit': {
       const prompt = String(e.prompt ?? '')
-      return { ...s, status: 'running', detail: prompt.slice(0, 140), prompt, startedAt: now, steps: [], files: [], diff: undefined, message: undefined, ask: undefined, replyable: false, seenAt: undefined }
+      const turn = { status: 'running' as const, startedAt: now, steps: [], files: [], diff: undefined, message: undefined, ask: undefined, replyable: false, seenAt: undefined, suggest: undefined }
+      // a message the app or a helper agent put in the conversation is not your prompt: yours stays on show
+      if (fromTheApp(prompt)) return { ...s, ...turn, detail: s.prompt ? s.prompt.slice(0, 140) : s.detail }
+      return { ...s, ...turn, detail: prompt.slice(0, 140), prompt }
     }
     case 'PreToolUse': {
+      // the turn's closing question with its answers (the Claude app's next-step box): kept for the island, not a step
+      if (isWrapUp(e.tool_name)) { const suggest = suggestionOf(input); return suggest ? { ...s, suggest } : s }
+      if (isAppTool(e.tool_name)) return s // the app's own bookkeeping (its task list…): not work to show
       const kind = stepKind(e.tool_name)
       const text = describeTool(e.tool_name, input)
       const next: Session = { ...s, status: 'running', detail: text, steps: addStep(s.steps, { at: now, kind, text }), startedAt: s.startedAt ?? now }
@@ -184,7 +192,8 @@ export function apply(prev: Session | undefined, e: HookEvent, agent: Agent = 'c
     case 'Notification': return { ...s, detail: e.message || s.detail }
     case 'Stop': {
       const message = e.last_assistant_message?.trim() || undefined
-      return { ...s, status: 'done', ask: undefined, message, detail: message ? message.split('\n')[0]!.slice(0, 140) : s.prompt ? `Done: ${s.prompt.slice(0, 100)}` : 'Done' }
+      // a suggestion waiting for your answer is what the small island shows
+      return { ...s, status: 'done', ask: undefined, message, detail: s.suggest ? s.suggest.ask : message ? message.split('\n')[0]!.slice(0, 140) : s.prompt ? `Done: ${s.prompt.slice(0, 100)}` : 'Done' }
     }
     case 'StopFailure': return { ...s, status: 'error', ask: undefined, detail: e.error || 'Stopped with an error' }
     case 'SessionEnd': return null
@@ -203,3 +212,24 @@ export function summary(steps: Step[]): string {
 export const risky = (tool: string) => /^(Bash|PowerShell|Write|Edit|MultiEdit|NotebookEdit|shell|run_shell_command|write_file|replace)$/i.test(tool)
 /** An answer is highlighted only when the agent itself recommends it (the default effect steers choices). */
 export const recommended = (label: string) => /\(recommended\)/i.test(label)
+
+/** Conversation turns that are not typed by you: a helper agent's report, a background task's notice, the app's events. */
+export const fromTheApp = (prompt: string) =>
+  /^\s*<(agent-message|task-notification|system-reminder|side-sessions-event|ci-monitor-event|local-command-stdout|command-name|bash-notification)[\s>]/.test(prompt)
+
+/** The Claude app's tools for its own bookkeeping (mcp__ccd_turn__update_plan, mcp__ccd_session__…). */
+export const isAppTool = (tool = '') => /^mcp__ccd_/.test(tool)
+const isWrapUp = (tool = '') => /^mcp__ccd_turn__wrap_up$/.test(tool)
+
+// what the app's own buttons do, as a reply in words
+const APP_ACTIONS: Record<string, string> = { commit: 'Commit it', create_pr: 'Create a pull request', verify: 'Verify it', merge: 'Merge it' }
+
+/** The next-step question of a turn and its ready answers; null when it asks nothing. */
+export function suggestionOf(input: Record<string, unknown>): { ask: string; options: string[] } | null {
+  const ask = typeof input.ask === 'string' ? input.ask.trim() : ''
+  if (!ask) return null
+  const actions = Array.isArray(input.actions) ? input.actions as Record<string, unknown>[] : []
+  const options = actions.map(a => (typeof a.action === 'string' && APP_ACTIONS[a.action]) || (typeof a.label === 'string' ? a.label.trim() : ''))
+    .filter(Boolean).slice(0, 3)
+  return { ask: ask.slice(0, 200), options }
+}

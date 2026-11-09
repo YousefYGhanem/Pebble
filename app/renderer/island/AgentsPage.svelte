@@ -102,6 +102,13 @@
         {:else}
           <div class="card muted">{detailText(s.detail) || t('i.detail.waiting')}</div>
         {/if}
+        {#if s.replyable && s.suggest}
+          <!-- the agent's suggested next step: a click answers with that button's words -->
+          <div class="suggest">
+            <span class="q">{s.suggest.ask}</span>
+            {#each s.suggest.options as o, i (o)}<button class:likely={i === 0} onclick={() => onreply(s.id, o)}>{o}</button>{/each}
+          </div>
+        {/if}
         {#if s.replyable}
           <div class="reply">
             <textarea rows="1" placeholder={t('i.agents.replyTo', { name: AGENT_NAMES[s.agent] })} bind:value={draft}
@@ -164,6 +171,9 @@
   .card { border-radius: 12px; padding: 10px 12px; background: var(--surface1); max-height: 170px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
   .card.muted { color: var(--muted); }
   .reply { display: flex; gap: 8px; align-items: flex-end; }
+  .suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .suggest .q { flex-basis: 100%; font-weight: 600; font-size: 0.92em; }
+  .suggest button { padding: 4px 12px; font-size: 0.9em; }
   .reply textarea { flex: 1; font: inherit; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: 12px; padding: 6px 10px; resize: none; max-height: 90px; field-sizing: content; }
   .reply textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 

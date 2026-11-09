@@ -68,3 +68,29 @@ test('a session first seen without cwd still gets its project name later', () =>
   s = apply(s, { session_id: 'b', cwd: '/home/me/blog', hook_event_name: 'Stop' })!
   expect(s.project).toBe('blog')
 })
+
+test("the turn's next-step question becomes the island's suggestion; the app's bookkeeping is not a step", () => {
+  let s = apply(undefined, { session_id: 'x', hook_event_name: 'UserPromptSubmit', prompt: 'make a release' })!
+  s = apply(s, { session_id: 'x', hook_event_name: 'PreToolUse', tool_name: 'mcp__ccd_turn__update_plan', tool_input: { advance: true } })!
+  expect(s.steps).toEqual([])
+  s = apply(s, { session_id: 'x', hook_event_name: 'PreToolUse', tool_name: 'mcp__ccd_turn__wrap_up',
+    tool_input: { recap: 'Built it.', ask: 'Release this as 0.3.0?', actions: [{ label: 'Yes, release 0.3.0' }, { label: 'Not yet' }, { action: 'commit' }] } })!
+  expect(s.suggest).toEqual({ ask: 'Release this as 0.3.0?', options: ['Yes, release 0.3.0', 'Not yet', 'Commit it'] })
+  expect(s.steps).toEqual([])
+  s = apply(s, { session_id: 'x', hook_event_name: 'Stop', last_assistant_message: 'All done.' })!
+  expect(s.detail).toBe('Release this as 0.3.0?')
+  expect(s.message).toBe('All done.')
+  // a recap without a question suggests nothing
+  expect(apply(s, { session_id: 'x', hook_event_name: 'PreToolUse', tool_name: 'mcp__ccd_turn__wrap_up', tool_input: { recap: 'Done.' } })!.suggest).toEqual(s.suggest)
+  // the next prompt starts clean
+  expect(apply(s, { session_id: 'x', hook_event_name: 'UserPromptSubmit', prompt: 'Yes, release 0.3.0' })!.suggest).toBeUndefined()
+})
+
+test("a helper agent's report or a background notice in the conversation does not replace your prompt", () => {
+  let s = apply(undefined, { session_id: 'x', hook_event_name: 'UserPromptSubmit', prompt: 'review the UX' })!
+  s = apply(s, { session_id: 'x', hook_event_name: 'UserPromptSubmit', prompt: '<agent-message from="a1">[Subagent hand-back] …' })!
+  expect([s.prompt, s.status]).toEqual(['review the UX', 'running'])
+  s = apply(s, { session_id: 'x', hook_event_name: 'UserPromptSubmit', prompt: '<task-notification>\n<task-id>b9</task-id>' })!
+  expect(s.prompt).toBe('review the UX')
+  expect(apply(s, { session_id: 'x', hook_event_name: 'UserPromptSubmit', prompt: 'a <b>real</b> prompt' })!.prompt).toBe('a <b>real</b> prompt')
+})
