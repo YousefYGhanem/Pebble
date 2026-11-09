@@ -24,6 +24,12 @@
     const patch = path.split('.').reduceRight<unknown>((inner, k) => ({ [k]: inner }), value)
     act({ do: 'update', patch: patch as Record<string, unknown> })
   }
+  // clearing history waits 5 s, and the same button undoes it meanwhile
+  let clearing = $state<ReturnType<typeof setTimeout> | null>(null)
+  function clearHistory() {
+    if (clearing) { clearTimeout(clearing); clearing = null; return }
+    clearing = setTimeout(() => { clearing = null; act({ do: 'history.clear' }) }, 5000)
+  }
   const num = (e: Event) => Number((e.currentTarget as HTMLInputElement).value)
   const text = (e: Event) => (e.currentTarget as HTMLInputElement).value
 
@@ -404,7 +410,7 @@
         <section class="actions">
           <button onclick={() => act({ do: 'open', what: 'settings' })}>{t('advanced.settings')}</button>
           <button onclick={() => act({ do: 'open', what: 'log' })}>{t('advanced.log')}</button>
-          <button onclick={() => act({ do: 'history.clear' })}>{t('advanced.history')}</button>
+          <button onclick={clearHistory}>{clearing ? `${t('advanced.historyCleared')} · ${t('i.common.undo')}` : t('advanced.history')}</button>
           <button onclick={() => act({ do: 'restart' })}>{t('advanced.restart')}</button>
           <button class="danger" onclick={() => act({ do: 'quit' })}>{t('advanced.quit')}</button>
         </section>

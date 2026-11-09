@@ -5,6 +5,7 @@
   import type { Answer, HistoryItem, Usage } from '../../shared/ipc'
   import { AGENT_NAMES, type Agent, type Session } from '../../shared/state'
   import { ago as agoAt, detailText, stepsSummary } from './pages'
+  import StatusMark from './StatusMark.svelte'
   import { t } from '../i18n.svelte'
   import AskView from './AskView.svelte'
   import DiffView from './DiffView.svelte'
@@ -49,7 +50,7 @@
     <div class="tabs" role="tablist">
       {#each sessions as x (x.id)}
         <button role="tab" aria-selected={!showHistory && x.id === s?.id} class="tab" class:on={!showHistory && x.id === s?.id} onclick={e => { e.stopPropagation(); selected = x.id; showHistory = false }}>
-          <span class="dot {x.status}"></span>{x.project}
+          <StatusMark status={x.status} size={9} />{x.project}
         </button>
       {/each}
       <button role="tab" aria-selected={showHistory} class="tab" class:on={showHistory} title={t('i.agents.history')} onclick={e => { e.stopPropagation(); showHistory = !showHistory }}>
@@ -183,11 +184,6 @@
   .link { display: inline-flex; align-items: center; gap: 5px; background: none; color: var(--muted); padding: 2px 6px; }
   .link:hover { color: var(--text); }
 
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--c, var(--ready)); }
-  .dot.running { --c: var(--running); }
-  .dot.done { --c: var(--done); }
-  .dot.error { --c: var(--error); }
-  .dot.question { --c: var(--question); }
   @keyframes pulse { 50% { opacity: 0.35; } }
   @media (prefers-reduced-motion: reduce) { .steps li, .steps li.current :global(svg) { animation: none; } }
 </style>

@@ -451,5 +451,20 @@
   "demo.rightClick": "زر أيمن",
   "demo.keys": "من أي مكان: {toggle} يفتحها، و{tuck} يطويها.",
   "guard.onlyDuringFocus": "فقط أثناء تشغيل مؤقت التركيز",
-  "guard.onlyDuringFocusHint": "عند الإيقاف: في كل مرة، طوال اليوم"
+  "guard.onlyDuringFocusHint": "عند الإيقاف: في كل مرة، طوال اليوم",
+  "i.ask.planFor": "لدى {project} خطة لك",
+  "i.ask.questionsFor": "لدى {project} أسئلة لك",
+  "i.ask.reviewPlan": "راجع الخطة",
+  "i.ask.answer": "أجب",
+  "i.home.quiet": "هادئ",
+  "i.home.nothingPlaying": "لا شيء قيد التشغيل",
+  "i.home.startTimer": "ابدأ مؤقتًا",
+  "i.home.empty": "فارغ",
+  "m.manyDone": "انتهى {n} من الوكلاء",
+  "i.common.undo": "تراجع",
+  "i.undo.clipboard": "تم مسح سجل الحافظة",
+  "i.undo.shelf": "تم مسح الرف",
+  "i.undo.file": "تمت إزالة الملف من الرف",
+  "i.undo.note": "تم حذف الملاحظة",
+  "advanced.historyCleared": "تم مسح السجل"
 }

@@ -47,7 +47,7 @@
       <span class="label"><Icon name="agents" size={13} />{t('i.page.agents')}</span>
       {#if busy.length}<span class="value">{t('i.home.working', { n: busy.length })}</span><span class="muted line">{busy[0]!.project} · {busy[0]!.detail}</span>
       {:else if sessions.length}<span class="value">{t('i.home.allDone')}</span><span class="muted line">{sessions[0]!.project}</span>
-      {:else}<span class="value muted">Quiet</span>{/if}
+      {:else}<span class="value muted">{t('i.home.quiet')}</span>{/if}
     </button>
 
     <button class="tile" onclick={() => go('music')}>
@@ -60,20 +60,20 @@
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <span class="playpause" role="button" tabindex="-1" aria-label={extras.media.playing ? t('i.common.pause') : t('i.common.play')}
           onclick={e => { e.stopPropagation(); act({ do: 'media', action: 'toggle' }) }}><Icon name={extras.media.playing ? 'pause' : 'play'} size={13} /></span>
-      {:else}<span class="value muted">Nothing playing</span>{/if}
+      {:else}<span class="value muted">{t('i.home.nothingPlaying')}</span>{/if}
     </button>
 
     <button class="tile" onclick={() => go('focus')}>
       <span class="label"><Icon name="focus" size={13} />{t('i.page.focus')}</span>
       {#if extras.focus}<span class="value">{clock(focusLeft(extras.focus, now) * 1000)}</span><span class="muted line">{extras.focus.left !== undefined ? t('i.home.paused') : t('i.home.left')}</span>
-      {:else}<span class="value muted">Start a timer</span>{/if}
+      {:else}<span class="value muted">{t('i.home.startTimer')}</span>{/if}
     </button>
 
     <button class="tile" onclick={() => go(extras.shelf.length ? 'files' : 'notes')}>
       <span class="label"><Icon name={extras.shelf.length ? 'files' : 'notes'} size={13} />{extras.shelf.length ? t('i.page.files') : t('i.page.notes')}</span>
       {#if extras.shelf.length}<span class="value">{t('i.home.onShelf', { n: extras.shelf.length })}</span>
       {:else if extras.notes.length}<span class="muted line">{extras.notes[0]!.text.split('\n')[0]}</span>
-      {:else}<span class="value muted">Empty</span>{/if}
+      {:else}<span class="value muted">{t('i.home.empty')}</span>{/if}
     </button>
   </div>
 

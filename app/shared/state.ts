@@ -198,3 +198,8 @@ export function summary(steps: Step[]): string {
   return ([['read', n('read')], ['edited', n('edit')], ['ran', n('run')], ['searched', n('search')]] as const)
     .filter(([, c]) => c > 0).map(([w, c]) => `${w} ${c}`).join(' · ')
 }
+
+/** Tools that run commands or change files: their Allow is not the highlighted, easy answer. */
+export const risky = (tool: string) => /^(Bash|PowerShell|Write|Edit|MultiEdit|NotebookEdit|shell|run_shell_command|write_file|replace)$/i.test(tool)
+/** An answer is highlighted only when the agent itself recommends it (the default effect steers choices). */
+export const recommended = (label: string) => /\(recommended\)/i.test(label)

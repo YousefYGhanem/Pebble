@@ -191,6 +191,22 @@ function updateVisibility() {
   if (!hide && !island.isVisible()) island.showInactive()
 }
 
+/** The island is on screen, neither tucked away nor hidden by game mode: what it shows needs no Windows notification. */
+const islandSeen = () => !!island && island.isVisible() && !tucked
+
+// "done" notifications only when the island is out of sight; several within 3 s become one
+let doneBatch: Session[] = [], doneTimer: NodeJS.Timeout | undefined
+function toastDone(s: Session) {
+  if (islandSeen()) return
+  doneBatch.push(s)
+  doneTimer ??= setTimeout(() => {
+    const b = doneBatch
+    doneBatch = []; doneTimer = undefined
+    if (b.length === 1) toast(tr('m.isDone', { agent: agentName(b[0]!), project: b[0]!.project }), b[0]!.message?.split('\n')[0] || b[0]!.detail, b[0]!.id)
+    else toast(tr('m.manyDone', { n: b.length }), b.map(x => `${agentName(x)} · ${x.project}`).join('\n'), b[0]!.id)
+  }, 3000)
+}
+
 function bringBack() {
   if (island && !island.isVisible()) { shownAnyway = true; updateVisibility() }
 }
@@ -596,9 +612,15 @@ app.whenReady().then(async () => {
     native.request<Record<string, unknown>>('window.ofProcess', { pid }).then(w => hub.attachWindow(id, w)).catch(() => {})
   })
   hub.on('question', (id: string) => {
+    const seen = islandSeen()
     bringBack() // the island itself switches to its "ask" size
-    const s = hub.sessions.get(id)
-    if (s) toast(tr('m.needsYou', { agent: agentName(s), project: s.project }), s.ask?.kind === 'plan' ? tr('m.planReady') : s.detail, id)
+    // the island already shows it: a Windows notification only if it is still unanswered after 20 s
+    const notify = () => {
+      const s = hub.sessions.get(id)
+      if (s?.ask) toast(tr('m.needsYou', { agent: agentName(s), project: s.project }), s.ask.kind === 'plan' ? tr('m.planReady') : s.detail, id)
+    }
+    if (seen) setTimeout(notify, 20_000).unref()
+    else notify()
   })
   hub.on('usage', (agent: Agent, prev: Usage | undefined, next: Usage) => { today.usage(agent, next); usageAlert(agent, prev, next) })
   onBattery = powerMonitor.isOnBatteryPower()
@@ -613,7 +635,7 @@ app.whenReady().then(async () => {
       }
       refreshTray()
     }
-    toast(tr('m.isDone', { agent: agentName(s), project: s.project }), s.message?.split('\n')[0] || s.detail, s.id)
+    toastDone(s)
   })
   hub.on('notify', (n: { id: string; title: string; body: string }) => toast(n.title, n.body, n.id))
   fullscreen.on('change', (id: number | null) => {

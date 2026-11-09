@@ -4,6 +4,7 @@
   import type { Action, Note } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import { t } from '../i18n.svelte'
+  import { undo } from './undo.svelte'
 
   let { notes, act }: { notes: Note[]; act: (a: Action) => void } = $props()
   let selected = $state<string>()
@@ -25,8 +26,11 @@
     save()
   }
   function remove(id: string) {
+    const before = $state.snapshot(draft)
     draft = draft.filter(n => n.id !== id)
     save()
+    // undo also cancels the pending save of the list without it
+    undo.offer(t('i.undo.note'), { undo: () => { clearTimeout(timer); timer = undefined; act({ do: 'notes.save', notes: before }) } })
   }
 </script>
 

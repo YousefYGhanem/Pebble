@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import type { Answer, IslandState } from '../../shared/ipc'
-  import type { Session, Status } from '../../shared/state'
+  import { recommended, risky, type Session, type Status } from '../../shared/state'
   import type { Scene } from '../../shared/island'
   import { applyTheme } from '../theme'
   import { setLanguage, t } from '../i18n.svelte'
@@ -27,6 +27,8 @@
   import { drawIsland, drawSplitPill, islandPath } from './draw'
   import { dayStart, drawSkin, skinFor } from './skins'
   import Icon from './Icon.svelte'
+  import StatusMark from './StatusMark.svelte'
+  import { undo } from './undo.svelte'
   import { drawPip, HATS } from './pip'
   import { pipColors } from '../../shared/pip'
   import { confetti, hearts, particlesAlive, stepParticles } from './particles'
@@ -314,6 +316,14 @@
       alpha: thin ? 1 : 1 - s.island.seeThrough / 100,
       shadow: s.island.style === 'floating' && !thin
     })
+    // tucked, the line's pattern says the state without its colour: dashed = stopped, dotted = needs you
+    if (thin && (status === 'error' || status === 'question')) {
+      const step = status === 'error' ? 14 : 7, gap = status === 'error' ? 5 : 3
+      ctx.save()
+      ctx.globalCompositeOperation = 'destination-out'
+      for (let x = box.x + step; x < box.x + box.w - step; x += step) ctx.fillRect(x, box.y - 1, gap, box.h + 2)
+      ctx.restore()
+    }
 
     if (s.island.skins && !thin) {
       const d = new Date()
@@ -453,6 +463,11 @@
     open = false
   }
 
+  // the ask card grows under the mouse at the top edge: clicks in its first 0.6 s were aimed at something else
+  let askShownAt = 0
+  $effect(() => { if (asking?.ask) { void asking.id; askShownAt = performance.now() } })
+  const armed = () => performance.now() - askShownAt > 600
+
   // In test mode the pretend sessions change here; real ones go to the main process.
   const patchScene = (id: string, p: Partial<Session>) => (sceneSessions = sceneSessions.map(x => (x.id === id ? { ...x, ...p } : x)))
 
@@ -523,7 +538,7 @@
         <div class="line" style:height="{view.settings.island.height}px"><Icon name="focus" size={14} /><span class="title">{t('i.island.focus', { time: clock(focusLeft(extras.focus, now) * 1000), state: extras.focus.left !== undefined ? t('i.home.paused') : t('i.home.left') })}</span></div>
       {:else if mode === 'medium' && top}
         <div class="line" style:height="{view.settings.island.height}px">
-          <span class="dot {top.status}"></span>
+          <StatusMark status={top.status} />
           <span class="title">{top.project} · {top.detail || top.status}</span>
           {#if shown.length > 1}<span class="count">+{shown.length - 1}</span>{/if}
         </div>
@@ -535,20 +550,20 @@
           {#if ask.kind === 'permission'}
             <div class="ask-text">{t('i.ask.wantsToUse', { project: s.project, tool: ask.tool })}<div class="detail">{ask.summary}</div></div>
             <div class="buttons">
-              <button class="likely" onclick={() => answer(s.id, { kind: 'permission', choice: 'allow' })}>{t('i.ask.allow')}</button>
-              <button onclick={() => answer(s.id, { kind: 'permission', choice: 'deny' })}>{t('i.ask.deny')}</button>
+              <button class:likely={!risky(ask.tool)} onclick={() => armed() && answer(s.id, { kind: 'permission', choice: 'allow' })}>{t('i.ask.allow')}</button>
+              <button onclick={() => armed() && answer(s.id, { kind: 'permission', choice: 'deny' })}>{t('i.ask.deny')}</button>
             </div>
           {:else if ask.kind === 'question' && quick}
             <div class="ask-text">{t('i.ask.asks', { project: s.project })}<div class="detail strong">{quick.question}</div></div>
             <div class="buttons">
               {#each quick.options as o, i (o.label)}
-                <button class:likely={i === 0} title={o.description} onclick={() => answer(s.id, { kind: 'question', answers: { [quick.question]: o.label } })}>{o.label}</button>
+                <button class:likely={recommended(o.label)} title={o.description} onclick={() => armed() && answer(s.id, { kind: 'question', answers: { [quick.question]: o.label } })}>{o.label}</button>
               {/each}
               <button onclick={() => openOn(s.id)}>{t('i.ask.other')}</button>
             </div>
           {:else}
-            <div class="ask-text"><b>{s.project}</b> {ask.kind === 'plan' ? 'has a plan for you' : 'has questions for you'}<div class="detail">{s.prompt ?? ''}</div></div>
-            <div class="buttons"><button class="likely" onclick={() => openOn(s.id)}>{ask.kind === 'plan' ? 'Review plan' : 'Answer'}</button></div>
+            <div class="ask-text">{t(ask.kind === 'plan' ? 'i.ask.planFor' : 'i.ask.questionsFor', { project: s.project })}<div class="detail">{s.prompt ?? ''}</div></div>
+            <div class="buttons"><button class="likely" onclick={() => openOn(s.id)}>{t(ask.kind === 'plan' ? 'i.ask.reviewPlan' : 'i.ask.answer')}</button></div>
           {/if}
         </div>
       {:else if mode === 'open'}
@@ -570,6 +585,7 @@
               {/if}
             </div>
           {/key}
+          {#if undo.text}<div class="undo" role="status">{undo.text}<button onclick={() => undo.take()}>{t('i.common.undo')}</button></div>{/if}
           <PageNav bind:page badges={{ agents: shown.some(x => x.ask || x.status === 'error') }} />
         </div>
       {/if}
@@ -583,17 +599,12 @@
   .content { position: absolute; left: 0; top: 0; }
   .reduced .content { transition: opacity 0.15s ease-out; }
 
+  .undo { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: 999px; background: #ffffff1a; font-size: 0.88em; }
+  .undo button { padding: 3px 12px; }
   .line { display: flex; align-items: center; gap: 10px; padding: 0 56px 0 16px; }
   .title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .count { color: var(--muted); font-size: 0.85em; }
 
-  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--c, var(--ready)); }
-  .running { --c: var(--running); animation: pulse 1.2s steps(5, jump-none) infinite; } /* steps: a smooth endless animation repaints the see-through window at the screen's full rate */
-  .done { --c: var(--done); }
-  .error { --c: var(--error); }
-  .question { --c: var(--question); }
-  @keyframes pulse { 50% { opacity: 0.35; } }
-  .reduced .dot { animation: none; }
 
   .ask { padding: 12px 16px 14px; }
   .ask-text { padding-right: 52px; line-height: 1.35; }

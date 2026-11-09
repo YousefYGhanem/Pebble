@@ -451,5 +451,20 @@
   "demo.rightClick": "right-click",
   "demo.keys": "From anywhere: {toggle} opens it, {tuck} tucks it away.",
   "guard.onlyDuringFocus": "Only while a focus timer runs",
-  "guard.onlyDuringFocusHint": "off: every time, all day"
+  "guard.onlyDuringFocusHint": "off: every time, all day",
+  "i.ask.planFor": "{project} has a plan for you",
+  "i.ask.questionsFor": "{project} has questions for you",
+  "i.ask.reviewPlan": "Review plan",
+  "i.ask.answer": "Answer",
+  "i.home.quiet": "Quiet",
+  "i.home.nothingPlaying": "Nothing playing",
+  "i.home.startTimer": "Start a timer",
+  "i.home.empty": "Empty",
+  "m.manyDone": "{n} agents are done",
+  "i.common.undo": "Undo",
+  "i.undo.clipboard": "Clipboard history cleared",
+  "i.undo.shelf": "Shelf cleared",
+  "i.undo.file": "File removed from the shelf",
+  "i.undo.note": "Note deleted",
+  "advanced.historyCleared": "History cleared"
 }

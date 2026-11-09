@@ -2,7 +2,7 @@
   // What a session asks, in full: a permission (with the change it makes), Claude's multiple-choice questions,
   // or a plan to approve or send back with feedback.
   import type { Answer } from '../../shared/ipc'
-  import { diffOf, type Session } from '../../shared/state'
+  import { diffOf, risky, type Session } from '../../shared/state'
   import DiffView from './DiffView.svelte'
   import { markdown } from './md'
   import { t } from '../i18n.svelte'
@@ -43,7 +43,7 @@
       <pre class="command">{ask.summary}</pre>
     {/if}
     <div class="buttons">
-      <button class="likely" onclick={() => onanswer({ kind: 'permission', choice: 'allow' })}>{t('i.ask.allow')}</button>
+      <button class:likely={!risky(ask.tool)} onclick={() => onanswer({ kind: 'permission', choice: 'allow' })}>{t('i.ask.allow')}</button>
       {#if ask.canAlways}<button onclick={() => onanswer({ kind: 'permission', choice: 'always' })}>{t('i.ask.always')}</button>{/if}
       <button onclick={() => onanswer({ kind: 'permission', choice: 'deny' })}>{t('i.ask.deny')}</button>
     </div>

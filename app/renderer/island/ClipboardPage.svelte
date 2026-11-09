@@ -4,6 +4,7 @@
   import Icon from './Icon.svelte'
   import { ago } from './pages'
   import { t } from '../i18n.svelte'
+  import { undo } from './undo.svelte'
 
   let { extras, now, act, enabled }: { extras: ExtrasState; now: number; act: (a: Action) => void; enabled: boolean } = $props()
   let copied = $state(-1)
@@ -18,12 +19,12 @@
 <div class="page">
   <div class="page-head">
     <span class="page-title">{t('i.page.clipboard')}</span>
-    {#if extras.clipboard.length}<button class="ghost" onclick={() => act({ do: 'clip.clear' })}><Icon name="trash" size={13} />{t('i.common.clear')}</button>{/if}
+    {#if extras.clipboard.length && !undo.hides('clipboard')}<button class="ghost" onclick={() => undo.offer(t('i.undo.clipboard'), { hides: 'clipboard', commit: () => act({ do: 'clip.clear' }) })}><Icon name="trash" size={13} />{t('i.common.clear')}</button>{/if}
     <span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span>
   </div>
   {#if !enabled}
     <div class="empty">{t('i.clip.off')}</div>
-  {:else if !extras.clipboard.length}
+  {:else if !extras.clipboard.length || undo.hides('clipboard')}
     <div class="empty">{t('i.clip.empty')}</div>
   {:else}
     <div class="list">

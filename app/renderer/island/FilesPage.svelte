@@ -6,9 +6,12 @@
   import type { Action, ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import { t } from '../i18n.svelte'
+  import { undo } from './undo.svelte'
 
   let { extras, now, act, reduced }: { extras: ExtrasState; now: number; act: (a: Action) => void; reduced: boolean } = $props()
   const drop = $derived(extras.drop)
+  // what an undo offer is holding back stays out of sight until it is settled
+  const shelf = $derived(extras.shelf.filter(f => !undo.hides(`shelf:${f.path}`)))
   const size = (b: number) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`)
 </script>
 
@@ -16,7 +19,7 @@
   <div class="page-head">
     <span class="page-title">{t('i.page.files')}</span>
     {#if !drop}<button class="ghost" onclick={() => act({ do: 'drop.start' })}><Icon name="phone" size={14} />{t('i.files.phone')}</button>{/if}
-    {#if extras.shelf.length && !drop}<button class="ghost" onclick={() => act({ do: 'shelf.clear' })}>{t('i.files.clearAll')}</button>{/if}
+    {#if shelf.length && !drop}<button class="ghost" onclick={() => undo.offer(t('i.undo.shelf'), { hides: 'shelf', commit: () => act({ do: 'shelf.clear' }) })}>{t('i.files.clearAll')}</button>{/if}
     <span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span>
   </div>
 
@@ -39,11 +42,11 @@
         <button onclick={() => act({ do: 'drop.stop' })}>{t('i.common.stop')}</button>
       </div>
     </div>
-  {:else if !extras.shelf.length}
+  {:else if !shelf.length}
     <div class="empty">{t('i.files.empty')}</div>
   {:else}
     <div class="shelf">
-      {#each extras.shelf as f (f.path)}
+      {#each shelf as f (f.path)}
         <div class="file" draggable="true" title={f.path} role="button" tabindex="0"
           in:scale={{ start: 0.6, duration: reduced ? 0 : 420, easing: backOut }}
           ondragstart={e => { e.preventDefault(); act({ do: 'shelf.drag', path: f.path }) }}
@@ -54,7 +57,7 @@
           <span class="muted small">{size(f.size)}</span>
           <span class="tools">
             <button class="ghost" title="Show in folder" aria-label="Show in folder" onclick={() => act({ do: 'shelf.reveal', path: f.path })}><Icon name="folder" size={12} /></button>
-            <button class="ghost" title="Remove from shelf" aria-label="Remove from shelf" onclick={() => act({ do: 'shelf.remove', path: f.path })}><Icon name="close" size={12} /></button>
+            <button class="ghost" title="Remove from shelf" aria-label="Remove from shelf" onclick={() => undo.offer(t('i.undo.file'), { hides: `shelf:${f.path}`, commit: () => act({ do: 'shelf.remove', path: f.path }) })}><Icon name="close" size={12} /></button>
           </span>
         </div>
       {/each}
