@@ -78,7 +78,15 @@
     </div>
   {:else}
     <div class="log" bind:this={list} aria-live="polite">
-      {#if !chat.messages.length}<div class="empty">{t('i.chat.empty', { name })}</div>{/if}
+      {#if !chat.messages.length}
+        <div class="empty">{t('i.chat.empty', { name })}</div>
+        <!-- what Pip can do, to start with one click (an empty page that teaches) -->
+        <div class="starters">
+          <button class="ghost" onclick={() => act({ do: 'chat.windows' })}><Icon name="eye" size={12} />{t('i.chat.startLook')}</button>
+          <button class="ghost" onclick={() => { text = t('i.chat.startExplainText'); box?.focus() }}><Icon name="chat" size={12} />{t('i.chat.startExplain')}</button>
+          <button class="ghost" onclick={dictate}><Icon name="mic" size={12} />{t('i.chat.speak')}</button>
+        </div>
+      {/if}
       {#each chat.messages as m (m.at + m.role)}
         <div class="msg {m.role}">
           {#if m.look}<div class="seen"><Icon name="eye" size={11} />{m.look.title}</div>{/if}
@@ -105,7 +113,7 @@
       <textarea rows="1" bind:this={box} bind:value={text} placeholder={t('i.chat.message', { name })} aria-label={t('i.chat.message', { name })}
         onkeydown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}></textarea>
       {#if chat.busy}
-        <button type="button" onclick={() => act({ do: 'chat.stop' })} aria-label={t('i.common.stop')}><Icon name="pause" size={13} /></button>
+        <button type="button" onclick={() => act({ do: 'chat.stop' })} aria-label={t('i.common.stop')}><Icon name="stop" size={13} /></button>
       {:else}
         <button type="submit" class="go" disabled={!text.trim()} aria-label={t('i.chat.send')}><Icon name="send" size={13} /></button>
       {/if}
@@ -114,6 +122,8 @@
 </div>
 
 <style>
+  .starters { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+  .starters button { display: inline-flex; align-items: center; gap: 6px; font-size: 0.86em; padding: 5px 12px; border-radius: 999px; background: #ffffff0d; }
   .who { font-size: 11px; }
   .log { height: 190px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding: 2px 2px 8px; }
   .msg { position: relative; max-width: 85%; padding: 8px 12px; border-radius: 14px; line-height: 1.45; overflow-wrap: anywhere; animation: pop 0.2s ease-out; }

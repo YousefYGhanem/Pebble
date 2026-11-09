@@ -12,6 +12,8 @@
   const drop = $derived(extras.drop)
   // what an undo offer is holding back stays out of sight until it is settled
   const shelf = $derived(extras.shelf.filter(f => !undo.hides(`shelf:${f.path}`)))
+  // a file without a picture: a document with its extension, not a folder
+  const ext = (name: string) => /\.([a-z0-9]{1,5})$/i.exec(name)?.[1]?.toUpperCase() ?? ''
   const size = (b: number) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`)
 </script>
 
@@ -50,14 +52,14 @@
         <div class="file" draggable="true" title={f.path} role="button" tabindex="0"
           in:scale={{ start: 0.6, duration: reduced ? 0 : 420, easing: backOut }}
           ondragstart={e => { e.preventDefault(); act({ do: 'shelf.drag', path: f.path }) }}
-          ondblclick={() => act({ do: 'shelf.open', path: f.path })}
+          onclick={() => act({ do: 'shelf.open', path: f.path })}
           onkeydown={e => e.key === 'Enter' && act({ do: 'shelf.open', path: f.path })}>
-          {#if f.icon}<img src={f.icon} alt="" />{:else}<span class="noicon"><Icon name="files" size={22} /></span>{/if}
+          {#if f.icon}<img src={f.icon} alt="" />{:else}<span class="noicon"><Icon name="read" size={26} />{#if ext(f.name)}<b>{ext(f.name)}</b>{/if}</span>{/if}
           <span class="name">{f.name}</span>
           <span class="muted small">{size(f.size)}</span>
           <span class="tools">
-            <button class="ghost" title="Show in folder" aria-label="Show in folder" onclick={() => act({ do: 'shelf.reveal', path: f.path })}><Icon name="folder" size={12} /></button>
-            <button class="ghost" title="Remove from shelf" aria-label="Remove from shelf" onclick={() => undo.offer(t('i.undo.file'), { hides: `shelf:${f.path}`, commit: () => act({ do: 'shelf.remove', path: f.path }) })}><Icon name="close" size={12} /></button>
+            <button class="ghost" title={t('i.files.reveal')} aria-label={t('i.files.reveal')} onclick={e => { e.stopPropagation(); act({ do: 'shelf.reveal', path: f.path }) }}><Icon name="folder" size={12} /></button>
+            <button class="ghost" title={t('i.files.remove')} aria-label={t('i.files.remove')} onclick={e => { e.stopPropagation(); undo.offer(t('i.undo.file'), { hides: `shelf:${f.path}`, commit: () => act({ do: 'shelf.remove', path: f.path }) }) }}><Icon name="close" size={12} /></button>
           </span>
         </div>
       {/each}
@@ -67,16 +69,17 @@
 
 <style>
   .shelf { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
-  .file { position: relative; flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 14px; background: #ffffff0b; cursor: grab; animation: float 3.2s steps(8, jump-none) infinite; }
+  .file { position: relative; flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 14px; background: #ffffff0b; cursor: pointer; animation: float 3.2s steps(8, jump-none) infinite; }
   .file:nth-child(2n) { animation-delay: -1.6s; }
   .file:hover { background: #ffffff16; }
   .file img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; }
-  .noicon { width: 56px; height: 56px; display: grid; place-items: center; color: var(--muted); }
+  .noicon { position: relative; width: 56px; height: 56px; display: grid; place-items: center; color: var(--muted); }
+  .noicon b { position: absolute; bottom: 4px; padding: 0 4px; border-radius: 4px; font-size: 9px; letter-spacing: 0.04em; background: var(--accent); color: var(--on-accent); }
   .name { max-width: 100%; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .small { font-size: 0.78em; }
   .warn { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; color: var(--question); font-size: 0.85em; }
-  .tools { position: absolute; top: 2px; right: 2px; display: none; }
-  .file:hover .tools, .file:focus-within .tools { display: flex; }
+  .tools { position: absolute; top: 2px; inset-inline-end: 2px; display: flex; opacity: 0.45; }
+  .file:hover .tools, .file:focus-within .tools { opacity: 1; }
   .tools button { padding: 3px; }
   @keyframes float { 50% { transform: translateY(-3px); } }
   @media (prefers-reduced-motion: reduce) { .file { animation: none; } }

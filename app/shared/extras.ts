@@ -37,7 +37,12 @@ export interface FocusTimer {
   endsAt?: number
   /** paused: what was left, s */
   left?: number
+  /** a break between rounds (not counted, and the focus guard rests) */
+  break?: boolean
 }
+
+/** The last focus timer that ran out (not stopped): what to offer next, and the rounds done today. */
+export interface FocusDone { at: number; wasBreak: boolean; /** the length of the last round, s */ round: number; today: number; day: string }
 
 export interface Drop {
   /** the address the phone opens (in the QR code) */
@@ -63,6 +68,7 @@ export interface ExtrasState {
   clipboard: ClipItem[]
   notes: Note[]
   focus: FocusTimer | null
+  focusDone: FocusDone | null
   /** 0–100 */
   system: { cpu: number; ram: number }
   radios: { wifi?: boolean; bluetooth?: boolean } | null
@@ -80,13 +86,14 @@ export type Action =
   | { do: 'shelf.clear' }
   | { do: 'clip.copy'; id: number }
   | { do: 'clip.clear' }
+  | { do: 'clip.remove'; id: number }
   | { do: 'notes.save'; notes: Note[] }
-  | { do: 'focus.start'; seconds: number }
+  | { do: 'focus.start'; seconds: number; break?: boolean }
   | { do: 'focus.pause' | 'focus.resume' | 'focus.stop' }
   | { do: 'radio'; kind: 'wifi' | 'bluetooth'; on: boolean }
   | { do: 'open'; what: 'wifi' | 'bluetooth' }
   | { do: 'drop.start' | 'drop.stop' | 'drop.allow' | 'drop.network' }
-  | { do: 'settings.open' }
+  | { do: 'settings.open'; tab?: 'connectors' }
   | { do: 'chat.send'; text: string }
   | { do: 'chat.signIn' }
   | { do: 'chat.stop' | 'chat.clear' | 'chat.windows' | 'chat.dictate' }
@@ -115,4 +122,25 @@ export function positionNow(m: Media, now: number): number {
 export function focusLeft(f: FocusTimer, now: number): number {
   if (f.left !== undefined) return f.left
   return Math.max(0, Math.round(((f.endsAt ?? now) - now) / 1000))
+}
+
+/**
+ * Copied text that looks like a key, token or password (one word, long, of mixed letters and digits, or a known
+ * prefix): the clipboard page shows only its ends.
+ */
+export function looksSecret(text: string): boolean {
+  const s = text.trim()
+  if (s.length < 16 || /\s/.test(s)) return false
+  if (/^(sk-|sk_|pk_|rk_|ghp_|gho_|ghs_|github_pat_|glpat-|xox[abpr]-|AKIA|AIza|eyJ)/.test(s)) return true
+  return s.length >= 24 && /[a-z]/.test(s) && /[A-Z]/.test(s) && /\d/.test(s) && !/[\\:.]/.test(s) // not a path, an address or a file name
+}
+
+/** "sk-a…3f9c": the ends of a secret, the rest hidden */
+export const maskSecret = (s: string) => `${s.trim().slice(0, 4)}••••••${s.trim().slice(-4)}`
+
+/** A focus timer ran out: a round counts toward today (a break does not), and its length is offered again. */
+export function focusFinished(prev: FocusDone | null, f: FocusTimer, now: number): FocusDone {
+  const d = new Date(now), day = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
+  const before = prev?.day === day ? prev.today : 0
+  return { at: now, wasBreak: !!f.break, round: f.break ? (prev?.round ?? 25 * 60) : f.seconds, today: before + (f.break ? 0 : 1), day }
 }

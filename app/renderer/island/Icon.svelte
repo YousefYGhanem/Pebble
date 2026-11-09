@@ -17,10 +17,11 @@
     music: 'M9 18V5l11-2v13 M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0z M20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
     files: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
     clipboard: 'M9 4h6v3H9z M9 5H6v16h12V5h-3 M9 12h6 M9 16h4',
-    notes: 'M5 3h10l4 4v14H5z M9 9h6 M9 13h6 M9 17h3',
+    notes: 'M4 4h16v11l-5 5H4z M15 20v-5h5 M8 9h8 M8 13h4', // a sticky note (the clipboard is the other page shape)
     focus: 'M12 8v5l3 2 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M10 1h4',
     play: 'M7 4l13 8-13 8z',
     pause: 'M7 4h3v16H7z M14 4h3v16h-3z',
+    stop: 'M6 6h12v12H6z',
     next: 'M5 4l11 8-11 8z M19 4v16',
     previous: 'M19 4L8 12l11 8z M5 4v16',
     wifi: 'M2 9a15 15 0 0 1 20 0 M5 12.5a10 10 0 0 1 14 0 M8.5 16a5 5 0 0 1 7 0 M12 19.5h.01',

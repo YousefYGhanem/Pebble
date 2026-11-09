@@ -54,7 +54,7 @@
         </button>
       {/each}
       <button role="tab" aria-selected={showHistory} class="tab" class:on={showHistory} title={t('i.agents.history')} onclick={e => { e.stopPropagation(); showHistory = !showHistory }}>
-        <Icon name="history" />{#if !sessions.length}{t('i.agents.history')}{/if}
+        <Icon name="history" />{t('i.agents.history')}
       </button>
     </div>
     <span class="time">{time}</span>
@@ -127,7 +127,7 @@
       {#if s}<span class="meta">{AGENT_NAMES[s.agent]}{s.provider ? ` · ${s.provider}` : ''}{s.model ? ` · ${s.model}` : ''}</span>{/if}
       <span class="grow"></span>
       {#if s?.windowPid}<button class="link" onclick={e => { e.stopPropagation(); onjump(s.id) }}><Icon name="jump" size={13} />{t('i.agents.jump')}</button>{/if}
-      {#if s && !s.ask}<button class="link" onclick={e => { e.stopPropagation(); ondismiss(s.id) }}>{t('i.agents.hide')}</button>{/if}
+      {#if s && !s.ask}<button class="link" title={t('i.agents.hideHint')} onclick={e => { e.stopPropagation(); ondismiss(s.id) }}>{t('i.agents.hide')}</button>{/if}
     </footer>
   {/if}
 </div>

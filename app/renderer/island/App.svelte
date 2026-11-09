@@ -598,8 +598,8 @@
               {:else if page === 'music' && extras}<MusicPage {extras} {now} {act} {reduced} color={album} />
               {:else if page === 'files' && extras}<FilesPage {extras} {now} {act} {reduced} />
               {:else if page === 'clipboard' && extras}<ClipboardPage {extras} {now} {act} enabled={view.settings.clipboard.enabled} />
-              {:else if page === 'notes' && extras}<NotesPage notes={extras.notes} {act} />
-              {:else if page === 'focus' && extras}<FocusPage focus={extras.focus} {now} {act} />
+              {:else if page === 'notes' && extras}<NotesPage notes={extras.notes} {now} {act} />
+              {:else if page === 'focus' && extras}<FocusPage focus={extras.focus} done={extras.focusDone} {now} {act} />
               {:else if page === 'chat' && view.chat}<ChatPage chat={view.chat} {act} {listen} name={view.settings.pip.name} />
               {:else if page === 'widgets'}<WidgetsPage {widgets} connectors={view.connectors} {now} {act} />
               {/if}

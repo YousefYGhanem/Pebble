@@ -16,6 +16,8 @@ export interface ConnectorView {
 }
 
 export interface SettingsView {
+  /** main asks for a tab (the island's "Fix in Settings") */
+  openTab?: { tab: string; n: number }
   version: string
   settings: Settings
   theme: Theme

@@ -21,7 +21,8 @@
 
 <div class="nav" role="tablist" aria-label={t('i.page.pages')} tabindex="-1" onkeydown={key} bind:this={nav}>
   {#each PAGES as p (p.id)}
-    <button role="tab" aria-selected={p.id === page} tabindex={p.id === page ? 0 : -1}
+    <!-- three groups (Hick, Gestalt proximity): you and the agents · what you play and keep · your own things -->
+    <button role="tab" aria-selected={p.id === page} tabindex={p.id === page ? 0 : -1} class:group={p.id === 'music' || p.id === 'notes'}
       aria-label={badges[p.id] ? `${t(`i.page.${p.id}`)} · ${t('i.page.attention')}` : t(`i.page.${p.id}`)} title={t(`i.page.${p.id}`)} class:on={p.id === page} onclick={e => { e.stopPropagation(); page = p.id }}>
       <Icon name={p.icon} size={15} />
       {#if badges[p.id]}<i class="badge"></i>{/if}
@@ -33,6 +34,7 @@
   .nav { display: flex; justify-content: center; gap: 4px; padding: 4px 0 10px; }
   button { position: relative; width: 34px; height: 28px; padding: 0; display: grid; place-items: center; background: none; color: var(--muted); border-radius: 10px; }
   button:hover { color: var(--text); background: #ffffff0f; }
+  button.group { margin-inline-start: 12px; }
   button.on { color: var(--text); background: #ffffff1a; }
   .badge { position: absolute; top: 4px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--question); }
 </style>

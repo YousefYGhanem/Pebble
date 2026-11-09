@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, test, expect } from 'vitest'
-import { focusLeft, lyricIndex, positionNow, type Media } from '../app/shared/extras'
+import { focusFinished, focusLeft, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
 import { Lyrics, parseLrc, plainTitle } from '../app/main/extras/lyrics'
 import { guardActive, matchSite } from '../app/main/extras/guard'
 import { DropServer, lanAddress, safeName } from '../app/main/extras/drop'
@@ -121,4 +121,30 @@ test('focus guard: only while a focus timer runs, unless set to always', () => {
   expect(guardActive(g, true)).toBe(true)
   expect(guardActive({ ...g, onlyDuringFocus: false }, false)).toBe(true)
   expect(guardActive({ ...g, enabled: false }, true)).toBe(false)
+})
+
+test('clipboard: keys and tokens are masked, ordinary text, paths and addresses are not', () => {
+  for (const s of ['sk-ant-api03-abcdefghijklmnop', 'ghp_1234567890abcdefghijklmnop', 'eyJhbGciOiJIUzI1NiJ9.e30.abc', 'Zq8Lm3Pw9Xr2Tk7Vb4Nc6Hd1Fs5Gj0Yy']) expect(looksSecret(s)).toBe(true)
+  for (const s of ['hello world, this is a sentence', 'C:\Users\Yousef\Projects\Pebble2', 'https://github.com/YousefYGhanem/Pebble', 'short', 'ComponentName.svelte2X']) expect(looksSecret(s)).toBe(false)
+  expect(maskSecret('sk-ant-api03-abcdefghijklmnop')).toBe('sk-a••••••mnop')
+})
+
+test('focus: a finished round counts toward today and is offered again; a break does not count', () => {
+  const at = new Date('2026-11-09T10:00').getTime()
+  let d = focusFinished(null, { seconds: 1500 }, at)
+  expect([d.today, d.round, d.wasBreak]).toEqual([1, 1500, false])
+  d = focusFinished(d, { seconds: 300, break: true }, at + 1_800_000)
+  expect([d.today, d.round, d.wasBreak]).toEqual([1, 1500, true])
+  d = focusFinished(d, { seconds: 2700 }, at + 5_000_000)
+  expect([d.today, d.round]).toEqual([2, 2700])
+  expect(focusFinished(d, { seconds: 1500 }, new Date('2026-11-10T09:00').getTime()).today).toBe(1) // a new day
+})
+
+test('actions: removing one clip, a break, and Settings on a tab are checked', () => {
+  expect(validAction({ do: 'clip.remove', id: 3 })).toBe(true)
+  expect(validAction({ do: 'clip.remove', id: 'x' })).toBe(false)
+  expect(validAction({ do: 'focus.start', seconds: 300, break: true })).toBe(true)
+  expect(validAction({ do: 'focus.start', seconds: 300, break: 'yes' })).toBe(false)
+  expect(validAction({ do: 'settings.open', tab: 'connectors' })).toBe(true)
+  expect(validAction({ do: 'settings.open', tab: 'advanced' })).toBe(false)
 })

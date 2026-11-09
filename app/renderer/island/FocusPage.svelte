@@ -1,10 +1,13 @@
 <script lang="ts">
   // Focus: a timer. Pick a length, start; the island keeps it as a ring around Pip (animation #18) and chimes at the end.
-  import { focusLeft, type Action, type FocusTimer } from '../../shared/extras'
+  import { focusLeft, type Action, type FocusDone, type FocusTimer } from '../../shared/extras'
   import { clock } from './pages'
   import { t } from '../i18n.svelte'
 
-  let { focus, now, act }: { focus: FocusTimer | null; now: number; act: (a: Action) => void } = $props()
+  let { focus, done, now, act }: { focus: FocusTimer | null; done: FocusDone | null; now: number; act: (a: Action) => void } = $props()
+  // a round just ended (within half an hour): offer a short break, or another round (Pomodoro: work, then rest)
+  const next = $derived(!focus && done && now - done.at < 30 * 60_000 ? done : null)
+  const start = (seconds: number, isBreak = false) => act({ do: 'focus.start', seconds, break: isBreak || undefined })
   const PRESETS = [5, 15, 25, 45, 60]
   let minutes = $state(25)
   const left = $derived(focus ? focusLeft(focus, now) : minutes * 60)
@@ -22,18 +25,25 @@
       <span class="time">{clock(left * 1000)}</span>
     </div>
     <div class="side">
-      {#if !focus}
+      {#if next}
+        <div class="title">{next.wasBreak ? t('i.focus.breakOver') : t('i.focus.roundDone')}</div>
+        {#if next.today}<div class="muted">{t('i.focus.today', { n: next.today })}</div>{/if}
+        <div class="row">
+          <button class="likely" onclick={() => start(next.round)}>{t('i.focus.another', { n: Math.round(next.round / 60) })}</button>
+          {#if !next.wasBreak}<button onclick={() => start(5 * 60, true)}>{t('i.focus.break')}</button>{/if}
+        </div>
+      {:else if !focus}
         <div class="presets">
           {#each PRESETS as p (p)}<button class:on={minutes === p} onclick={() => (minutes = p)}>{t('i.focus.min', { n: p })}</button>{/each}
         </div>
         <label class="custom muted">{t('i.focus.or')} <input type="number" min="1" max="600" bind:value={minutes} aria-label={t('i.focus.minutes')} /> {t('i.focus.minutes')}</label>
-        <button class="likely start" disabled={!(minutes >= 1)} onclick={() => act({ do: 'focus.start', seconds: Math.round(minutes * 60) })}>{t('i.common.start')}</button>
+        <button class="likely start" disabled={!(minutes >= 1)} onclick={() => start(Math.round(minutes * 60))}>{t('i.focus.startFor', { n: minutes })}</button>
       {:else}
-        <div class="muted">{focus.left !== undefined ? t('i.focus.paused') : t('i.focus.running')}</div>
+        <div class="muted">{focus.break ? t('i.focus.onBreak') : focus.left !== undefined ? t('i.focus.paused') : t('i.focus.running')}</div>
         <div class="row">
           {#if focus.left !== undefined}<button class="likely" onclick={() => act({ do: 'focus.resume' })}>{t('i.common.resume')}</button>
           {:else}<button onclick={() => act({ do: 'focus.pause' })}>{t('i.common.pause')}</button>{/if}
-          <button onclick={() => act({ do: 'focus.stop' })}>{t('i.common.stop')}</button>
+          <button class="ghost" onclick={() => act({ do: 'focus.stop' })}>{t('i.common.stop')}</button>
         </div>
       {/if}
     </div>
@@ -41,6 +51,7 @@
 </div>
 
 <style>
+  .title { font-weight: 600; }
   .focus { display: flex; gap: 22px; align-items: center; padding-bottom: 10px; }
   .dial { position: relative; width: 130px; height: 130px; flex: none; display: grid; place-items: center; }
   .dial svg { position: absolute; inset: 0; transform: rotate(-90deg); }

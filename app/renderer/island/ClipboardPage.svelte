@@ -1,6 +1,6 @@
 <script lang="ts">
   // Clipboard: your last copied texts (kept in memory only, never on disk). Click one to copy it again.
-  import type { Action, ExtrasState } from '../../shared/extras'
+  import { looksSecret, maskSecret, type Action, type ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import { ago } from './pages'
   import { t } from '../i18n.svelte'
@@ -28,11 +28,16 @@
     <div class="empty">{t('i.clip.empty')}</div>
   {:else}
     <div class="list">
-      {#each extras.clipboard as c (c.id)}
-        <button class="row" onclick={() => copy(c.id)} title={t('i.clip.again')}>
-          <span class="text">{c.text}</span>
-          <span class="when muted">{copied === c.id ? t('i.clip.copied') : ago(c.at, now)}</span>
-        </button>
+      {#each extras.clipboard.filter(c => !undo.hides(`clipboard:${c.id}`)) as c (c.id)}
+        <div class="row">
+          <button class="copy" onclick={() => copy(c.id)} title={t('i.clip.again')}>
+            <!-- a key or a token shows only its ends: the island is on screen for anyone to see -->
+            <span class="text" class:secret={looksSecret(c.text)}>{looksSecret(c.text) ? maskSecret(c.text) : c.text}</span>
+            <span class="when muted">{copied === c.id ? t('i.clip.copied') : ago(c.at, now)}</span>
+          </button>
+          <button class="ghost remove" title={t('i.clip.remove')} aria-label={t('i.clip.remove')}
+            onclick={() => undo.offer(t('i.undo.clip'), { hides: `clipboard:${c.id}`, commit: () => act({ do: 'clip.remove', id: c.id }) })}><Icon name="close" size={12} /></button>
+        </div>
       {/each}
     </div>
   {/if}
@@ -40,8 +45,12 @@
 
 <style>
   .list { display: flex; flex-direction: column; max-height: 270px; overflow: auto; margin: 0 -8px 8px; }
-  .row { display: flex; gap: 12px; align-items: flex-start; text-align: left; background: none; border-radius: 10px; padding: 7px 8px; }
-  .row:hover { background: #ffffff10; }
+  .row { display: flex; align-items: flex-start; border-radius: 10px; }
+  .row:hover, .row:focus-within { background: #ffffff10; }
+  .copy { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: flex-start; text-align: start; background: none; padding: 7px 8px; }
+  .secret { font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.04em; }
+  .remove { flex: none; padding: 6px; margin: 2px 4px 0 0; opacity: 0.45; }
+  .row:hover .remove, .remove:focus-visible { opacity: 1; }
   .text { flex: 1; min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; }
   .when { flex: none; font-size: 0.82em; padding-top: 1px; }
 </style>

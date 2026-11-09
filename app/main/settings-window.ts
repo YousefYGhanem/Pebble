@@ -75,7 +75,11 @@ export class SettingsWindow {
   }
 
   /** offscreen: never shown (screenshots for the docs) */
-  open(offscreen = false) {
+  /** the tab to show next (counted, so asking for the same tab again shows it again) */
+  private openTab?: { tab: string; n: number }
+
+  open(offscreen = false, tab?: string) {
+    if (tab) { this.openTab = { tab, n: (this.openTab?.n ?? 0) + 1 }; this.push() }
     if (this.win && !this.win.isDestroyed()) { if (this.win.isMinimized()) this.win.restore(); this.win.focus(); return this.win }
     this.win = new BrowserWindow({
       width: 940, height: 680, minWidth: 760, minHeight: 520, title: 'Pebble Settings', show: false, autoHideMenuBar: true, icon: this.d.icon(),
@@ -92,7 +96,7 @@ export class SettingsWindow {
   push() {
     const open = [this.win, this.welcome].filter(w => w && !w.isDestroyed()) as BrowserWindow[]
     if (!open.length) return
-    const view = { ...this.d.view(), chatModels: this.models, connectorPick: this.pick, diagnostics: this.diagnostics, error: this.error } satisfies SettingsView
+    const view = { ...this.d.view(), chatModels: this.models, connectorPick: this.pick, diagnostics: this.diagnostics, error: this.error, openTab: this.openTab } satisfies SettingsView
     for (const w of open) { w.webContents.send('settings:view', view); w.setIcon(this.d.icon()) } // a newly chosen icon shows at once
   }
 

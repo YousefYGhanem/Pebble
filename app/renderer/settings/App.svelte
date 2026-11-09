@@ -15,7 +15,10 @@
   let pickFilter = $state('')
   let recording = $state<'toggleShortcut' | 'tuckShortcut' | 'buddyShortcut' | 'voiceShortcut' | null>(null)
 
-  window.settingsApi.onView(next => { v = next; applyTheme(next.theme); setLanguage(next.settings.general.language) })
+  let tabAsked = 0
+  window.settingsApi.onView(next => {
+    if (next.openTab && next.openTab.n !== tabAsked) { tabAsked = next.openTab.n; tab = next.openTab.tab }
+    v = next; applyTheme(next.theme); setLanguage(next.settings.general.language) })
   window.settingsApi.ready()
 
   const act = (a: SettingsAction) => window.settingsApi.act(a)

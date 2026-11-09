@@ -71,11 +71,11 @@
       {:else}<span class="value muted">{t('i.home.startTimer')}</span>{/if}
     </button>
 
-    <button class="tile" onclick={() => go(extras.shelf.length ? 'files' : 'notes')}>
-      <span class="label"><Icon name={extras.shelf.length ? 'files' : 'notes'} size={13} />{extras.shelf.length ? t('i.page.files') : t('i.page.notes')}</span>
+    <!-- always Files, in the same place (spatial memory) -->
+    <button class="tile" onclick={() => go('files')}>
+      <span class="label"><Icon name="files" size={13} />{t('i.page.files')}</span>
       {#if extras.shelf.length}<span class="value">{t('i.home.onShelf', { n: extras.shelf.length })}</span>
-      {:else if extras.notes.length}<span class="muted line">{extras.notes[0]!.text.split('\n')[0]}</span>
-      {:else}<span class="value muted">{t('i.home.empty')}</span>{/if}
+      {:else}<span class="value muted">{t('i.home.empty')}</span><span class="muted line">{t('i.home.dropHint')}</span>{/if}
     </button>
   </div>
 

@@ -99,7 +99,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -141,7 +141,7 @@ const extensionDir = app.isPackaged ? path.join(process.resourcesPath, 'extensio
 useDsh(new DshWatch({ event: e => hub.ingest(e, 'dsh'), usage: u => hub.setUsage('dsh', u) }))
 const chatApps = new ChatApps(hub, extensionKey, { native, followed: () => store.settings.chatApps.desktop, problem: (title, body) => toast(title, body) })
 const drop = new DropServer(() => extras.state.shelf, app.getPath('downloads'))
-const guard = new FocusGuard(native, () => store.settings, () => !!extras.state.focus && extras.state.focus.left === undefined, guardPreload(), guardPage)
+const guard = new FocusGuard(native, () => store.settings, () => !!extras.state.focus && extras.state.focus.left === undefined && !extras.state.focus.break, guardPreload(), guardPage)
 const fullscreen = new FullscreenWatch(native)
 const agents = () => adapters({ port: store.settings.server.port, token, nativeExe: nativeExe(app.getAppPath(), app.isPackaged) })
 const documents = () => app.getPath('documents')
@@ -461,7 +461,7 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   }
   if (a.do === 'drop.network') { void shell.openExternal('ms-settings:network-status'); return }
   if (a.do === 'drop.stop') { drop.stop(); return }
-  if (a.do === 'settings.open') { settingsWin.open(); return }
+  if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
   if (a.do === 'chat.send') { void chat.send(a.text); return }
   if (a.do === 'chat.stop') { chat.stop(); return }
   if (a.do === 'chat.clear') { chat.clear(); return }

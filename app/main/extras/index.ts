@@ -4,7 +4,7 @@ import path from 'node:path'
 import { EventEmitter } from 'node:events'
 import { app, clipboard, nativeImage, shell } from 'electron'
 import type { RestLevel } from '../rest'
-import type { Action, ExtrasState, Media, Note, ShelfFile } from '../../shared/extras'
+import { focusFinished, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
 import type { Native } from '../native'
 import { Lyrics } from './lyrics'
@@ -22,7 +22,7 @@ const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipbo
  * 'peak' (0–1, ~30 a second while music plays) and 'focus-done'.
  */
 export class Extras extends EventEmitter {
-  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
   private lyrics: Lyrics
   private songKey = ''
   private lastClip = ''
@@ -185,6 +185,7 @@ export class Extras extends EventEmitter {
     if (!f?.endsAt) return
     this.focusTimer = setTimeout(() => {
       this.state.focus = null
+      this.state.focusDone = focusFinished(this.state.focusDone, f, Date.now())
       this.emit('focus-done', f.seconds)
       this.changed()
     }, Math.max(0, f.endsAt - Date.now()))
@@ -208,16 +209,17 @@ export class Extras extends EventEmitter {
         return
       }
       case 'clip.clear': s.clipboard = []; return this.changed()
+      case 'clip.remove': s.clipboard = s.clipboard.filter(c => c.id !== a.id); return this.changed()
       case 'notes.save':
         s.notes = a.notes.slice(0, MAX_NOTES)
         try { writeJsonAtomic(this.file('notes'), s.notes) } catch {}
         return this.changed()
-      case 'focus.start': s.focus = { seconds: a.seconds, endsAt: Date.now() + a.seconds * 1000 }; this.schedule(); return this.changed()
+      case 'focus.start': s.focus = { seconds: a.seconds, endsAt: Date.now() + a.seconds * 1000, break: a.break || undefined }; this.schedule(); return this.changed()
       case 'focus.pause':
-        if (s.focus?.endsAt) { s.focus = { seconds: s.focus.seconds, left: Math.max(0, Math.round((s.focus.endsAt - Date.now()) / 1000)) }; this.schedule() }
+        if (s.focus?.endsAt) { s.focus = { seconds: s.focus.seconds, left: Math.max(0, Math.round((s.focus.endsAt - Date.now()) / 1000)), break: s.focus.break }; this.schedule() }
         return this.changed()
       case 'focus.resume':
-        if (s.focus?.left !== undefined) { s.focus = { seconds: s.focus.seconds, endsAt: Date.now() + s.focus.left * 1000 }; this.schedule() }
+        if (s.focus?.left !== undefined) { s.focus = { seconds: s.focus.seconds, endsAt: Date.now() + s.focus.left * 1000, break: s.focus.break }; this.schedule() }
         return this.changed()
       case 'focus.stop': s.focus = null; this.schedule(); return this.changed()
       case 'radio':
@@ -242,13 +244,14 @@ export function validAction(a: unknown): a is Action {
     case 'volume': return typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
-    case 'clip.copy': return Number.isInteger(o.id)
+    case 'clip.copy': case 'clip.remove': return Number.isInteger(o.id)
     case 'notes.save': return Array.isArray(o.notes) && o.notes.length <= MAX_NOTES
       && o.notes.every((n: Note) => n && typeof n.id === 'string' && typeof n.text === 'string' && n.text.length <= 20000 && typeof n.at === 'number')
-    case 'focus.start': return Number.isInteger(o.seconds) && (o.seconds as number) >= 1 && (o.seconds as number) <= 24 * 3600
+    case 'settings.open': return o.tab === undefined || o.tab === 'connectors'
+    case 'focus.start': return Number.isInteger(o.seconds) && (o.seconds as number) >= 1 && (o.seconds as number) <= 24 * 3600 && (o.break === undefined || typeof o.break === 'boolean')
     case 'radio': return (o.kind === 'wifi' || o.kind === 'bluetooth') && typeof o.on === 'boolean'
     case 'open': return o.what === 'wifi' || o.what === 'bluetooth'
-    case 'shelf.clear': case 'clip.clear': case 'focus.pause': case 'focus.resume': case 'focus.stop': case 'drop.start': case 'drop.stop': case 'drop.allow': case 'drop.network': case 'settings.open': case 'chat.stop': case 'chat.clear': case 'chat.signIn': case 'chat.windows': case 'chat.dictate': return true
+    case 'shelf.clear': case 'clip.clear': case 'focus.pause': case 'focus.resume': case 'focus.stop': case 'drop.start': case 'drop.stop': case 'drop.allow': case 'drop.network': case 'chat.stop': case 'chat.clear': case 'chat.signIn': case 'chat.windows': case 'chat.dictate': return true
     case 'chat.look': return Number.isSafeInteger(o.hwnd)
     case 'chat.say': return o.at === null || Number.isFinite(o.at)
     case 'word.check': case 'word.close': return true
