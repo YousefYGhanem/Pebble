@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import type { Answer, IslandState } from '../../shared/ipc'
-  import { recommended, risky, type Session, type Status } from '../../shared/state'
+  import { AGENT_NAMES, recommended, risky, type Session, type Status } from '../../shared/state'
   import type { Scene } from '../../shared/island'
   import { applyTheme } from '../theme'
   import { setLanguage, t } from '../i18n.svelte'
@@ -183,6 +183,8 @@
     read(); b.addEventListener('levelchange', read); b.addEventListener('chargingchange', read)
   }).catch(() => {})
 
+  // opened or closed: the welcome tour ticks it off while you try
+  $effect(() => { const on = mode === 'open'; if (!scene) window.pebble.opened(on) })
   // tucked away: every service rests (main), until the island comes back
   $effect(() => { const on = mode === 'tucked'; if (!scene) window.pebble.tucked(on) })
 
@@ -223,6 +225,7 @@
     window.pebble.release()
   })
   window.pebble.onTuck(() => { tucked = !tucked; open = false })
+  window.pebble.onPeek(on => { tucked = on; open = false })
   window.pebble.onBye(() => startBye(() => window.pebble.byeDone()))
   window.pebble.onScene(s => {
     scene = s
@@ -343,7 +346,7 @@
       ctx.restore()
     }
 
-    if (s.island.skins && !thin) {
+    if (s.island.skins && !thin && mode === 'resting') {
       const d = new Date()
       drawSkin(ctx, box, s.island.style === 'notch', skinFor({ cpu: view!.extras.system.cpu, hour: d.getHours(), dayHours: (d.getTime() - started) / 3.6e6 }), reduced ? 0 : t)
     }
@@ -428,15 +431,26 @@
     return inMain || inSplit
   }
 
+  // hover intent (NN/g: 0.3–0.5 s): the island opens once the pointer slows down over it, not as it passes on its way
+  // to a tab or a title bar at the top edge
+  let speed = 0, lastMove = { x: 0, y: 0, t: 0 }
+  function openIfResting() {
+    if (!hovering) return
+    if (speed > 0.6) { hoverTimer = setTimeout(openIfResting, 120); return } // px/ms: still moving fast
+    if (mode === 'resting' || mode === 'medium') open = true
+  }
+  /** tucked, the island lets clicks through to the window below (pointing at it still brings it back) */
+  const catching = () => hovering && mode !== 'tucked'
+
   function setHover(on: boolean) {
     if (on === hovering) return
     hovering = on
-    window.pebble.catchMouse(on)
+    window.pebble.catchMouse(catching())
     clearTimeout(hoverTimer)
     if (on) {
       clearTimeout(leaveTimer)
       if (mode === 'tucked') hoverTimer = setTimeout(() => (tucked = false), 500)
-      else if (view?.settings.island.openOn === 'hover' && (mode === 'resting' || mode === 'medium')) hoverTimer = setTimeout(() => (open = true), 150)
+      else if (view?.settings.island.openOn === 'hover' && (mode === 'resting' || mode === 'medium')) hoverTimer = setTimeout(openIfResting, 350)
     } else if (open) {
       leaveTimer = setTimeout(() => { if (!hovering && !shown.some(x => x.ask) && !typing()) open = false }, 700)
     }
@@ -459,6 +473,9 @@
   })
 
   addEventListener('mousemove', e => {
+    const now = performance.now(), dt = now - lastMove.t
+    if (dt > 0) speed = dt > 200 ? 0 : Math.hypot(e.clientX - lastMove.x, e.clientY - lastMove.y) / dt
+    lastMove = { x: e.clientX, y: e.clientY, t: now }
     setHover(inside(e.clientX, e.clientY))
     const follow = view?.settings.pip.followMouse ?? false
     const lx = follow ? Math.max(-100, Math.min(100, (e.clientX - pipAt.x) / 1.5)) : 0
@@ -468,7 +485,7 @@
   document.addEventListener('mouseleave', () => { setHover(false); lookX.target = lookY.target = 0; wake() })
   // poking Pip (a click right on him) never opens or closes the island
   addEventListener('pointerdown', e => { if (e.button === 0 && pipAt.r && Math.hypot(e.clientX - pipAt.x, e.clientY - pipAt.y) < pipAt.r) poke() }, true)
-  setInterval(() => window.pebble.catchMouse(hovering), 1000) // never stuck catching clicks
+  setInterval(() => window.pebble.catchMouse(catching()), 1000) // never stuck catching clicks
 
   function onClick() {
     if (Date.now() - pokedAt < 400) return
@@ -480,6 +497,17 @@
     tucked = !tucked
     open = false
   }
+
+  // ---------- tips: each shown once, in the moment it is useful (Settings → General brings them back) ----------
+  let tip = $state<'ask' | 'tuck' | 'drop' | null>(null)
+  $effect(() => {
+    if (!view || scene || tip) return
+    const seen = view.settings.general.tipsSeen
+    const next = mode === 'ask' && !seen.includes('ask') ? 'ask' : mode === 'open' && page === 'files' && (extras?.shelf.length ?? 0) > 0 && !seen.includes('drop') ? 'drop' : mode === 'open' && !seen.includes('tuck') ? 'tuck' : null
+    if (next) { tip = next; window.pebble.act({ do: 'tip.seen', id: next }) }
+  })
+  // a tip stays until its moment is over
+  $effect(() => { if ((tip === 'ask' && mode !== 'ask') || ((tip === 'tuck' || tip === 'drop') && mode !== 'open')) tip = null })
 
   // the ask card grows under the mouse at the top edge: clicks in its first 0.6 s were aimed at something else
   let askShownAt = 0
@@ -565,8 +593,11 @@
       {:else if mode === 'ask' && asking?.ask}
         {@const s = asking}
         {@const ask = asking.ask}
+        {@const waitingCount = shown.filter(x => x.ask).length}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <div class="ask" onclick={e => e.stopPropagation()}>
+          {#if tip === 'ask'}<div class="who tipline">{t('i.tip.ask', { keys: view.settings.general.toggleShortcut.replace('Control', 'Ctrl') })}</div>{/if}
+          <div class="who">{AGENT_NAMES[s.agent]}{#if waitingCount > 1} · {t('i.ask.queue', { n: 1, total: waitingCount })}{/if}</div>
           {#if ask.kind === 'permission'}
             <div class="ask-text">{t('i.ask.wantsToUse', { project: s.project, tool: ask.tool })}<div class="detail">{ask.summary}</div></div>
             <div class="buttons">
@@ -605,8 +636,9 @@
               {/if}
             </div>
           {/key}
+          {#if tip === 'tuck' || tip === 'drop'}<div class="tip" role="note">{t(`i.tip.${tip}`)}<button onclick={() => (tip = null)}>{t('i.tip.ok')}</button></div>{/if}
           {#if undo.text}<div class="undo" role="status">{undo.text}<button onclick={() => undo.take()}>{t('i.common.undo')}</button></div>{/if}
-          <PageNav bind:page badges={{ agents: shown.some(x => x.ask || x.status === 'error') }} />
+          <PageNav bind:page hidden={view.settings.island.hiddenPages} badges={{ agents: shown.some(x => x.ask || x.status === 'error') }} />
         </div>
       {/if}
     </div>
@@ -619,6 +651,10 @@
   .content { position: absolute; left: 0; top: 0; }
   .reduced .content { transition: opacity 0.15s ease-out; }
 
+  .who { font-size: 0.78em; color: var(--muted); margin-bottom: 2px; }
+  .who.tipline { color: var(--accent-text); }
+  .tip { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--accent) 22%, transparent); font-size: 0.86em; }
+  .tip button { padding: 3px 12px; }
   .undo { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: 999px; background: var(--surface2); font-size: 0.88em; }
   .undo button { padding: 3px 12px; }
   .line { display: flex; align-items: center; gap: 10px; padding: 0 56px 0 16px; }

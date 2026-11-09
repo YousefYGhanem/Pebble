@@ -78,7 +78,7 @@
   .title { font-weight: 700; font-size: 1.12em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .controls { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
   .play { background: var(--text); color: var(--background); }
-  .vol { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+  .vol { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
   .vol input { width: 90px; }
   /* a 5 px line in a 21 px target (Fitts; WCAG 2.5.8) */
   .progress { height: 5px; padding: 8px 0; margin: -8px 0; background: var(--surface2) content-box; }

@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, test, expect } from 'vitest'
-import { focusFinished, focusLeft, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
+import { focusFinished, focusLeft, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
 import { Lyrics, parseLrc, plainTitle } from '../app/main/extras/lyrics'
 import { guardActive, matchSite } from '../app/main/extras/guard'
 import { DropServer, lanAddress, safeName } from '../app/main/extras/drop'
@@ -147,4 +147,12 @@ test('actions: removing one clip, a break, and Settings on a tab are checked', (
   expect(validAction({ do: 'focus.start', seconds: 300, break: 'yes' })).toBe(false)
   expect(validAction({ do: 'settings.open', tab: 'connectors' })).toBe(true)
   expect(validAction({ do: 'settings.open', tab: 'advanced' })).toBe(false)
+})
+
+test('clipboard: pinned entries stay first and are never pushed out', () => {
+  const list = [{ id: 3, text: 'c', at: 3 }, { id: 2, text: 'b', at: 2, pinned: true }, { id: 1, text: 'a', at: 1 }]
+  expect(trimClips(list, 1).map(c => c.id)).toEqual([2, 3])
+  expect(validAction({ do: 'clip.pin', id: 2 })).toBe(true)
+  expect(validAction({ do: 'tip.seen', id: 'ask' })).toBe(true)
+  expect(validAction({ do: 'tip.seen', id: 'other' })).toBe(false)
 })

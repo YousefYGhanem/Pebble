@@ -17,6 +17,8 @@ export const settingsSchema = z.object({
     language: z.string().regex(/^[a-z]{2}(-[A-Z]{2})?$/),
     /** the welcome tour was shown */
     welcomed: z.boolean(),
+    /** tips already shown once in the island (Settings → General → Show the tips again) */
+    tipsSeen: z.array(z.enum(['ask', 'tuck', 'drop'])),
     startWithWindows: z.boolean(),
     /** the tray's and the windows' icon (the installer and the exe file keep lavender) */
     icon: z.enum(['lavender', 'cream', 'graphite']),
@@ -49,7 +51,9 @@ export const settingsSchema = z.object({
     /** living skins: fire or frost from the processor, a web at night, vines after a long day */
     skins: z.boolean(),
     /** what the resting island shows left and right of Pip */
-    chips: z.object({ left: CHIP, right: CHIP })
+    chips: z.object({ left: CHIP, right: CHIP }),
+    /** pages left out of the page row (Home and Agents always stay) */
+    hiddenPages: z.array(z.enum(['chat', 'music', 'files', 'clipboard', 'notes', 'focus', 'widgets']))
   }),
   music: z.object({
     /** now playing from Windows' media controls (any player), with controls and a sound wave */
@@ -107,6 +111,8 @@ export const settingsSchema = z.object({
     toasts: z.boolean(),
     /** a notification (and a worried Pip) when a CLI passes 80% and 95% of its session or week */
     usageAlerts: z.boolean(),
+    /** which Windows notifications, by where they come from (problems with Pebble itself always show) */
+    notify: z.object({ asks: z.boolean(), done: z.boolean(), connectors: z.boolean(), extras: z.boolean() }),
     /** pause what nobody needs while you are away, a game runs full screen, or the PC is on battery */
     rest: z.object({ away: z.boolean(), games: z.boolean(), battery: z.boolean() }),
     doneSeconds: z.number().min(1).max(600)
@@ -123,11 +129,11 @@ export type Settings = z.infer<typeof settingsSchema>
 export const DEFAULTS: Settings = {
   version: 1,
   theme: 'default',
-  general: { language: 'en', welcomed: false, startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space' },
+  general: { language: 'en', welcomed: false, tipsSeen: [], startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space' },
   island: {
     style: 'notch', openOn: 'hover', display: 'main',
     restingWidth: 180, restingHeight: 32, width: 340, height: 36, askWidth: 460, openWidth: 680,
-    offsetTop: 8, seeThrough: 0, gameMode: true, skins: true, chips: { left: 'none', right: 'none' }
+    offsetTop: 8, seeThrough: 0, gameMode: true, skins: true, chips: { left: 'none', right: 'none' }, hiddenPages: []
   },
   music: { enabled: true, lyrics: true },
   clipboard: { enabled: true },
@@ -139,7 +145,7 @@ export const DEFAULTS: Settings = {
     cursor: { enabled: true }, opencode: { enabled: true }, aider: { enabled: true }, dsh: { enabled: true }
   },
   terminals: { minSeconds: 10 },
-  features: { sound: true, toasts: true, usageAlerts: true, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
+  features: { sound: true, toasts: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
   chat: { provider: 'claude-cli', model: '', readAloud: false },
   chatApps: { desktop: [] },
   server: { port: 47901 }

@@ -26,7 +26,7 @@ export interface SettingsView {
   themes: { id: string; name: string }[]
   displays: { id: number; label: string }[]
   agents: { id: string; name: string; available: boolean; connected: boolean }[]
-  terminals: { id: string; on: boolean }[]
+  terminals: { id: string; on: boolean; file: string }[]
   connectors: ConnectorView[]
   chipWidgets: { id: string; label: string }[]
   pip: { done: number; wearable: string[]; custom: string[] }

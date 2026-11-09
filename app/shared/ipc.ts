@@ -28,7 +28,9 @@ export const CH = {
   play: 'island:play',
   worry: 'island:worry',
   tucked: 'island:tucked',
-  release: 'island:release'
+  release: 'island:release',
+  opened: 'island:opened',
+  peek: 'island:peek'
 } as const
 
 /** Your decision on what a session asks. */
@@ -121,6 +123,10 @@ export interface IslandApi {
   onPage(fn: (page: string, listen: boolean) => void): void
   /** play a sound (a data: URL), or stop with null */
   onPlay(fn: (url: string | null) => void): void
+  /** a question during a full-screen game: show it as the tucked line (true), or that is over (false) */
+  onPeek(fn: (on: boolean) => void): void
+  /** the island opened (true) or closed: the welcome tour ticks off what you tried */
+  opened(on: boolean): void
   /** Esc or closing by shortcut: give the keyboard back to the app that had it */
   release(): void
   /** the island is tucked away (true) or back: main lets every service rest meanwhile */

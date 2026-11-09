@@ -109,7 +109,7 @@
   .radio { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; background: var(--surface2); color: var(--muted); }
   .radio.on { background: var(--accent); color: var(--on-accent); }
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .tile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; min-height: 92px; padding: 10px 12px; border-radius: 16px; background: var(--surface1); }
+  .tile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; min-height: 92px; padding: 10px 12px; border-radius: 16px; background: var(--surface1); }
   .tile:hover { background: var(--surface2); }
   .label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.85em; }
   .value { font-weight: 600; }

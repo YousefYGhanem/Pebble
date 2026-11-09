@@ -179,6 +179,7 @@
                 </button></span></div>
           {/each}
           <button class="link" onclick={() => act({ do: 'welcome' })}>{t('general.welcome')}</button>
+          {#if s.general.tipsSeen.length}<button class="link" onclick={() => set('general.tipsSeen', [])}>{t('general.tipsAgain')}</button>{/if}
         </section>
         <h2>{t('update.title')} <span class="muted">· {v.version}</span></h2>
         <section>
@@ -192,6 +193,10 @@
         <section>
           <label class="row"><span>{t('notify.toasts')}<small>{t('notify.toastsHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.features.toasts} onchange={() => set('features.toasts', !s.features.toasts)} /></label>
+          {#each ['asks', 'done', 'connectors', 'extras'] as const as k}
+            <label class="row sub"><span>{t(`notify.${k}`)}<small>{t(`notify.${k}Hint`)}</small></span>
+              <input type="checkbox" class="switch" checked={s.features.notify[k]} disabled={!s.features.toasts} onchange={() => set(`features.notify.${k}`, !s.features.notify[k])} /></label>
+          {/each}
           <label class="row"><span>{t('notify.sound')}</span>
             <input type="checkbox" class="switch" checked={s.features.sound} onchange={() => set('features.sound', !s.features.sound)} /></label>
           <label class="row"><span>{t('notify.doneSeconds')}<small>{t('unit.seconds')}</small></span>
@@ -233,6 +238,14 @@
             <input type="range" min="0" max="60" value={s.island.seeThrough} onchange={e => set('island.seeThrough', num(e))} /></label>
           <label class="row"><span>{t('island.skins')}<small>{t('island.skinsHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.island.skins} onchange={() => set('island.skins', !s.island.skins)} /></label>
+        </section>
+        <h2>{t('island.pages')} <span class="muted">· {t('island.pagesHint')}</span></h2>
+        <section>
+          {#each ['chat', 'music', 'files', 'clipboard', 'notes', 'focus', 'widgets'] as const as id}
+            <label class="row"><span>{t(`i.page.${id}`)}</span>
+              <input type="checkbox" class="switch" checked={!s.island.hiddenPages.includes(id)}
+                onchange={() => set('island.hiddenPages', s.island.hiddenPages.includes(id) ? s.island.hiddenPages.filter(x => x !== id) : [...s.island.hiddenPages, id])} /></label>
+          {/each}
         </section>
         <h2>{t('island.resting')}</h2>
         <section>
@@ -541,6 +554,7 @@
   small.okay { color: var(--done); }
   small.warn { color: var(--question); }
   section.actions.apart { margin-top: 28px; }
+  .row.sub { padding-inline-start: 18px; }
   nav button { text-align: start; padding: 9px 12px; border-radius: 8px; background: none; }
   nav button:hover { background: color-mix(in srgb, var(--text) 7%, transparent); }
   nav button.active { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--text); font-weight: 600; }

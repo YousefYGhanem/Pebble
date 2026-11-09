@@ -22,6 +22,7 @@
     play: 'M7 4l13 8-13 8z',
     pause: 'M7 4h3v16H7z M14 4h3v16h-3z',
     stop: 'M6 6h12v12H6z',
+    pin: 'M9 3h6l-1 6 3 3H7l3-3z M12 12v9',
     next: 'M5 4l11 8-11 8z M19 4v16',
     previous: 'M19 4L8 12l11 8z M5 4v16',
     wifi: 'M2 9a15 15 0 0 1 20 0 M5 12.5a10 10 0 0 1 14 0 M8.5 16a5 5 0 0 1 7 0 M12 19.5h.01',

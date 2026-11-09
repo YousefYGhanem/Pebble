@@ -20,7 +20,7 @@ input, textarea { user-select: text; }
 .page { padding: 0 18px 2px; display: flex; flex-direction: column; gap: 10px; }
 .page-head { height: 44px; display: flex; align-items: center; gap: 12px; }
 .page-title { font-weight: 600; font-size: 1.05em; }
-.page-time { margin-left: auto; color: var(--muted); }
+.page-time { margin-inline-start: auto; color: var(--muted); }
 .page-head .pip-room { width: 64px; flex: none; } /* where Pip sits, next to the clock */
 .muted { color: var(--muted); }
 .empty { color: var(--muted); padding: 6px 0 8px; }

@@ -35,6 +35,8 @@
             <span class="text" class:secret={looksSecret(c.text)}>{looksSecret(c.text) ? maskSecret(c.text) : c.text}</span>
             <span class="when muted">{copied === c.id ? t('i.clip.copied') : ago(c.at, now)}</span>
           </button>
+          <button class="ghost remove" class:pinned={c.pinned} title={t(c.pinned ? 'i.clip.unpin' : 'i.clip.pin')} aria-label={t(c.pinned ? 'i.clip.unpin' : 'i.clip.pin')} aria-pressed={!!c.pinned}
+            onclick={() => act({ do: 'clip.pin', id: c.id })}><Icon name="pin" size={12} /></button>
           <button class="ghost remove" title={t('i.clip.remove')} aria-label={t('i.clip.remove')}
             onclick={() => undo.offer(t('i.undo.clip'), { hides: `clipboard:${c.id}`, commit: () => act({ do: 'clip.remove', id: c.id }) })}><Icon name="close" size={12} /></button>
         </div>
@@ -50,7 +52,8 @@
   .copy { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: flex-start; text-align: start; background: none; padding: 7px 8px; }
   .secret { font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.04em; }
   .remove { flex: none; padding: 6px; margin: 2px 4px 0 0; opacity: 0.45; }
-  .row:hover .remove, .remove:focus-visible { opacity: 1; }
+  .row:hover .remove, .remove:focus-visible, .remove.pinned { opacity: 1; }
+  .remove.pinned { color: var(--accent-text); }
   .text { flex: 1; min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; }
   .when { flex: none; font-size: 0.82em; padding-top: 1px; }
 </style>

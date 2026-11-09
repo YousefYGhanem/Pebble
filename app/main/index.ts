@@ -7,6 +7,7 @@ import { SCENES, type Scene } from '../shared/island'
 import { AGENT_NAMES, type Agent, type Session } from '../shared/state'
 import { initLog, logger } from './log'
 import { Store } from './store'
+import type { Settings } from '../shared/settings'
 import { Hub, loadToken } from './agents/hub'
 import * as claude from './agents/claude'
 import { adapters, type Adapter } from './agents/registry'
@@ -20,7 +21,7 @@ import { restLevel, type RestLevel } from './rest'
 import { emptyDay, usageAlerts } from '../shared/today'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
-import { buildTray } from './tray'
+import { buildTray, trayStatus } from './tray'
 import { SettingsWindow } from './settings-window'
 import { Extras, validAction } from './extras'
 import { DropServer } from './extras/drop'
@@ -166,17 +167,27 @@ function sendState() {
   const json = JSON.stringify(state)
   if (json === lastState) return
   lastState = json
+  updateTrayStatus()
   send(CH.state, state)
 }
 
 // Windows notifications; a click opens the island on that session. Kept referenced until closed (a collected
 // notification loses its click handler).
 const toasts = new Set<Notification>()
-function toast(title: string, body: string, sessionId?: string, link?: string) {
-  if (!store.settings.features.toasts || !Notification.isSupported()) return
+/**
+ * kind: where it comes from (Settings → Notifications switches each off); none: a problem with Pebble, always shown.
+ * settings: a click opens Settings on that tab (a problem says where to fix it).
+ */
+function toast(title: string, body: string, sessionId?: string, link?: string, o: { kind?: keyof Settings['features']['notify']; settings?: string } = {}) {
+  const f = store.settings.features
+  if (!f.toasts || (o.kind && !f.notify[o.kind]) || !Notification.isSupported()) return
   const n = new Notification({ title, body: body.slice(0, 200), silent: true }) // the island makes its own sound
   toasts.add(n)
-  n.on('click', () => { if (link && /^https?:\/\//.test(link)) void shell.openExternal(link); else { bringBack(); send(CH.expand, sessionId) } })
+  n.on('click', () => {
+    if (link && /^https?:\/\//.test(link)) void shell.openExternal(link)
+    else if (o.settings) settingsWin.open(false, o.settings)
+    else { bringBack(); send(CH.expand, sessionId) }
+  })
   n.on('close', () => toasts.delete(n))
   n.show()
 }
@@ -184,9 +195,12 @@ function toast(title: string, body: string, sessionId?: string, link?: string) {
 const agentName = (s: Session) => (s.agent === 'cli' ? s.project : AGENT_NAMES[s.agent]) + (s.provider ? ` (${s.provider})` : '')
 
 /** Game mode: hidden while something covers the island's screen, unless you brought it back yourself. */
+const inGame = () => store.settings.island.gameMode && fullscreen.current === islandDisplay(store.settings).id
+/** a question came during a full-screen game: the island shows as its thin line until it is answered */
+let peeking = false
 function updateVisibility() {
   if (!island) return
-  const hide = store.settings.island.gameMode && fullscreen.current === islandDisplay(store.settings).id && !shownAnyway
+  const hide = inGame() && !shownAnyway && !peeking
   if (hide && island.isVisible()) island.hide()
   if (!hide && !island.isVisible()) island.showInactive()
 }
@@ -202,8 +216,8 @@ function toastDone(s: Session) {
   doneTimer ??= setTimeout(() => {
     const b = doneBatch
     doneBatch = []; doneTimer = undefined
-    if (b.length === 1) toast(tr('m.isDone', { agent: agentName(b[0]!), project: b[0]!.project }), b[0]!.message?.split('\n')[0] || b[0]!.detail, b[0]!.id)
-    else toast(tr('m.manyDone', { n: b.length }), b.map(x => `${agentName(x)} · ${x.project}`).join('\n'), b[0]!.id)
+    if (b.length === 1) toast(tr('m.isDone', { agent: agentName(b[0]!), project: b[0]!.project }), b[0]!.message?.split('\n')[0] || b[0]!.detail, b[0]!.id, undefined, { kind: 'done' })
+    else toast(tr('m.manyDone', { n: b.length }), b.map(x => `${agentName(x)} · ${x.project}`).join('\n'), b[0]!.id, undefined, { kind: 'done' })
   }, 3000)
 }
 
@@ -232,7 +246,7 @@ async function look(w: { hwnd: number; pid?: number; title?: string; process?: s
     if (w.pid) { await native.request('window.focus', { hwnd: w.hwnd, pid: w.pid }); await new Promise(r => setTimeout(r, 250)) }
     if (hide) { island!.hide(); await new Promise(r => setTimeout(r, 120)) } // the island is not part of the picture
     await native.request('window.capture', { hwnd: w.hwnd, file })
-  } catch (err) { toast(tr('m.couldNotLook', { name: store.settings.pip.name }), (err as Error).message); return }
+  } catch (err) { log.warn('look at a window:', (err as Error).message); toast(tr('m.couldNotLook', { name: store.settings.pip.name }), tr('m.couldNotLookBody')); return }
   finally { if (hide) island!.showInactive() }
   // big screens: at most 1568 px on the long side (what vision models take in without shrinking it themselves)
   const img = nativeImage.createFromPath(file), { width, height } = img.getSize()
@@ -360,7 +374,7 @@ const settingsWin = new SettingsWindow({
     themes: Object.entries(store.themes()).map(([id, t]) => ({ id, name: t.name })),
     displays: screen.getAllDisplays().map((d, i) => ({ id: d.id, label: d.label || `Screen ${i + 1} (${d.size.width}×${d.size.height})` })),
     agents: agents().map(a => ({ id: a.id, name: a.name, available: a.available(), connected: connected(a) })),
-    terminals: terminals.shells(documents()).map(sh => ({ id: sh, on: terminals.installed(sh, documents()) })),
+    terminals: terminals.shells(documents()).map(sh => ({ id: sh, on: terminals.installed(sh, documents()), file: terminals.profileFile(sh, documents()) })),
     connectors: connectors.list().map(c => ({ ...c, webhook: connectors.webhookUrl(c.id, store.settings.server.port), fields: connectors.fields(c.id) })),
     chipWidgets: [...connectors.widgets.values()].filter(w => w.kind === 'chip').map(w => ({ id: `widget:${w.plugin}/${w.id}`, label: `${w.plugin}: ${w.text}` })),
     pip: { done: pip.stats.done, wearable: wearable(pip.stats.done, new Date()), custom: pip.custom.map(c => c.id) },
@@ -392,15 +406,42 @@ const settingsWin = new SettingsWindow({
 })
 
 /** Call after anything the tray or the Settings window shows has changed. */
+/** "Pebble · 2 agents working · 1 needs you" (the tray's tooltip) */
+function updateTrayStatus() {
+  const list = hub.list()
+  const asks = list.filter(s => s.ask).length, working = list.filter(s => s.status === 'running').length
+  trayStatus(['Pebble', working ? tr('m.tray.working', { n: working }) : '', asks ? tr('m.tray.asks', { n: asks }) : '', tucked ? tr('m.tray.isTucked') : ''].filter(Boolean).join(' · '))
+}
+
 function refreshTray() {
   const u = updater.status
-  buildTray({ toggleIsland, toggleTuck, openSettings: () => settingsWin.open(), t: tr, update: u.state === 'ready' ? { version: u.version, install: () => updater.install() } : undefined }, iconFile(`${store.settings.general.icon}-tray.ico`))
+  const f = store.settings.features
+  buildTray({
+    toggleIsland, toggleTuck, openSettings: () => settingsWin.open(), t: tr, tucked,
+    update: u.state === 'ready' ? { version: u.version, install: () => updater.install() } : undefined,
+    switches: [
+      { label: tr('m.tray.notifications'), checked: f.toasts, click: () => store.update({ features: { toasts: !f.toasts } }) },
+      { label: tr('m.tray.sounds'), checked: f.sound, click: () => store.update({ features: { sound: !f.sound } }) }
+    ]
+  }, iconFile(`${store.settings.general.icon}-tray.ico`))
+  updateTrayStatus()
   settingsWin.push()
 }
 
 ipcMain.on(CH.ready, e => { if (fromIsland(e)) { push(true); if (scene) send(CH.scene, scene) } })
 ipcMain.on(CH.release, e => { if (fromIsland(e) && island?.isFocused()) island.blur() })
-ipcMain.on(CH.tucked, (e, on: unknown) => { if (fromIsland(e)) { tucked = on === true; applyRest() } })
+ipcMain.on(CH.tucked, (e, on: unknown) => {
+  if (!fromIsland(e) || tucked === (on === true)) return
+  tucked = on === true
+  applyRest(); refreshTray()
+  settingsWin.islandDid(tucked ? 'tuck' : 'back')
+})
+let islandOpen = false
+ipcMain.on(CH.opened, (e, on: unknown) => {
+  if (!fromIsland(e) || islandOpen === (on === true)) return
+  islandOpen = on === true
+  settingsWin.islandDid(islandOpen ? 'open' : 'close')
+})
 ipcMain.on(CH.catchMouse, (e, on: unknown) => {
   if (fromIsland(e)) island!.setIgnoreMouseEvents(on !== true, { forward: true })
 })
@@ -453,7 +494,10 @@ ipcMain.on(CH.dismiss, (e, id: unknown) => {
 ipcMain.on(CH.act, (e, a: unknown) => {
   if (!fromIsland(e) || !validAction(a)) return
   if (a.do === 'drop.start') {
-    drop.start().then(checkDrop).catch(err => { log.warn('phone drop:', err.message); toast(tr('m.drop'), err.message) })
+    drop.start().then(checkDrop).catch(err => {
+      log.warn('phone drop:', err.message)
+      toast(tr('m.drop'), tr(/EADDRINUSE/.test(err.message) ? 'm.dropPortBusy' : 'm.dropFailed'), undefined, undefined, { settings: 'advanced' })
+    })
     return
   }
   if (a.do === 'drop.allow') {
@@ -466,6 +510,7 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'drop.network') { void shell.openExternal('ms-settings:network-status'); return }
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
+  if (a.do === 'tip.seen') { const seen = store.settings.general.tipsSeen; if (!seen.includes(a.id)) store.update({ general: { tipsSeen: [...seen, a.id] } }); return }
   if (a.do === 'chat.send') { void chat.send(a.text); return }
   if (a.do === 'chat.stop') { chat.stop(); return }
   if (a.do === 'chat.clear') { chat.clear(); return }
@@ -569,7 +614,7 @@ app.whenReady().then(async () => {
   native.watch('drag', true, 'drop-target')
   extras.on('change', () => { push(); guard.apply() }) // the focus timer started, paused or ended
   extras.on('peak', (p: number) => send(CH.peak, p))
-  extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) })))
+  extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) }), undefined, undefined, { kind: 'extras' }))
   drop.on('change', push)
   // an answer streams in many small pieces: show them at most ~20 times a second
   chat.on('answered', (text: string) => { if (store.settings.chat.readAloud) void say(text) })
@@ -578,12 +623,12 @@ app.whenReady().then(async () => {
   connectors.loadConfig()
   void connectors.startAll()
   connectors.on('change', () => { push(); refreshTray() })
-  connectors.on('notify', (n: { title: string; body: string; link?: string }) => toast(n.title, n.body, undefined, n.link))
+  connectors.on('notify', (n: { title: string; body: string; link?: string }) => toast(n.title, n.body, undefined, n.link, { kind: 'connectors' }))
   // your edits to connectors.json apply right away (a secret you typed in moves to encrypted storage)
   let connectorsTimer: NodeJS.Timeout | undefined
   fs.watch(userData, (_e, name) => { if (name === 'connectors.json') { clearTimeout(connectorsTimer); connectorsTimer = setTimeout(() => void connectors.reload(), 300) } })
   fs.watch(connectors.userDir, () => { clearTimeout(connectorsTimer); connectorsTimer = setTimeout(() => { connectors.discover(); void connectors.reload(); refreshTray() }, 500) })
-  drop.on('received', (paths: string[]) => { void extras.shelve(paths); toast(tr('m.fromPhone'), paths.map(p => path.basename(p)).join(', ')) })
+  drop.on('received', (paths: string[]) => { void extras.shelve(paths); toast(tr('m.fromPhone'), paths.map(p => path.basename(p)).join(', '), undefined, undefined, { kind: 'extras' }) })
   setInterval(() => {
     const now = powerMonitor.getSystemIdleTime() >= store.settings.pip.sleepAfterMinutes * 60
     if (now !== sleepy) { sleepy = now; push(); applyRest() }
@@ -602,7 +647,11 @@ app.whenReady().then(async () => {
   for (const ev of ['display-added', 'display-removed', 'display-metrics-changed'] as const) {
     screen.on(ev as 'display-added', () => { if (island) placeIsland(island, store.settings); refreshTray() })
   }
-  hub.on('change', push)
+  hub.on('change', () => {
+    push()
+    // the question that peeked into the game is answered: out of the way again
+    if (peeking && !hub.list().some(s => s.ask)) { peeking = false; send(CH.peek, false); updateVisibility() }
+  })
   // Codex's plan usage, from its newest session file
   let codexUsage = ''
   setInterval(() => {
@@ -618,11 +667,13 @@ app.whenReady().then(async () => {
   })
   hub.on('question', (id: string) => {
     const seen = islandSeen()
-    bringBack() // the island itself switches to its "ask" size
+    // in a full-screen game: only the thin line peeks (point at it to answer); otherwise the island switches to its ask size
+    if (inGame() && !shownAnyway) { peeking = true; updateVisibility(); send(CH.peek, true) }
+    else bringBack()
     // the island already shows it: a Windows notification only if it is still unanswered after 20 s
     const notify = () => {
       const s = hub.sessions.get(id)
-      if (s?.ask) toast(tr('m.needsYou', { agent: agentName(s), project: s.project }), s.ask.kind === 'plan' ? tr('m.planReady') : s.detail, id)
+      if (s?.ask) toast(tr('m.needsYou', { agent: agentName(s), project: s.project }), s.ask.kind === 'plan' ? tr('m.planReady') : s.detail, id, undefined, { kind: 'asks' })
     }
     if (seen) setTimeout(notify, 20_000).unref()
     else notify()
@@ -636,13 +687,13 @@ app.whenReady().then(async () => {
     if (s.agent !== 'cli' && s.prompt) today.task({ agent: s.agent, seconds: s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0, files: s.files.length })
     if (s.agent !== 'cli' && s.prompt) {
       for (const id of pip.finish(s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0)) {
-        toast(tr('m.earned', { name: store.settings.pip.name }), translateOr(store.settings.general.language, `o.${id}`, ACHIEVEMENTS.find(a => a.id === id)?.name ?? id))
+        toast(tr('m.earned', { name: store.settings.pip.name }), translateOr(store.settings.general.language, `o.${id}`, ACHIEVEMENTS.find(a => a.id === id)?.name ?? id), undefined, undefined, { kind: 'extras' })
       }
       refreshTray()
     }
     toastDone(s)
   })
-  hub.on('notify', (n: { id: string; title: string; body: string }) => toast(n.title, n.body, n.id))
+  hub.on('notify', (n: { id: string; title: string; body: string }) => toast(n.title, n.body, n.id, undefined, { kind: 'done' }))
   fullscreen.on('change', (id: number | null) => {
     if (id === null) shownAnyway = false
     log.info(id === null ? 'nothing full screen' : `full screen on display ${id}`)

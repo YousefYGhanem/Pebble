@@ -63,3 +63,10 @@ test("Pip's look: theme colours by default, an icon's, or your own (only real co
   expect(pipColors({ ...DEFAULTS.pip, look: 'cream' }, tok).body).toBe('#f1e4cf')
   expect(parseSettings({ pip: { look: 'custom', body: 'red' } }).ok).toBe(false)
 })
+
+test('pages can be hidden (not Home or Agents), notifications switched by source, tips remembered', () => {
+  expect(parseSettings({ island: { hiddenPages: ['chat', 'notes'] } }).ok).toBe(true)
+  expect(parseSettings({ island: { hiddenPages: ['agents'] } }).ok).toBe(false)
+  expect(parseSettings({ features: { notify: { done: false } } }).ok).toBe(true)
+  expect(parseSettings({ general: { tipsSeen: ['ask', 'nope'] } }).ok).toBe(false)
+})

@@ -14,6 +14,8 @@ const api: IslandApi = {
   catchMouse: on => ipcRenderer.send(CH.catchMouse, on),
   tucked: on => ipcRenderer.send(CH.tucked, on),
   release: () => ipcRenderer.send(CH.release),
+  opened: on => ipcRenderer.send(CH.opened, on),
+  onPeek: fn => { ipcRenderer.on(CH.peek, (_e, on: boolean) => fn(on)) },
   answer: (id, answer) => ipcRenderer.send(CH.answer, id, answer),
   reply: (id, text) => ipcRenderer.send(CH.reply, id, text),
   jump: id => ipcRenderer.send(CH.jump, id),

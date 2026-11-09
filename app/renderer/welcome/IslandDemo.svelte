@@ -4,7 +4,9 @@
   import { onDestroy } from 'svelte'
   import { t } from '../i18n.svelte'
 
-  let { openOn, toggle, tuck }: { openOn: 'hover' | 'click'; toggle: string; tuck: string } = $props()
+  let { openOn, toggle, tuck, tried = [] }: { openOn: 'hover' | 'click'; toggle: string; tuck: string; tried?: string[] } = $props()
+  // each caption, ticked off when you do it on the real island at the top of your screen
+  const WHAT = ['open', 'close', 'tuck', 'back']
 
   type State = 'rest' | 'open' | 'tucked'
   let look = $state<State>('rest')
@@ -64,14 +66,18 @@
     </div>
   </div>
 </div>
+<p class="try">{t('demo.try')}</p>
 <ol class="captions">
-  {#each captions as c, i}<li class:on={i === caption}>{c}</li>{/each}
+  {#each captions as c, i}<li class:on={i === caption} class:did={tried.includes(WHAT[i]!)}>{#if tried.includes(WHAT[i]!)}<span class="tick" aria-label={t('demo.done')}>✓</span>{/if}{c}</li>{/each}
 </ol>
 <p class="keys">{t('demo.keys', { toggle, tuck })}</p>
 <button class="pause" onclick={pauseOrPlay}>{paused ? t('demo.play') : t('demo.pause')}</button>
 
 <style>
-  .demo { width: 360px; margin: 0 auto 12px; }
+  .try { font-size: 12px; margin: 0 0 6px; color: var(--accent-text); }
+  .captions li.did { color: var(--done); }
+  .tick { margin-inline-end: 6px; font-weight: 700; }
+  .demo { width: 360px; margin: 0 auto 8px; }
   .screen { position: relative; height: 150px; border-radius: 12px; overflow: hidden; direction: ltr;
     background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 22%, #1b1b24), #101016); border: 1px solid color-mix(in srgb, var(--text) 10%, transparent); }
   .island { position: absolute; left: 50%; top: 8px; translate: -50% 0; width: 120px; height: 26px; border-radius: 13px; background: #050507;

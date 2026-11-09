@@ -149,14 +149,14 @@
   .fix b { color: var(--done); font-weight: 500; }
   .fix input { accent-color: var(--accent); margin-top: 3px; }
   .done { display: flex; gap: 6px; align-items: center; color: var(--done); }
-  .ask .wide { width: auto; border-radius: 12px; padding: 0 16px; margin-left: auto; }
-  .win { display: flex; justify-content: space-between; gap: 12px; text-align: left; background: none; border-radius: 10px; padding: 7px 10px; }
+  .ask .wide { width: auto; border-radius: 12px; padding: 0 16px; margin-inline-start: auto; }
+  .win { display: flex; justify-content: space-between; gap: 12px; text-align: start; background: none; border-radius: 10px; padding: 7px 10px; }
   .win b { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .win:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
   .attached { display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 6px; animation: pop 0.2s ease-out; }
   .attached span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .chip { border-radius: 999px; padding: 3px 10px; font-size: 11px; background: color-mix(in srgb, var(--accent) 25%, transparent); white-space: nowrap; }
-  .x { margin-left: auto; padding: 2px 6px; }
+  .x { margin-inline-start: auto; padding: 2px 6px; }
   .ask { display: flex; gap: 6px; align-items: flex-end; margin-bottom: 8px; }
   .ask textarea { flex: 1; resize: none; max-height: 80px; field-sizing: content; font: inherit; color: inherit; background: color-mix(in srgb, var(--text) 8%, transparent); border: 0; border-radius: 12px; padding: 8px 12px; }
   .ask textarea:focus-visible { outline: 2px solid var(--accent); }

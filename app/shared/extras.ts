@@ -27,7 +27,7 @@ export interface ShelfFile {
   addedAt: number
 }
 
-export interface ClipItem { id: number; text: string; at: number }
+export interface ClipItem { id: number; text: string; at: number; pinned?: boolean }
 export interface Note { id: string; text: string; at: number }
 
 export interface FocusTimer {
@@ -87,6 +87,8 @@ export type Action =
   | { do: 'clip.copy'; id: number }
   | { do: 'clip.clear' }
   | { do: 'clip.remove'; id: number }
+  | { do: 'clip.pin'; id: number }
+  | { do: 'tip.seen'; id: 'ask' | 'tuck' | 'drop' }
   | { do: 'notes.save'; notes: Note[] }
   | { do: 'focus.start'; seconds: number; break?: boolean }
   | { do: 'focus.pause' | 'focus.resume' | 'focus.stop' }
@@ -143,4 +145,9 @@ export function focusFinished(prev: FocusDone | null, f: FocusTimer, now: number
   const d = new Date(now), day = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
   const before = prev?.day === day ? prev.today : 0
   return { at: now, wasBreak: !!f.break, round: f.break ? (prev?.round ?? 25 * 60) : f.seconds, today: before + (f.break ? 0 : 1), day }
+}
+
+/** The clipboard list: pinned ones first and always kept, then the newest others up to max. */
+export function trimClips(list: ClipItem[], max: number): ClipItem[] {
+  return [...list.filter(c => c.pinned), ...list.filter(c => !c.pinned).slice(0, max)]
 }

@@ -199,7 +199,8 @@ If the exe is missing, Pebble still runs; game mode and jump to terminal are off
 | Do | What happens |
 | --- | --- |
 | Point at it (or click, with "Open when I point at it" off) | Opens the Agents page; it closes when the mouse leaves (not while you type) |
-| Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line; clicks pass through, and every service rests (below). Point at the line to bring it back |
+| Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line (dashed: stopped, dotted: needs you); clicks pass through, and every service rests (below). Point at the line to bring it back |
+| A question during a full-screen game | Only the thin line shows; point at it to answer, and it is gone again after |
 | **Ctrl+Alt+P** | Opens or closes it |
 | An agent needs you | It grows into a card (Allow/Deny, or the answer buttons), even when tucked, plus a Windows notification |
 | Something runs full screen on its screen | It hides (game mode) and comes back after |
@@ -237,8 +238,9 @@ Everything lives in `%APPDATA%\Pebble` and applies the moment you save:
 
 Theme tokens become CSS variables (`fontSize` → `--font-size`; numbers are px). Built-in themes are in [themes/](themes).
 
-**First start** shows a short welcome tour (language, which AIs, terminals, Pip's name, and a small demo of opening,
-closing and tucking away the island); Settings → General shows it
+**First start** shows a short welcome tour (language, which AIs, terminals, then you try opening, closing and tucking
+away the real island, with a small demo and a tick for each; Pip's name at the end). Tips appear once, in the moment
+they help (the first question, the first open island, the first file on the shelf). Settings → General shows the tour
 again, or `Pebble --welcome`. **Languages**: English and Arabic, everywhere: the island, Settings, the tour, the tray
 and notifications (Arabic lays Settings and the tour out right to left). The words are in [i18n/](i18n); a language
 is its file there plus a line in [app/shared/i18n.ts](app/shared/i18n.ts), and a missing word falls back to English.

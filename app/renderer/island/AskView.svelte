@@ -84,7 +84,7 @@
   .chip { align-self: flex-start; font-size: 0.8em; padding: 1px 8px; border-radius: 999px; background: var(--surface2); color: var(--muted); }
   .q { font-weight: 600; }
   .options { display: flex; flex-wrap: wrap; gap: 6px; }
-  .option { display: flex; flex-direction: column; align-items: flex-start; border-radius: 12px; text-align: left; max-width: 100%; }
+  .option { display: flex; flex-direction: column; align-items: flex-start; border-radius: 12px; text-align: start; max-width: 100%; }
   .option small { color: var(--muted); font-size: 0.82em; }
   .option.on { background: var(--accent); color: var(--on-accent); }
   .option.on small { color: inherit; opacity: 0.8; }

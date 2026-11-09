@@ -4,23 +4,25 @@
   import Icon from './Icon.svelte'
   import { PAGES, type Page } from './pages'
   import { t } from '../i18n.svelte'
-  let { page = $bindable(), badges = {} }: { page: Page; badges?: Partial<Record<Page, boolean>> } = $props()
+  let { page = $bindable(), badges = {}, hidden = [] }: { page: Page; badges?: Partial<Record<Page, boolean>>; hidden?: string[] } = $props()
+  // the pages you keep (Settings → Island → Pages); the one you are on always shows
+  const pages = $derived(PAGES.filter(p => !hidden.includes(p.id) || p.id === page))
 
   let nav: HTMLDivElement
   function key(e: KeyboardEvent) {
-    const i = PAGES.findIndex(p => p.id === page), n = PAGES.length
+    const i = pages.findIndex(p => p.id === page), n = pages.length
     const rtl = getComputedStyle(nav).direction === 'rtl'
     const j = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1
       : e.key === (rtl ? 'ArrowLeft' : 'ArrowRight') ? (i + 1) % n : e.key === (rtl ? 'ArrowRight' : 'ArrowLeft') ? (i - 1 + n) % n : -1
     if (j < 0) return
     e.preventDefault()
-    page = PAGES[j]!.id
+    page = pages[j]!.id
     nav.querySelectorAll('button')[j]?.focus()
   }
 </script>
 
 <div class="nav" role="tablist" aria-label={t('i.page.pages')} tabindex="-1" onkeydown={key} bind:this={nav}>
-  {#each PAGES as p (p.id)}
+  {#each pages as p (p.id)}
     <!-- three groups (Hick, Gestalt proximity): you and the agents · what you play and keep · your own things -->
     <button role="tab" aria-selected={p.id === page} tabindex={p.id === page ? 0 : -1} class:group={p.id === 'music' || p.id === 'notes'}
       aria-label={badges[p.id] ? `${t(`i.page.${p.id}`)} · ${t('i.page.attention')}` : t(`i.page.${p.id}`)} title={t(`i.page.${p.id}`)} class:on={p.id === page} onclick={e => { e.stopPropagation(); page = p.id }}>

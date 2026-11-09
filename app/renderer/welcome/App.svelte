@@ -1,6 +1,6 @@
 <script lang="ts">
-  // The welcome tour (first start): language → which AIs → terminals → Pip's name → how the island works → done. Every choice is saved at once,
-  // like in Settings; closing the window early keeps what was chosen so far.
+  // The welcome tour (first start): language → which AIs → terminals → try the island → done (and Pip's name, if you like).
+  // Every choice is saved at once, like in Settings; closing the window early keeps what was chosen so far.
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t } from '../i18n.svelte'
   import { drawPip } from '../island/pip'
@@ -12,7 +12,10 @@
   let step = $state(0)
   let name = $state('')
   let canvas = $state<HTMLCanvasElement>()
-  const STEPS = 6
+  const STEPS = 5
+  // what you tried on the real island during the demo step (main tells): open, close, tuck, back
+  let tried = $state<string[]>([])
+  window.settingsApi.onIsland(what => { if (!tried.includes(what)) tried = [...tried, what] })
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
 
   window.settingsApi.onView(next => {
@@ -31,8 +34,10 @@
   const firstClick = () => { if (!clicked) { clicked = true; act({ do: 'welcome.clicked' }) } }
 
   function next() {
-    if (step === 3 && name.trim()) act({ do: 'update', patch: { pip: { name: name.trim().slice(0, 24) } } })
-    if (step === STEPS - 1) act({ do: 'welcome.done' })
+    if (step === STEPS - 1) {
+      if (name.trim()) act({ do: 'update', patch: { pip: { name: name.trim().slice(0, 24) } } })
+      act({ do: 'welcome.done' })
+    }
     else step++
   }
 
@@ -61,7 +66,7 @@
   {@const s = v.settings}
   <main>
     <!-- the demo step has its own little island (and needs the room) -->
-    {#if step !== 4}<canvas bind:this={canvas} width="240" height="200" style="width:120px;height:100px" aria-hidden="true"></canvas>{/if}
+    {#if step !== 3}<canvas bind:this={canvas} width="240" height="200" style="width:120px;height:100px" aria-hidden="true"></canvas>{/if}
     {#key step}
       <div class="step">
         {#if step === 0}
@@ -78,7 +83,7 @@
             {#each v.agents.filter(g => g.available || g.connected) as g}
               <label class="row"><span>{g.name}</span><input type="checkbox" class="switch" checked={g.connected} onchange={() => act({ do: 'agent', id: g.id })} /></label>
             {:else}
-              <p class="muted">{t('agents.notFound')}</p>
+              <p class="muted">{t('welcome.noAgents', { list: v.agents.map(g => g.name).join(', ') })}</p>
             {/each}
           </div>
         {:else if step === 2}
@@ -86,21 +91,19 @@
           <p>{t('welcome.terminalsHint')}</p>
           <div class="list">
             {#each v.terminals as term}
-              <label class="row"><span>{({ powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' } as Record<string, string>)[term.id] ?? term.id}</span>
+              <label class="row"><span>{({ powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' } as Record<string, string>)[term.id] ?? term.id}<small class="file">{term.file}</small></span>
                 <input type="checkbox" class="switch" checked={term.on} onchange={() => act({ do: 'terminal', id: term.id })} /></label>
             {/each}
           </div>
         {:else if step === 3}
-          <h1 tabindex="-1" use:focusOnShow>{t('welcome.name')}</h1>
-          <p>{t('welcome.nameHint')}</p>
-          <!-- svelte-ignore a11y_autofocus -->
-          <input class="name" type="text" maxlength="24" bind:value={name} autofocus aria-label={t('pip.name')} />
-        {:else if step === 4}
           <h1 tabindex="-1" use:focusOnShow>{t('welcome.how')}</h1>
-          <IslandDemo openOn={s.island.openOn} toggle={s.general.toggleShortcut.replace('Control', 'Ctrl')} tuck={s.general.tuckShortcut.replace('Control', 'Ctrl')} />
+          <IslandDemo openOn={s.island.openOn} {tried} toggle={s.general.toggleShortcut.replace('Control', 'Ctrl')} tuck={s.general.tuckShortcut.replace('Control', 'Ctrl')} />
         {:else}
           <h1 tabindex="-1" use:focusOnShow>{t('welcome.ready', { name: name.trim() || 'Pip' })}</h1>
           <p>{t('welcome.readyHint', { toggle: s.general.toggleShortcut.replace('Control', 'Ctrl'), buddy: s.general.buddyShortcut.replace('Control', 'Ctrl') })}</p>
+          <!-- his name, if you like (not a step of its own: setting up comes after seeing what Pebble does) -->
+          <label class="field"><span>{t('welcome.nameOptional')}</span>
+            <input class="name" type="text" maxlength="24" bind:value={name} aria-label={t('pip.name')} /></label>
         {/if}
       </div>
     {/key}
@@ -129,7 +132,8 @@
   .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
   .row + .row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
   select, .name { font: inherit; color: inherit; background: color-mix(in srgb, var(--text) 7%, var(--background)); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); border-radius: 10px; padding: 8px 12px; min-width: 220px; }
-  .name { font-size: 18px; text-align: center; }
+  .name { font-size: 16px; text-align: center; }
+  .file { display: block; font-size: 11px; color: var(--muted); direction: ltr; text-align: start; }
   .switch { appearance: none; width: 40px; height: 22px; border-radius: 11px; background: color-mix(in srgb, var(--text) 20%, transparent); position: relative; cursor: pointer; transition: background 0.15s; }
   .switch::after { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--text); transition: translate 0.18s cubic-bezier(.3, 1.4, .6, 1); }
   .switch:checked { background: var(--accent); }

@@ -4,7 +4,7 @@ import path from 'node:path'
 import { EventEmitter } from 'node:events'
 import { app, clipboard, nativeImage, shell } from 'electron'
 import type { RestLevel } from '../rest'
-import { focusFinished, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
+import { focusFinished, trimClips, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
 import type { Native } from '../native'
 import { Lyrics } from './lyrics'
@@ -145,7 +145,7 @@ export class Extras extends EventEmitter {
       for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) return
     } catch { return } finally { this.reading = false }
     if (!text.trim()) return
-    this.state.clipboard = [{ id: ++this.clipId, text: text.slice(0, 5000), at: Date.now() }, ...this.state.clipboard.filter(c => c.text !== text.slice(0, 5000))].slice(0, MAX_CLIPS)
+    this.state.clipboard = trimClips([{ id: ++this.clipId, text: text.slice(0, 5000), at: Date.now() }, ...this.state.clipboard.filter(c => c.text !== text.slice(0, 5000))], MAX_CLIPS)
     this.changed()
   }
 
@@ -208,7 +208,8 @@ export class Extras extends EventEmitter {
         if (c) { this.lastClip = c.text; await clipboard.writeText(c.text) }
         return
       }
-      case 'clip.clear': s.clipboard = []; return this.changed()
+      case 'clip.clear': s.clipboard = s.clipboard.filter(c => c.pinned); return this.changed() // pinned ones stay
+      case 'clip.pin': s.clipboard = trimClips(s.clipboard.map(c => (c.id === a.id ? { ...c, pinned: !c.pinned } : c)), MAX_CLIPS); return this.changed()
       case 'clip.remove': s.clipboard = s.clipboard.filter(c => c.id !== a.id); return this.changed()
       case 'notes.save':
         s.notes = a.notes.slice(0, MAX_NOTES)
@@ -244,7 +245,8 @@ export function validAction(a: unknown): a is Action {
     case 'volume': return typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
-    case 'clip.copy': case 'clip.remove': return Number.isInteger(o.id)
+    case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
+    case 'tip.seen': return o.id === 'ask' || o.id === 'tuck' || o.id === 'drop'
     case 'notes.save': return Array.isArray(o.notes) && o.notes.length <= MAX_NOTES
       && o.notes.every((n: Note) => n && typeof n.id === 'string' && typeof n.text === 'string' && n.text.length <= 20000 && typeof n.at === 'number')
     case 'settings.open': return o.tab === undefined || o.tab === 'connectors'

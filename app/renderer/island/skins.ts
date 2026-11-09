@@ -95,14 +95,14 @@ export function drawSkin(ctx: CanvasRenderingContext2D, b: Box, notch: boolean, 
   if (k.vines) {
     // a vine creeping in from both lower corners, with leaves
     const reach = b.w * 0.45 * k.vines, base = b.y + b.h - 3
-    ctx.strokeStyle = 'rgba(96, 170, 90, 0.75)'
+    ctx.strokeStyle = 'rgba(140, 160, 130, 0.6)' // a muted sage: green means done
     ctx.lineWidth = 1.4
     for (const dir of [1, -1]) {
       const x0 = dir > 0 ? b.x + 2 : b.x + b.w - 2
       ctx.beginPath()
       for (let d = 0; d <= reach; d += 2) ctx.lineTo(x0 + dir * d, base - Math.abs(Math.sin(d / 9)) * 4)
       ctx.stroke()
-      ctx.fillStyle = 'rgba(110, 190, 100, 0.85)'
+      ctx.fillStyle = 'rgba(150, 172, 138, 0.7)'
       for (let d = 10; d < reach; d += 14) {
         const x = x0 + dir * d, y = base - Math.abs(Math.sin(d / 9)) * 4
         ctx.beginPath()

@@ -61,6 +61,11 @@ export class SettingsWindow {
   }
 
   /** First start: the welcome tour. It stays on top until it gets its first click (so it never opens hidden behind other windows). */
+  /** what you just did with the island (open, close, tuck, back): the tour's demo step ticks it off */
+  islandDid(what: 'open' | 'close' | 'tuck' | 'back') {
+    if (this.welcome && !this.welcome.isDestroyed()) this.welcome.webContents.send('settings:island', what)
+  }
+
   openWelcome(offscreen = false) {
     if (this.welcome && !this.welcome.isDestroyed()) { this.welcome.focus(); return this.welcome }
     this.welcome = new BrowserWindow({
