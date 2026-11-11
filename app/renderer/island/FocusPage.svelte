@@ -7,6 +7,11 @@
   let { focus, done, now, act }: { focus: FocusTimer | null; done: FocusDone | null; now: number; act: (a: Action) => void } = $props()
   // a round just ended (within half an hour): offer a short break, or another round (Pomodoro: work, then rest)
   const next = $derived(!focus && done && now - done.at < 30 * 60_000 ? done : null)
+  // rounds of four (Pomodoro): which one this is, and after the fourth a long break
+  const ROUNDS = 4
+  const doneToday = $derived(done && done.day === `${new Date(now).getFullYear()}-${new Date(now).getMonth() + 1}-${new Date(now).getDate()}` ? done.today : 0)
+  const inCycle = $derived(doneToday % ROUNDS) // rounds finished in this cycle
+  const longBreakDue = $derived(!!next && !next.wasBreak && doneToday > 0 && doneToday % ROUNDS === 0)
   const start = (seconds: number, isBreak = false) => act({ do: 'focus.start', seconds, break: isBreak || undefined })
   const PRESETS = [5, 15, 25, 45, 60]
   let minutes = $state(25)
@@ -30,7 +35,7 @@
         {#if next.today}<div class="muted">{t('i.focus.today', { n: next.today })}</div>{/if}
         <div class="row">
           <button class="likely" onclick={() => start(next.round)}>{t('i.focus.another', { n: Math.round(next.round / 60) })}</button>
-          {#if !next.wasBreak}<button onclick={() => start(5 * 60, true)}>{t('i.focus.break')}</button>{/if}
+          {#if !next.wasBreak}<button onclick={() => start((longBreakDue ? 15 : 5) * 60, true)}>{t(longBreakDue ? 'i.focus.longBreak' : 'i.focus.break')}</button>{/if}
         </div>
       {:else if !focus}
         <div class="presets">
@@ -39,7 +44,16 @@
         <label class="custom muted">{t('i.focus.or')} <input type="number" min="1" max="600" bind:value={minutes} aria-label={t('i.focus.minutes')} /> {t('i.focus.minutes')}</label>
         <button class="likely start" disabled={!(minutes >= 1)} onclick={() => start(Math.round(minutes * 60))}>{t('i.focus.startFor', { n: minutes })}</button>
       {:else}
-        <div class="muted">{focus.break ? t('i.focus.onBreak') : focus.left !== undefined ? t('i.focus.paused') : t('i.focus.running')}</div>
+        <div class="muted">{focus.break ? t('i.focus.onBreak') : focus.left !== undefined ? t('i.focus.paused') : t('i.focus.roundOf', { n: inCycle + 1, total: ROUNDS })}</div>
+        {#if !focus.break}
+          <!-- the cycle: finished rounds full, this one filling with a glowing head, then the long break -->
+          <div class="track" aria-hidden="true">
+            {#each Array(ROUNDS) as _, i (i)}
+              <span class="seg" class:full={i < inCycle}>{#if i === inCycle}<i style:width="{(1 - left / focus.seconds) * 100}%"></i>{/if}</span>
+            {/each}
+            <span class="seg long">{t('i.focus.long')}</span>
+          </div>
+        {/if}
         <div class="row">
           {#if focus.left !== undefined}<button class="likely" onclick={() => act({ do: 'focus.resume' })}>{t('i.common.resume')}</button>
           {:else}<button onclick={() => act({ do: 'focus.pause' })}>{t('i.common.pause')}</button>{/if}
@@ -51,6 +65,13 @@
 </div>
 
 <style>
+  .track { display: flex; gap: 5px; align-items: center; margin: 6px 0 4px; }
+  .seg { position: relative; width: 38px; height: 6px; border-radius: 3px; background: var(--surface3); }
+  .seg.full { background: var(--accent); }
+  .seg > i { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 3px; background: var(--accent); }
+  .seg > i::after { content: ''; position: absolute; inset-inline-end: -4px; top: -2px; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 10px 2px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .seg.long { width: auto; height: auto; padding: 0 6px; background: none; color: var(--muted); font-size: 0.75em; }
   .title { font-weight: 600; }
   .focus { display: flex; gap: 22px; align-items: center; padding-bottom: 10px; }
   .dial { position: relative; width: 130px; height: 130px; flex: none; display: grid; place-items: center; }

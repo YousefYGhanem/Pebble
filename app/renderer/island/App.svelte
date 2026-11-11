@@ -65,13 +65,15 @@
   const extras = $derived<ExtrasState | undefined>(view ? { ...view.extras, ...(scene ? sceneExtras : {}) } : undefined)
   const music = $derived(!!view?.settings.music.enabled && !!extras?.media?.playing)
   // ---------- peeks: a short line for a moment when something on the PC changes ----------
-  let notice = $state<{ icon: string; text: string; n: number } | null>(null)
+  // a peek: an icon in a ring (ring: how full, 0–1), a title over a short line, and a value on the right
+  interface Peek { icon: string; title: string; sub?: string; value?: string; ring?: number; tone?: 'ok' | 'warn' | 'info' }
+  let notice = $state<(Peek & { n: number }) | null>(null)
   let noticeN = 0
-  function peek(icon: string, text: string) {
+  function peek(p: Peek) {
     if (scene || !view?.settings.features.peeks) return
     const n = ++noticeN
-    notice = { icon, text, n }
-    setTimeout(() => { if (notice?.n === n) notice = null }, 2800)
+    notice = { ...p, n }
+    setTimeout(() => { if (notice?.n === n) notice = null }, 3000)
   }
   // a language code in your language's words ("ar-SA" → "Arabic")
   const languageName = (code: string) => { try { return new Intl.DisplayNames([locale()], { type: 'language' }).of(code.split('-')[0]!) ?? code } catch { return code } }
@@ -91,7 +93,8 @@
   const reduced = $derived(view ? (view.settings.motion.mode === 'system' ? systemReduced : view.settings.motion.mode === 'reduced') : false)
   const target = $derived.by(() => {
     if (!view) return { w: 0, h: 0, r: 0 }
-    const t = sizeFor(mode, view.settings.island, contentHeight)
+    const t0 = sizeFor(mode, view.settings.island, contentHeight)
+    const t = mode === 'medium' && medium === 'notice' && notice ? { w: Math.max(t0.w, 340), h: Math.max(t0.h, 52), r: 26 } : t0
     const room = chips.reduce((n, c) => n + (c === 'none' ? 0 : c.startsWith('widget:') ? 110 : 52), 0)
     return mode === 'resting' && room ? { ...t, w: t.w + room } : t // room for the chips left and right of Pip
   })
@@ -189,7 +192,7 @@
     if (prevSleepy && !s.pip.sleepy && !scene) { happyAt = Date.now(); kick(); say('hello'); later(3100) }
     prevSleepy = s.pip.sleepy
     // an update is ready: one peek (the Home page keeps the button)
-    if (s.update && s.update !== lastUpdate) peek('download', t('i.peek.update', { version: s.update }))
+    if (s.update && s.update !== lastUpdate) peek({ icon: 'download', title: t('i.peek.updateTitle', { version: s.update }), sub: t('i.peek.updateSub'), tone: 'ok' })
     lastUpdate = s.update
     if (s.extras.art !== lastArt) { lastArt = s.extras.art; album = null; if (lastArt) albumColor(lastArt).then(c => (album = c)) }
   })
@@ -199,7 +202,10 @@
     const read = () => (battery = { level: Math.round(b.level * 100), charging: b.charging })
     read(); b.addEventListener('levelchange', read)
     // plugged in: a peek with the battery's level
-    b.addEventListener('chargingchange', () => { read(); if (b.charging) peek('battery', t('i.peek.charging', { n: Math.round(b.level * 100) })) })
+    b.addEventListener('chargingchange', () => {
+      read()
+      if (b.charging) peek({ icon: 'battery', title: t('i.peek.chargingTitle'), sub: t('i.peek.chargingSub'), value: `${Math.round(b.level * 100)}%`, ring: b.level, tone: 'ok' })
+    })
   }).catch(() => {})
 
   // opened or closed: the welcome tour ticks it off while you try
@@ -245,15 +251,16 @@
   })
   window.pebble.onTuck(() => { tucked = !tucked; open = false })
   window.pebble.onNotice(n => {
-    if (n.kind === 'device') peek('speaker', t('i.peek.device', { name: n.name }))
-    else if (n.kind === 'caps') peek('keyboard', t(n.on ? 'i.peek.capsOn' : 'i.peek.capsOff'))
-    else if (n.kind === 'keyboard') peek('keyboard', t('i.peek.keyboard', { lang: languageName(n.lang) }))
-    else if (n.kind === 'mute') peek('speaker', t(n.on ? 'i.peek.muted' : 'i.peek.unmuted'))
-    else if (n.kind === 'mic') peek(n.on ? 'micoff' : 'mic', t(n.on ? 'i.peek.micOff' : 'i.peek.micOn'))
+    // a device name "Headphones (AirPods Pro)": the part in brackets is the device itself
+    if (n.kind === 'device') peek({ icon: 'speaker', title: /\(([^)]+)\)/.exec(n.name)?.[1] ?? n.name, sub: t('i.peek.deviceSub') })
+    else if (n.kind === 'caps') peek({ icon: 'keyboard', title: 'Caps Lock', value: t(n.on ? 'i.peek.on' : 'i.peek.off'), tone: n.on ? 'warn' : 'info' })
+    else if (n.kind === 'keyboard') peek({ icon: 'keyboard', title: t('i.peek.keyboardTitle'), value: languageName(n.lang) })
+    else if (n.kind === 'mute') peek({ icon: 'speaker', title: t('i.peek.soundTitle'), value: t(n.on ? 'i.peek.mutedValue' : 'i.peek.on'), tone: n.on ? 'warn' : 'info' })
+    else if (n.kind === 'mic') peek({ icon: n.on ? 'micoff' : 'mic', title: t('i.peek.micTitle'), sub: t('i.peek.micSub'), value: t(n.on ? 'i.peek.mutedValue' : 'i.peek.on'), tone: n.on ? 'warn' : 'info' })
   })
   // the network dropped, or came back
-  addEventListener('offline', () => peek('wifi', t('i.peek.offline')))
-  addEventListener('online', () => peek('wifi', t('i.peek.online')))
+  addEventListener('offline', () => peek({ icon: 'wifi', title: t('i.peek.offlineTitle'), sub: t('i.peek.offlineSub'), tone: 'warn' }))
+  addEventListener('online', () => peek({ icon: 'wifi', title: t('i.peek.onlineTitle'), tone: 'ok' }))
   window.pebble.onPeek(on => { tucked = on; open = false })
   window.pebble.onBye(() => startBye(() => window.pebble.byeDone()))
   window.pebble.onScene(s => {
@@ -596,7 +603,11 @@
           {/each}
         </div>
       {:else if mode === 'medium' && medium === 'notice' && notice}
-        <div class="line" role="status" style:height="{view.settings.island.height}px"><Icon name={notice.icon} size={14} /><span class="title">{notice.text}</span></div>
+        <div class="line peek tone-{notice.tone ?? 'info'}" role="status" style:height="{target.h}px">
+          <span class="ring" style:--p={notice.ring ?? 1}><span><Icon name={notice.icon} size={13} /></span></span>
+          <span class="ptext"><b>{notice.title}</b>{#if notice.sub}<small>{notice.sub}</small>{/if}</span>
+          {#if notice.value}<span class="pval">{notice.value}</span>{/if}
+        </div>
       {:else if mode === 'medium' && medium === 'drop'}
         <div class="line" style:height="{view.settings.island.height}px"><Icon name="files" size={14} /><span class="title">{t('i.island.dropHere')}</span></div>
       {:else if mode === 'medium' && medium === 'music' && extras?.media}
@@ -689,6 +700,17 @@
 
   .micoff { position: absolute; inset-inline-start: 12px; top: 0; z-index: 1; display: flex; align-items: center; color: var(--error); }
   .content.micmuted .line { padding-inline-start: 30px; } /* room for the muted mic */
+  /* a peek: icon in a ring · title over a line · value */
+  .peek { gap: 10px; }
+  .peek .ring { --c: var(--running); width: 30px; height: 30px; flex: none; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--c) calc(var(--p) * 1turn), var(--surface3) 0); }
+  .peek .ring > span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--background); color: var(--c); }
+  .peek.tone-ok .ring { --c: var(--done); }
+  .peek.tone-warn .ring { --c: var(--question); }
+  .ptext { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+  .ptext b, .ptext small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ptext small { color: var(--muted); font-size: 0.82em; }
+  .pval { flex: none; font-weight: 700; font-size: 1.15em; font-variant-numeric: tabular-nums; }
   .who { font-size: 0.78em; color: var(--muted); margin-bottom: 2px; }
   .who.tipline { color: var(--accent-text); }
   .tip { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--accent) 22%, transparent); font-size: 0.86em; }

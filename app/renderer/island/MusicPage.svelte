@@ -1,14 +1,23 @@
 <script lang="ts">
-  // Music: what plays on this PC (any player, from Windows' media controls). Cover, song, a progress line you can click
-  // to jump, controls, volume, and the lyrics: the line before, the one sung now (big) and the next. The album's colour
-  // rises from the bottom of the page.
-  import { fly } from 'svelte/transition'
+  // Music: what plays on this PC (any player, from Windows' media controls). Cover with the player it comes from, song, a
+  // progress line you can click to jump (a wave while it plays), controls, volume, and the lyrics beside it: a column that
+  // follows the song. The album's colour rises from the bottom of the page.
   import { lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import Wave from './Wave.svelte'
   import { clock } from './pages'
   import { t } from '../i18n.svelte'
 
+  // the player the music comes from, in words ("SpotifyAB.SpotifyMusic_…!Spotify" → "Spotify")
+  const SOURCES: [RegExp, string][] = [[/spotify/i, 'Spotify'], [/msedge|edge/i, 'Edge'], [/chrome/i, 'Chrome'], [/firefox/i, 'Firefox'], [/brave/i, 'Brave'],
+    [/opera/i, 'Opera'], [/applemusic|apple/i, 'Apple Music'], [/zune|mediaplayer|music\.ui/i, 'Media Player'], [/vlc/i, 'VLC'], [/youtube/i, 'YouTube'], [/deezer/i, 'Deezer'], [/tidal/i, 'TIDAL']]
+  const sourceOf = (app: string) => SOURCES.find(([r]) => r.test(app))?.[1] ?? app.replace(/^.*!/, '').replace(/\.exe$/i, '').slice(0, 16)
+  let lyricList = $state<HTMLDivElement>()
+  // the line sung now, in the middle of the column (the list scrolls itself)
+  $effect(() => {
+    const el = lyricList?.children[line] as HTMLElement | undefined
+    if (lyricList && el) lyricList.scrollTo({ top: el.offsetTop - lyricList.clientHeight / 2 + el.offsetHeight / 2, behavior: reduced ? 'auto' : 'smooth' })
+  })
   let { extras, now, color, act, reduced }: { extras: ExtrasState; now: number; color: string | null; act: (a: Action) => void; reduced: boolean } = $props()
   const m = $derived(extras.media)
   const pos = $derived(m ? positionNow(m, now) : 0)
@@ -39,8 +48,13 @@
   {#if !m}
     <div class="empty">{t('i.music.nothing')}</div>
   {:else}
+    <div class="body" class:withLyrics={!!extras.lyrics}>
+    <div class="player">
     <div class="top">
-      {#if extras.art}<img class="cover" src={extras.art} alt="" />{:else}<div class="cover none"><Icon name="music" size={28} /></div>{/if}
+      <div class="coverbox">
+        {#if extras.art}<img class="cover" src={extras.art} alt="" />{:else}<div class="cover none"><Icon name="music" size={28} /></div>{/if}
+        {#if m.app}<span class="source">{sourceOf(m.app)}</span>{/if}
+      </div>
       <div class="info">
         <div class="title">{m.title}</div>
         <div class="muted">{m.artist}{m.album ? ` · ${m.album}` : ''}</div>
@@ -54,25 +68,32 @@
       </div>
     </div>
     <div class="progress" role="slider" tabindex="0" aria-label={t('i.music.position')} aria-valuemin={0} aria-valuemax={Math.round((m.durationMs ?? 0) / 1000)} aria-valuenow={Math.round(pos / 1000)} aria-valuetext={clock(pos)} onclick={seek} onkeydown={seekKey} class:seekable={m.canSeek}>
-      <div class="fill" style:width="{m.durationMs ? (pos / m.durationMs) * 100 : 0}%"></div>
+      <!-- the played part waves while it plays (flat when paused) -->
+      <div class="fill" class:wavy={m.playing && !reduced} style:width="{m.durationMs ? (pos / m.durationMs) * 100 : 0}%"></div>
     </div>
     <div class="times muted"><span>{clock(pos)}</span><span>{m.durationMs ? clock(m.durationMs) : ''}</span></div>
+    </div>
     {#if extras.lyrics}
-      <div class="lyrics">
-        <!-- the line before or after: a click jumps there -->
-        <button class="ly muted" disabled={!m?.canSeek || !extras.lyrics[line - 1]} onclick={() => act({ do: 'media', action: 'seek', positionMs: extras.lyrics![line - 1]!.t })}>{extras.lyrics[line - 1]?.text ?? ''}</button>
-        {#key line}
-          <div class="ly now" in:fly={{ y: reduced ? 0 : 10, duration: reduced ? 0 : 280 }}>{extras.lyrics[line]?.text ?? '♪'}</div>
-        {/key}
-        <button class="ly muted" disabled={!m?.canSeek || !extras.lyrics[line + 1]} onclick={() => act({ do: 'media', action: 'seek', positionMs: extras.lyrics![line + 1]!.t })}>{extras.lyrics[line + 1]?.text ?? ''}</button>
+      <!-- every line in a column that follows the song: the one sung now is bright, the others fade; a click jumps there -->
+      <div class="lyrics" bind:this={lyricList}>
+        {#each extras.lyrics as l, i (i)}
+          <button class="ly" class:now={i === line} class:past={i < line} disabled={!m.canSeek} onclick={() => act({ do: 'media', action: 'seek', positionMs: l.t })}>{l.text || '♪'}</button>
+        {/each}
       </div>
     {/if}
+    </div>
   {/if}
 </div>
 
 <style>
   .music { background: linear-gradient(to top, rgba(var(--album), 0.22), transparent 70%); border-radius: 0 0 26px 26px; }
+  .body { display: flex; flex-direction: column; gap: 10px; }
+  .body.withLyrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
+  .player { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .top { display: flex; gap: 14px; align-items: center; }
+  .coverbox { position: relative; flex: none; }
+  .source { position: absolute; inset-inline-end: -6px; bottom: -6px; padding: 1px 7px; border-radius: var(--r-pill); font-size: 10px; font-weight: 600;
+    background: rgb(var(--album)); color: #111; box-shadow: 0 2px 8px #0006; }
   .cover { width: 84px; height: 84px; border-radius: 14px; object-fit: cover; flex: none; box-shadow: 0 8px 24px rgba(var(--album), 0.35); }
   .cover.none { display: grid; place-items: center; background: var(--surface2); color: var(--muted); }
   .info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
@@ -85,11 +106,17 @@
   .progress { height: 5px; padding: 8px 0; margin: -8px 0; background: var(--surface2) content-box; }
   .progress.seekable { cursor: pointer; }
   .fill { height: 100%; border-radius: 3px; background: rgb(var(--album)); transition: width 1s linear; }
+  /* a wave cut out of the fill (a still shape: no frames to draw) */
+  .fill.wavy { height: 10px; margin-top: -2.5px; border-radius: 0;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Cpath d='M0 5 Q4.5 0 9 5 T18 5' fill='none' stroke='black' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x 0 0 / 18px 10px;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Cpath d='M0 5 Q4.5 0 9 5 T18 5' fill='none' stroke='black' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x 0 0 / 18px 10px; }
   .times { display: flex; justify-content: space-between; font-size: 0.82em; margin-top: -6px; font-variant-numeric: tabular-nums; }
-  button.ly { background: none; padding: 0 8px; border-radius: var(--r-s); font: inherit; }
-  button.ly:not(:disabled):hover { color: var(--text); background: var(--surface1); }
-  button.ly:disabled { opacity: 1; cursor: default; }
-  .lyrics { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 6px; text-align: center; }
-  .ly { min-height: 1.4em; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ly.now { font-size: 1.15em; font-weight: 700; }
+  .lyrics { display: flex; flex-direction: column; gap: 2px; height: 150px; overflow-y: auto; scrollbar-width: none; padding: 50px 0;
+    -webkit-mask: linear-gradient(transparent, #000 30%, #000 70%, transparent); mask: linear-gradient(transparent, #000 30%, #000 70%, transparent); }
+  .lyrics::-webkit-scrollbar { display: none; }
+  .ly { background: none; padding: 2px 6px; border-radius: var(--r-s); font: inherit; text-align: start; color: var(--muted); opacity: 0.75; transition: color 0.3s, opacity 0.3s, font-size 0.3s; }
+  .ly.past { opacity: 0.45; }
+  .ly.now { color: var(--text); opacity: 1; font-weight: 700; font-size: 1.08em; }
+  .ly:not(:disabled):hover { color: var(--text); background: var(--surface1); }
+  .ly:disabled { cursor: default; }
 </style>

@@ -45,7 +45,7 @@
       </div>
     </div>
   {:else if !shelf.length}
-    <div class="empty">{t('i.files.empty')}</div>
+    <div class="dropzone"><Icon name="download" size={22} /><b>{t('i.files.dropTitle')}</b><span class="muted">{t('i.files.dropSub')}</span></div>
   {:else}
     <div class="shelf">
       {#each shelf as f (f.path)}
@@ -68,6 +68,10 @@
 </div>
 
 <style>
+  .dropzone { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px; margin-bottom: 8px; border: 1.5px dashed var(--stroke);
+    border-radius: var(--r-l); color: var(--muted); text-align: center; }
+  .dropzone b { color: var(--text); }
+  .dropzone span { font-size: 0.85em; }
   .shelf { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; }
   .file { position: relative; flex: none; width: 96px; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px 8px; border-radius: 14px; background: var(--surface1); cursor: pointer; animation: float 3.2s steps(8, jump-none) infinite; }
   .file:nth-child(2n) { animation-delay: -1.6s; }
