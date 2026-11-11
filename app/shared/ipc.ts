@@ -2,7 +2,7 @@ import type { Agent, Session } from './state'
 import type { Days } from './today'
 import type { Settings, Theme } from './settings'
 import type { Scene } from './island'
-import type { Action, ExtrasState } from './extras'
+import type { Action, ExtrasState, Notice } from './extras'
 import type { ConnectorInfo, Widget } from './connectors'
 import type { ChatState } from './chat'
 
@@ -30,7 +30,8 @@ export const CH = {
   tucked: 'island:tucked',
   release: 'island:release',
   opened: 'island:opened',
-  peek: 'island:peek'
+  peek: 'island:peek',
+  notice: 'island:notice'
 } as const
 
 /** Your decision on what a session asks. */
@@ -88,6 +89,8 @@ export interface IslandState {
   chat: ChatState
   /** what your agents did today and yesterday (the Home page's summary) */
   day: Days
+  /** a downloaded update waiting for a restart: its version */
+  update: string | null
 }
 
 /** What window.pebble offers the island renderer (app/preload/island.ts). */
@@ -123,6 +126,8 @@ export interface IslandApi {
   onPage(fn: (page: string, listen: boolean) => void): void
   /** play a sound (a data: URL), or stop with null */
   onPlay(fn: (url: string | null) => void): void
+  /** something on the PC just changed: a short notice */
+  onNotice(fn: (n: Notice) => void): void
   /** a question during a full-screen game: show it as the tucked line (true), or that is over (false) */
   onPeek(fn: (on: boolean) => void): void
   /** the island opened (true) or closed: the welcome tour ticks off what you tried */

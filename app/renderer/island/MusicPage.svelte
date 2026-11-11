@@ -59,11 +59,12 @@
     <div class="times muted"><span>{clock(pos)}</span><span>{m.durationMs ? clock(m.durationMs) : ''}</span></div>
     {#if extras.lyrics}
       <div class="lyrics">
-        <div class="ly muted">{extras.lyrics[line - 1]?.text ?? ''}</div>
+        <!-- the line before or after: a click jumps there -->
+        <button class="ly muted" disabled={!m?.canSeek || !extras.lyrics[line - 1]} onclick={() => act({ do: 'media', action: 'seek', positionMs: extras.lyrics![line - 1]!.t })}>{extras.lyrics[line - 1]?.text ?? ''}</button>
         {#key line}
           <div class="ly now" in:fly={{ y: reduced ? 0 : 10, duration: reduced ? 0 : 280 }}>{extras.lyrics[line]?.text ?? '♪'}</div>
         {/key}
-        <div class="ly muted">{extras.lyrics[line + 1]?.text ?? ''}</div>
+        <button class="ly muted" disabled={!m?.canSeek || !extras.lyrics[line + 1]} onclick={() => act({ do: 'media', action: 'seek', positionMs: extras.lyrics![line + 1]!.t })}>{extras.lyrics[line + 1]?.text ?? ''}</button>
       </div>
     {/if}
   {/if}
@@ -85,6 +86,9 @@
   .progress.seekable { cursor: pointer; }
   .fill { height: 100%; border-radius: 3px; background: rgb(var(--album)); transition: width 1s linear; }
   .times { display: flex; justify-content: space-between; font-size: 0.82em; margin-top: -6px; font-variant-numeric: tabular-nums; }
+  button.ly { background: none; padding: 0 8px; border-radius: var(--r-s); font: inherit; }
+  button.ly:not(:disabled):hover { color: var(--text); background: var(--surface1); }
+  button.ly:disabled { opacity: 1; cursor: default; }
   .lyrics { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 6px; text-align: center; }
   .ly { min-height: 1.4em; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ly.now { font-size: 1.15em; font-weight: 700; }

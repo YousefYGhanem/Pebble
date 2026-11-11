@@ -125,6 +125,7 @@ export function makeApi(o: {
         id, kind, text: String(w.text).slice(0, 200), title: w.title?.slice(0, 80), icon: w.icon?.slice(0, 20), tone: w.tone,
         lines: w.lines?.slice(0, 6).map(l => String(l).slice(0, 200)),
         progress: typeof w.progress === 'number' ? Math.max(0, Math.min(100, w.progress)) : undefined,
+        since: typeof w.since === 'number' && w.since > 0 ? w.since : undefined,
         link: typeof w.link === 'string' && /^https?:\/\//.test(w.link) ? w.link : undefined
       } })
     },

@@ -72,6 +72,7 @@ static class Server
         "media.control" => await Media.Control(Str(a, "action"), Long(a, "positionMs")),
         "audio.get" => AudioState(),
         "audio.set" => AudioSet(a),
+        "mic.mute" => Audio.MicSetMute(a["on"]?.GetValue<bool>() ?? !(Audio.MicMuted() ?? false)),
         "radios.get" => await Radios.Get(),
         "radios.set" => await Radios.Set(Str(a, "kind"), a["on"]?.GetValue<bool>() ?? false),
         "speech.voices" => Speech.Voices(),
@@ -101,7 +102,13 @@ static class Server
         Capture.Region((int)r["x"]!, (int)r["y"]!, (int)r["w"]!, (int)r["h"]!, file);
         return r;
     }
-    static JsonObject AudioState() { var (v, m) = Audio.Get(); return new JsonObject { ["volume"] = v, ["muted"] = m }; }
+    // the 'audio' watch also carries what the island peeks at: the speakers' name, the mic's mute, Caps Lock and the
+    // keyboard language (one poll, an event only when something changed)
+    static JsonObject AudioState()
+    {
+        var (v, m, d) = Audio.Get();
+        return new JsonObject { ["volume"] = v, ["muted"] = m, ["device"] = d, ["mic"] = Audio.MicMuted(), ["caps"] = Win32.CapsLock(), ["keyboard"] = Win32.KeyboardLanguage() };
+    }
     static JsonObject AudioSet(JsonObject a)
     {
         if (a["volume"] is JsonValue v) Audio.SetVolume(v.GetValue<int>());

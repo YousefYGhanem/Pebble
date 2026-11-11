@@ -12,7 +12,7 @@
   import { AGENT_NAMES, type Agent } from '../../shared/state'
   import { daysAt, spentOf, type Days, type Spent } from '../../shared/today'
 
-  let { sessions, extras, widgets = [], day, now, act, go }: { sessions: Session[]; extras: ExtrasState; widgets?: Widget[]; day: Days; now: number; act: (a: Action) => void; go: (p: Page) => void } = $props()
+  let { sessions, extras, widgets = [], day, update = null, now, act, go }: { sessions: Session[]; extras: ExtrasState; widgets?: Widget[]; day: Days; update?: string | null; now: number; act: (a: Action) => void; go: (p: Page) => void } = $props()
   // what your agents did today (yesterday's, until today has something)
   const days = $derived(daysAt(day, now))
   const shownDay = $derived(days.today.tasks || Object.values(days.today.spent).some(x => spentOf(x!) > 0) ? { d: days.today, label: t('i.day.today') } : days.yesterday ? { d: days.yesterday, label: t('i.day.yesterday') } : null)
@@ -32,6 +32,7 @@
       <span class="muted">{date.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })}</span>
     </div>
     <span class="page-time"></span>
+    {#if update}<button class="likely" onclick={() => act({ do: 'update.install' })}><Icon name="download" size={13} />{t('i.home.update', { version: update })}</button>{/if}
     {#if r}
       <button class="radio" class:on={r.wifi} title={t('i.home.wifi')} aria-label="Wi-Fi" aria-pressed={!!r.wifi}
         onclick={() => act({ do: 'radio', kind: 'wifi', on: !r.wifi })} oncontextmenu={e => { e.preventDefault(); act({ do: 'open', what: 'wifi' }) }}><Icon name="wifi" size={15} /></button>

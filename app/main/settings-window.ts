@@ -1,3 +1,4 @@
+import os from 'node:os'
 import path from 'node:path'
 import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron'
 import { validSettingsAction, type SettingsAction, type SettingsView } from '../shared/settings-ui'
@@ -126,7 +127,10 @@ export class SettingsWindow {
           break
         }
         case 'copyWebhook': { const u = this.d.webhook(a.id); if (u) clipboard.writeText(u); break }
-        case 'open': void shell.openPath(this.d.paths[a.what]); break
+        case 'open':
+          if (a.what === 'bug') void shell.openExternal(bugReportUrl(app.getVersion(), `${os.type()} ${os.release()}`))
+          else void shell.openPath(this.d.paths[a.what])
+          break
         case 'history.clear': this.d.clearHistory(); break
         case 'scene': this.d.playScene(a.scene); break
         case 'copyExtensionKey': clipboard.writeText(this.d.view().extension.key); break
@@ -158,4 +162,10 @@ export class SettingsWindow {
     }
     this.push()
   }
+}
+
+/** A new GitHub issue with the version and Windows filled in; the diagnostics report (which holds paths) you paste yourself. */
+export function bugReportUrl(version: string, windows: string): string {
+  const body = `**Pebble** ${version} on ${windows}\n\n**What happened**\n\n\n**What you expected**\n\n\n**Diagnostics** (Settings → Advanced → Copy the report, then paste it here; check it for anything private first)\n`
+  return `https://github.com/YousefYGhanem/Pebble/issues/new?${new URLSearchParams({ body })}`
 }

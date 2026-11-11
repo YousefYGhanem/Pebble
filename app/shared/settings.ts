@@ -29,7 +29,9 @@ export const settingsSchema = z.object({
     /** screen buddy: shows Pip the window under the mouse */
     buddyShortcut: z.string(),
     /** opens the chat and starts Windows voice typing */
-    voiceShortcut: z.string()
+    voiceShortcut: z.string(),
+    /** mutes the microphone for every app (and unmutes it) */
+    micShortcut: z.string()
   }),
   island: z.object({
     /** notch: hangs from the top edge with curved "ears"; floating: a pill a little below it */
@@ -109,6 +111,8 @@ export const settingsSchema = z.object({
     sound: z.boolean(),
     /** Windows notifications when an agent finishes or needs you */
     toasts: z.boolean(),
+    /** short notices on the island when something on the PC changes (charger, network, Caps Lock, sound device…) */
+    peeks: z.boolean(),
     /** a notification (and a worried Pip) when a CLI passes 80% and 95% of its session or week */
     usageAlerts: z.boolean(),
     /** which Windows notifications, by where they come from (problems with Pebble itself always show) */
@@ -129,7 +133,7 @@ export type Settings = z.infer<typeof settingsSchema>
 export const DEFAULTS: Settings = {
   version: 1,
   theme: 'default',
-  general: { language: 'en', welcomed: false, tipsSeen: [], startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space' },
+  general: { language: 'en', welcomed: false, tipsSeen: [], startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space', micShortcut: 'Control+Alt+M' },
   island: {
     style: 'notch', openOn: 'hover', display: 'main',
     restingWidth: 180, restingHeight: 32, width: 340, height: 36, askWidth: 460, openWidth: 680,
@@ -145,7 +149,7 @@ export const DEFAULTS: Settings = {
     cursor: { enabled: true }, opencode: { enabled: true }, aider: { enabled: true }, dsh: { enabled: true }
   },
   terminals: { minSeconds: 10 },
-  features: { sound: true, toasts: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
+  features: { sound: true, toasts: true, peeks: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
   chat: { provider: 'claude-cli', model: '', readAloud: false },
   chatApps: { desktop: [] },
   server: { port: 47901 }

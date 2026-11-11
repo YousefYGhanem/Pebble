@@ -67,7 +67,7 @@ const captureDir = process.argv.find(a => a.startsWith('--capture='))?.slice(10)
 if (captureDir) {
   app.whenReady().then(async () => {
     const win = createIsland(store.settings, true)
-    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { claude: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: NO_EXTRAS, chat: { provider: 'Claude Code', ready: true, messages: [], busy: false }, day: { today: { ...emptyDay(Date.now()), tasks: 6, seconds: 5400, files: 14, agents: { claude: { tasks: 6, seconds: 5400 } }, spent: { claude: { unit: '%', base: 20, prev: 31, acc: 0 } } }, yesterday: null } } satisfies IslandState))
+    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { claude: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: NO_EXTRAS, chat: { provider: 'Claude Code', ready: true, messages: [], busy: false }, update: null, day: { today: { ...emptyDay(Date.now()), tasks: 6, seconds: 5400, files: 14, agents: { claude: { tasks: 6, seconds: 5400 } }, spent: { claude: { unit: '%', base: 20, prev: 31, acc: 0 } } }, yesterday: null } } satisfies IslandState))
     await new Promise<void>(r => win.webContents.once('did-finish-load', () => r()))
     await new Promise(r => setTimeout(r, 1500)) // hello
     fs.mkdirSync(captureDir, { recursive: true })
@@ -100,7 +100,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -163,7 +163,8 @@ function sendState() {
   const state: IslandState = { sessions: hub.list(), settings: store.settings, theme: store.theme, usage: hub.usage, history: history.items,
     pip: { done: pip.stats.done, achievements: pip.stats.achievements, custom: pip.custom, sleepy, playing: !!extras.state.media?.playing },
     extras: { ...extras.state, drop: drop.state },
-    widgets: [...connectors.widgets.values()], connectors: connectors.list(), chat: chat.state(), day: today.view() }
+    widgets: [...connectors.widgets.values()], connectors: connectors.list(), chat: chat.state(), day: today.view(),
+    update: updater.status.state === 'ready' ? updater.status.version : null }
   const json = JSON.stringify(state)
   if (json === lastState) return
   lastState = json
@@ -322,6 +323,8 @@ function applySettings() {
   bindShortcut('tuck', s.general.tuckShortcut, toggleTuck)
   bindShortcut('buddy', s.general.buddyShortcut, () => void buddy())
   bindShortcut('voice', s.general.voiceShortcut, () => showPage('chat', true))
+  // the microphone for every app at once; the island shows a muted mic until it is back on
+  bindShortcut('mic', s.general.micShortcut, () => { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)) })
   chatApps.apply()
   updater.apply()
   if (island) placeIsland(island, s)
@@ -510,6 +513,7 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'drop.network') { void shell.openExternal('ms-settings:network-status'); return }
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
+  if (a.do === 'update.install') { updater.install(); return }
   if (a.do === 'tip.seen') { const seen = store.settings.general.tipsSeen; if (!seen.includes(a.id)) store.update({ general: { tipsSeen: [...seen, a.id] } }); return }
   if (a.do === 'chat.send') { void chat.send(a.text); return }
   if (a.do === 'chat.stop') { chat.stop(); return }
@@ -614,6 +618,7 @@ app.whenReady().then(async () => {
   native.watch('drag', true, 'drop-target')
   extras.on('change', () => { push(); guard.apply() }) // the focus timer started, paused or ended
   extras.on('peak', (p: number) => send(CH.peak, p))
+  extras.on('notice', (n: unknown) => { if (store.settings.features.peeks) send(CH.notice, n) })
   extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) }), undefined, undefined, { kind: 'extras' }))
   drop.on('change', push)
   // an answer streams in many small pieces: show them at most ~20 times a second

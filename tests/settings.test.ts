@@ -70,3 +70,11 @@ test('pages can be hidden (not Home or Agents), notifications switched by source
   expect(parseSettings({ features: { notify: { done: false } } }).ok).toBe(true)
   expect(parseSettings({ general: { tipsSeen: ['ask', 'nope'] } }).ok).toBe(false)
 })
+
+test('a bug report opens a GitHub issue with the version and Windows filled in, nothing else', async () => {
+  const { bugReportUrl } = await import('../app/main/settings-window')
+  const u = new URL(bugReportUrl('0.3.0', 'Windows_NT 10.0.26300'))
+  expect(u.origin + u.pathname).toBe('https://github.com/YousefYGhanem/Pebble/issues/new')
+  expect(u.searchParams.get('body')).toContain('**Pebble** 0.3.0 on Windows_NT 10.0.26300')
+  expect(DEFAULTS.general.micShortcut).toBe('Control+Alt+M')
+})

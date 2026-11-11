@@ -4,7 +4,7 @@ import path from 'node:path'
 import { EventEmitter } from 'node:events'
 import { app, clipboard, nativeImage, shell } from 'electron'
 import type { RestLevel } from '../rest'
-import { focusFinished, trimClips, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
+import { focusFinished, noticesFor, trimClips, type PcState, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
 import type { Native } from '../native'
 import { Lyrics } from './lyrics'
@@ -22,12 +22,13 @@ const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipbo
  * 'peak' (0–1, ~30 a second while music plays) and 'focus-done'.
  */
 export class Extras extends EventEmitter {
-  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
   private lyrics: Lyrics
   private songKey = ''
   private lastClip = ''
   private clipId = 0
   private cpuPrev = os.cpus()
+  private pc: PcState | null = null
   private focusTimer?: NodeJS.Timeout
 
   constructor(private dir: string, private native: Native, private settings: () => Settings) {
@@ -47,7 +48,13 @@ export class Extras extends EventEmitter {
     this.native.on('media', (m: Media | null) => void this.onMedia(m))
     this.native.on('peak', (p: number) => this.emit('peak', p))
     // Windows' volume, also when you change it elsewhere (keyboard keys, the taskbar)
-    this.native.on('audio', (a: { volume: number; muted: boolean } | null) => { this.state.volume = a ? { level: a.volume, muted: a.muted } : null; this.changed() })
+    this.native.on('audio', (a: { volume: number; muted: boolean } & PcState | null) => {
+      this.state.volume = a ? { level: a.volume, muted: a.muted } : null
+      this.state.mic = a?.mic ?? null
+      // what changed on the PC: the island peeks at it (Settings → General → Peeks)
+      if (a) { for (const n of noticesFor(this.pc, a)) this.emit('notice', n); this.pc = a }
+      this.changed()
+    })
     this.native.on('ready', () => void this.readRadios())
     this.applySettings()
     setInterval(() => void this.readClipboard(), 1000).unref()
@@ -59,7 +66,7 @@ export class Extras extends EventEmitter {
   applySettings() {
     const on = this.settings().music.enabled
     this.native.watch('media', on && this.rest !== 'off') // watching again sends the song playing now
-    this.native.watch('audio', on && !this.deep())
+    this.native.watch('audio', !this.deep()) // the volume (music), and the PC's changes the island peeks at
     if (!on && this.state.media) { this.state.media = null; this.state.art = null; this.state.lyrics = null; this.changed() }
     this.peaks()
   }
@@ -246,6 +253,7 @@ export function validAction(a: unknown): a is Action {
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
+    case 'update.install': return true
     case 'tip.seen': return o.id === 'ask' || o.id === 'tuck' || o.id === 'drop'
     case 'notes.save': return Array.isArray(o.notes) && o.notes.length <= MAX_NOTES
       && o.notes.every((n: Note) => n && typeof n.id === 'string' && typeof n.text === 'string' && n.text.length <= 20000 && typeof n.at === 'number')

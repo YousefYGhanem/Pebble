@@ -32,7 +32,9 @@ static class Selftest
             File.Delete(f);
             return Task.FromResult(head.SequenceEqual(new byte[] { 0x89, 0x50, 0x4E, 0x47 }) ? "png ok" : throw new Exception("not a PNG"));
         });
-        await Check("volume", () => { var (v, m) = Audio.Get(); return Task.FromResult($"{v}%{(m ? " muted" : "")}"); });
+        await Check("volume", () => { var (v, m, d) = Audio.Get(); return Task.FromResult($"{v}%{(m ? " muted" : "")} on {d}"); });
+        await Check("microphone", () => Task.FromResult(Audio.MicMuted() is bool b ? (b ? "muted" : "on") : "none"));
+        await Check("keyboard", () => Task.FromResult($"{Win32.KeyboardLanguage()}, caps lock {(Win32.CapsLock() ? "on" : "off")}"));
         await Check("sound level", () => Task.FromResult($"peak {Audio.Peak():0.00}"));
         await Check("media", async () => (await Media.Get())?["app"]?.GetValue<string>() ?? "nothing playing");
         await Check("radios", async () => string.Join(", ", (await Radios.Get()).Select(r => $"{r!["kind"]} {((bool)r["on"]! ? "on" : "off")}")) is { Length: > 0 } s ? s : "none");

@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, test, expect } from 'vitest'
-import { focusFinished, focusLeft, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
+import { focusFinished, focusLeft, noticesFor, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
 import { Lyrics, parseLrc, plainTitle } from '../app/main/extras/lyrics'
 import { guardActive, matchSite } from '../app/main/extras/guard'
 import { DropServer, lanAddress, safeName } from '../app/main/extras/drop'
@@ -155,4 +155,14 @@ test('clipboard: pinned entries stay first and are never pushed out', () => {
   expect(validAction({ do: 'clip.pin', id: 2 })).toBe(true)
   expect(validAction({ do: 'tip.seen', id: 'ask' })).toBe(true)
   expect(validAction({ do: 'tip.seen', id: 'other' })).toBe(false)
+})
+
+test('peeks: what changed on the PC becomes a notice; the first reading is only the baseline', () => {
+  const pc = { muted: false, device: 'Speakers', mic: false, caps: false, keyboard: 'en-US' }
+  expect(noticesFor(null, pc)).toEqual([])
+  expect(noticesFor(pc, pc)).toEqual([])
+  expect(noticesFor(pc, { ...pc, device: 'Headphones (AirPods)', caps: true, keyboard: 'ar-SA', muted: true, mic: true })).toEqual([
+    { kind: 'device', name: 'Headphones (AirPods)' }, { kind: 'caps', on: true }, { kind: 'keyboard', lang: 'ar-SA' }, { kind: 'mute', on: true }, { kind: 'mic', on: true }])
+  // no microphone, or a name not read: no notice
+  expect(noticesFor({ ...pc, mic: null, device: '' }, { ...pc, mic: true, device: 'X' })).toEqual([])
 })

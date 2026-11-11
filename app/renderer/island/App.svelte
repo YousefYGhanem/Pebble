@@ -4,7 +4,7 @@
   import { AGENT_NAMES, recommended, risky, type Session, type Status } from '../../shared/state'
   import type { Scene } from '../../shared/island'
   import { applyTheme } from '../theme'
-  import { setLanguage, t } from '../i18n.svelte'
+  import { locale, setLanguage, t } from '../i18n.svelte'
   import AgentsPage from './AgentsPage.svelte'
   import HomePage from './HomePage.svelte'
   import MusicPage from './MusicPage.svelte'
@@ -64,15 +64,26 @@
   const top = $derived<Session | undefined>(shown[0])
   const extras = $derived<ExtrasState | undefined>(view ? { ...view.extras, ...(scene ? sceneExtras : {}) } : undefined)
   const music = $derived(!!view?.settings.music.enabled && !!extras?.media?.playing)
+  // ---------- peeks: a short line for a moment when something on the PC changes ----------
+  let notice = $state<{ icon: string; text: string; n: number } | null>(null)
+  let noticeN = 0
+  function peek(icon: string, text: string) {
+    if (scene || !view?.settings.features.peeks) return
+    const n = ++noticeN
+    notice = { icon, text, n }
+    setTimeout(() => { if (notice?.n === n) notice = null }, 2800)
+  }
+  // a language code in your language's words ("ar-SA" → "Arabic")
+  const languageName = (code: string) => { try { return new Intl.DisplayNames([locale()], { type: 'language' }).of(code.split('-')[0]!) ?? code } catch { return code } }
   const focusOn = $derived(!!extras?.focus)
   const busy = $derived(shown.find(x => x.status !== 'ready'))
   const widgets = $derived<Widget[]>(sceneWidgets ?? view?.widgets ?? [])
   /** a connector's live thing (a match, a call, an upload): it takes the small island while it lasts */
   const activity = $derived(widgets.find(w => w.kind === 'activity'))
   const chipText = (c: string) => widgets.find(w => `widget:${w.plugin}/${w.id}` === c)?.text ?? ''
-  const mode = $derived<Mode>(phase === 'normal' ? modeFor({ tucked, open, sessions: shown, extra: music || focusOn || dropping || !!activity }) : 'resting')
+  const mode = $derived<Mode>(phase === 'normal' ? modeFor({ tucked, open, sessions: shown, extra: music || focusOn || dropping || !!activity || !!notice }) : 'resting')
   /** what the medium island shows: a drop > music > an agent > a connector's live activity > the focus timer */
-  const medium = $derived<'drop' | 'music' | 'agent' | 'activity' | 'focus'>(dropping ? 'drop' : music && !(busy && busy.status === 'error') ? 'music' : busy ? 'agent' : activity ? 'activity' : focusOn ? 'focus' : 'agent')
+  const medium = $derived<'drop' | 'notice' | 'music' | 'agent' | 'activity' | 'focus'>(dropping ? 'drop' : notice ? 'notice' : music && !(busy && busy.status === 'error') ? 'music' : busy ? 'agent' : activity ? 'activity' : focusOn ? 'focus' : 'agent')
   const chips = $derived(view ? [view.settings.island.chips.left, view.settings.island.chips.right] : ['none', 'none'])
   const chipCount = $derived(chips.filter(c => c !== 'none').length)
   const lyric = $derived(extras?.lyrics && extras.media ? extras.lyrics[lyricIndex(extras.lyrics, positionNow(extras.media, now) + 250)]?.text ?? '' : '')
@@ -174,13 +185,21 @@
     // a focus timer ran out (not stopped by hand): Pip is happy and chimes
     if (prevFocus?.endsAt && !s.extras.focus && prevFocus.endsAt - Date.now() < 2000) { happyAt = Date.now(); kick(); say('done'); later(3100) }
     prevFocus = s.extras.focus
+    // you are back after Pip fell asleep: he wakes up glad to see you
+    if (prevSleepy && !s.pip.sleepy && !scene) { happyAt = Date.now(); kick(); say('hello'); later(3100) }
+    prevSleepy = s.pip.sleepy
+    // an update is ready: one peek (the Home page keeps the button)
+    if (s.update && s.update !== lastUpdate) peek('download', t('i.peek.update', { version: s.update }))
+    lastUpdate = s.update
     if (s.extras.art !== lastArt) { lastArt = s.extras.art; album = null; if (lastArt) albumColor(lastArt).then(c => (album = c)) }
   })
-  let prevFocus: ExtrasState['focus'] = null, lastArt: string | null = null
+  let prevFocus: ExtrasState['focus'] = null, lastArt: string | null = null, prevSleepy = false, lastUpdate: string | null = null
   window.pebble.onPeak(emitPeak)
   ;(navigator as Navigator & { getBattery?: () => Promise<{ level: number; charging: boolean; addEventListener(e: string, f: () => void): void }> }).getBattery?.().then(b => {
     const read = () => (battery = { level: Math.round(b.level * 100), charging: b.charging })
-    read(); b.addEventListener('levelchange', read); b.addEventListener('chargingchange', read)
+    read(); b.addEventListener('levelchange', read)
+    // plugged in: a peek with the battery's level
+    b.addEventListener('chargingchange', () => { read(); if (b.charging) peek('battery', t('i.peek.charging', { n: Math.round(b.level * 100) })) })
   }).catch(() => {})
 
   // opened or closed: the welcome tour ticks it off while you try
@@ -225,6 +244,16 @@
     window.pebble.release()
   })
   window.pebble.onTuck(() => { tucked = !tucked; open = false })
+  window.pebble.onNotice(n => {
+    if (n.kind === 'device') peek('speaker', t('i.peek.device', { name: n.name }))
+    else if (n.kind === 'caps') peek('keyboard', t(n.on ? 'i.peek.capsOn' : 'i.peek.capsOff'))
+    else if (n.kind === 'keyboard') peek('keyboard', t('i.peek.keyboard', { lang: languageName(n.lang) }))
+    else if (n.kind === 'mute') peek('speaker', t(n.on ? 'i.peek.muted' : 'i.peek.unmuted'))
+    else if (n.kind === 'mic') peek(n.on ? 'micoff' : 'mic', t(n.on ? 'i.peek.micOff' : 'i.peek.micOn'))
+  })
+  // the network dropped, or came back
+  addEventListener('offline', () => peek('wifi', t('i.peek.offline')))
+  addEventListener('online', () => peek('wifi', t('i.peek.online')))
   window.pebble.onPeek(on => { tucked = on; open = false })
   window.pebble.onBye(() => startBye(() => window.pebble.byeDone()))
   window.pebble.onScene(s => {
@@ -548,7 +577,11 @@
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
   <div class="clip" class:reduced bind:this={clip} role="region" aria-label={t('i.island.name')} onclick={onClick} oncontextmenu={onRightClick}
     title={mode === 'resting' || mode === 'medium' ? t('i.island.hint') : mode === 'tucked' ? t('i.island.tuckedHint') : undefined}>
-    <div class="content mode-{mode}" bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
+    <div class="content mode-{mode}" class:micmuted={!!extras?.mic} bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
+      {#if (mode === 'resting' || mode === 'medium') && extras?.mic}
+        <!-- the microphone is muted for every app: a reminder while it is -->
+        <div class="micoff" title={t('i.peek.micOff')} style:height="{mode === 'resting' ? view.settings.island.restingHeight : view.settings.island.height}px"><Icon name="micoff" size={12} /></div>
+      {/if}
       {#if mode === 'resting' && chipCount}
         <!-- the resting island's chips, left and right of Pip -->
         <div class="chips" style:height="{view.settings.island.restingHeight}px">
@@ -562,6 +595,8 @@
             </span>
           {/each}
         </div>
+      {:else if mode === 'medium' && medium === 'notice' && notice}
+        <div class="line" role="status" style:height="{view.settings.island.height}px"><Icon name={notice.icon} size={14} /><span class="title">{notice.text}</span></div>
       {:else if mode === 'medium' && medium === 'drop'}
         <div class="line" style:height="{view.settings.island.height}px"><Icon name="files" size={14} /><span class="title">{t('i.island.dropHere')}</span></div>
       {:else if mode === 'medium' && medium === 'music' && extras?.media}
@@ -580,6 +615,7 @@
         <div class="line" style:height="{view.settings.island.height}px" onclick={e => { e.stopPropagation(); if (activity.link) act({ do: 'widget.open', plugin: activity.plugin, id: activity.id }); else { page = 'widgets'; open = true } }}>
           {#if activity.icon && !/^[a-z-]+$/.test(activity.icon)}<span>{activity.icon}</span>{:else}<Icon name={activity.icon ?? 'grid'} size={14} />{/if}
           <span class="title">{activity.title ? `${activity.title} · ` : ''}{activity.text}</span>
+          {#if activity.since}<span class="count">{clock(now - activity.since)}</span>{/if}
           {#if activity.progress !== undefined}<span class="act-progress"><i style:width="{activity.progress}%"></i></span>{/if}
         </div>
       {:else if mode === 'medium' && medium === 'focus' && extras?.focus}
@@ -625,7 +661,7 @@
               {#if page === 'agents'}
                 <AgentsPage sessions={shown} usage={view.usage} history={view.history} {now} bind:selected
                   onanswer={answer} onreply={reply} onjump={jump} ondismiss={dismiss} onseen={seen} />
-              {:else if page === 'home' && extras}<HomePage sessions={shown} {extras} {widgets} day={view.day} {now} {act} go={p => (page = p)} />
+              {:else if page === 'home' && extras}<HomePage sessions={shown} {extras} {widgets} day={view.day} update={view.update} {now} {act} go={p => (page = p)} />
               {:else if page === 'music' && extras}<MusicPage {extras} {now} {act} {reduced} color={album} />
               {:else if page === 'files' && extras}<FilesPage {extras} {now} {act} {reduced} />
               {:else if page === 'clipboard' && extras}<ClipboardPage {extras} {now} {act} enabled={view.settings.clipboard.enabled} />
@@ -651,6 +687,8 @@
   .content { position: absolute; left: 0; top: 0; }
   .reduced .content { transition: opacity 0.15s ease-out; }
 
+  .micoff { position: absolute; inset-inline-start: 12px; top: 0; z-index: 1; display: flex; align-items: center; color: var(--error); }
+  .content.micmuted .line { padding-inline-start: 30px; } /* room for the muted mic */
   .who { font-size: 0.78em; color: var(--muted); margin-bottom: 2px; }
   .who.tipline { color: var(--accent-text); }
   .tip { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--accent) 22%, transparent); font-size: 0.86em; }

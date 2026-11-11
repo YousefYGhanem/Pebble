@@ -65,6 +65,12 @@ static unsafe partial class Win32
     [LibraryImport("gdi32.dll")] public static partial int GetDIBits(nint dc, nint bmp, uint start, uint lines, void* bits, BITMAPINFOHEADER* info, uint usage);
     [LibraryImport("gdi32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static partial bool DeleteObject(nint obj);
     [LibraryImport("gdi32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static partial bool DeleteDC(nint dc);
+    [LibraryImport("ole32.dll")] public static partial int PropVariantClear(ref PROPVARIANT pv);
+    [LibraryImport("user32.dll")] public static partial short GetKeyState(int key);
+    [LibraryImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static partial bool AttachThreadInput(uint from, uint to, [MarshalAs(UnmanagedType.Bool)] bool attach);
+    [LibraryImport("kernel32.dll")] public static partial uint GetCurrentThreadId();
+    [LibraryImport("user32.dll")] public static partial nint GetKeyboardLayout(uint thread);
+    [LibraryImport("kernel32.dll")] public static partial int LCIDToLocaleName(uint lcid, char* name, int size, uint flags);
     [LibraryImport("ole32.dll")] public static partial int CoCreateInstance(in Guid clsid, nint outer, int ctx, in Guid iid, out nint ppv);
 
     public static string ClassName(nint hwnd) { var b = stackalloc char[256]; int n = GetClassName(hwnd, b, 256); return new string(b, 0, n); }
@@ -100,5 +106,27 @@ static unsafe partial class Win32
         }
         finally { CloseHandle(snap); }
         return map;
+    }
+
+    /// <summary>Caps Lock is on. A thread sees the toggle only through input it reads itself, so this one briefly shares
+    /// the input state of the window in front (attached only for the one call).</summary>
+    public static bool CapsLock()
+    {
+        var hwnd = GetForegroundWindow();
+        uint fg = hwnd == 0 ? 0 : GetWindowThreadProcessId(hwnd, out _), me = GetCurrentThreadId();
+        var attached = fg != 0 && fg != me && AttachThreadInput(me, fg, true);
+        try { return (GetKeyState(0x14 /* VK_CAPITAL */) & 1) != 0; }
+        finally { if (attached) AttachThreadInput(me, fg, false); }
+    }
+
+    /// <summary>The keyboard language of the window in front ("ar-SA", "en-US").</summary>
+    public static string KeyboardLanguage()
+    {
+        var hwnd = GetForegroundWindow();
+        var thread = hwnd == 0 ? 0 : GetWindowThreadProcessId(hwnd, out _);
+        var lcid = (uint)(GetKeyboardLayout(thread) & 0xFFFF);
+        var buf = stackalloc char[85];
+        var n = LCIDToLocaleName(lcid, buf, 85, 0);
+        return n > 1 ? new string(buf, 0, n - 1) : "";
     }
 }

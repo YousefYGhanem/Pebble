@@ -14,7 +14,7 @@
   let v = $state<SettingsView>()
   let tab = $state('general')
   let pickFilter = $state('')
-  let recording = $state<'toggleShortcut' | 'tuckShortcut' | 'buddyShortcut' | 'voiceShortcut' | null>(null)
+  let recording = $state<(typeof SHORTCUTS)[number] | null>(null)
 
   let tabAsked = 0
   window.settingsApi.onView(next => {
@@ -113,7 +113,7 @@
   /** the port typed this session: Pebble listens on it after a restart */
   let portEdited = $state(false)
   const SHELLS: Record<string, string> = { powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' }
-  const SHORTCUTS = ['toggleShortcut', 'tuckShortcut', 'buddyShortcut', 'voiceShortcut'] as const
+  const SHORTCUTS = ['toggleShortcut', 'tuckShortcut', 'buddyShortcut', 'voiceShortcut', 'micShortcut'] as const
   const SIZES = [['restingWidth', 60, 600], ['restingHeight', 20, 60], ['width', 120, 1200], ['height', 24, 80], ['askWidth', 200, 1200], ['openWidth', 300, 1400], ['offsetTop', 0, 200]] as const
 
   function record(e: KeyboardEvent) {
@@ -201,6 +201,8 @@
             <input type="checkbox" class="switch" checked={s.features.sound} onchange={() => set('features.sound', !s.features.sound)} /></label>
           <label class="row"><span>{t('notify.doneSeconds')}<small>{t('unit.seconds')}</small></span>
             <input type="number" min="1" max="600" value={s.features.doneSeconds} onchange={e => set('features.doneSeconds', num(e))} /></label>
+          <label class="row"><span>{t('notify.peeks')}<small>{t('notify.peeksHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.features.peeks} onchange={() => set('features.peeks', !s.features.peeks)} /></label>
           <label class="row"><span>{t('notify.usage')}<small>{t('notify.usageHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.features.usageAlerts} onchange={() => set('features.usageAlerts', !s.features.usageAlerts)} /></label>
         </section>
@@ -521,6 +523,7 @@
         <section class="actions">
           <button onclick={() => act({ do: 'open', what: 'settings' })}>{t('advanced.settings')}</button>
           <button onclick={() => act({ do: 'open', what: 'log' })}>{t('advanced.log')}</button>
+          <button onclick={() => act({ do: 'open', what: 'bug' })}>{t('advanced.bug')}</button>
           <button onclick={clearHistory}>{clearing ? `${t('advanced.historyCleared')} · ${t('i.common.undo')}` : t('advanced.history')}</button>
         </section>
         <!-- apart from the everyday buttons, so a slip does not end Pebble -->

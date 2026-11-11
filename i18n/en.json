@@ -542,5 +542,22 @@
   "i.tip.ok": "Got it",
   "island.pages": "Pages",
   "island.pagesHint": "the ones in the island's page row (Home and Agents always stay)",
-  "general.tipsAgain": "Show the tips again"
+  "general.tipsAgain": "Show the tips again",
+  "i.peek.device": "Sound on {name}",
+  "i.peek.capsOn": "Caps Lock on",
+  "i.peek.capsOff": "Caps Lock off",
+  "i.peek.keyboard": "Keyboard: {lang}",
+  "i.peek.muted": "Sound muted",
+  "i.peek.unmuted": "Sound on",
+  "i.peek.micOff": "Microphone muted (every app)",
+  "i.peek.micOn": "Microphone on",
+  "i.peek.offline": "Offline: the network connection dropped",
+  "i.peek.online": "Back online",
+  "i.peek.charging": "Charging · {n}%",
+  "i.peek.update": "Pebble {version} is ready: restart from Home",
+  "i.home.update": "Update to {version}",
+  "general.micShortcut": "Mute / unmute the microphone (every app)",
+  "notify.peeks": "Peeks",
+  "notify.peeksHint": "a short line on the island: charging, network, Caps Lock, keyboard language, sound device, mute",
+  "advanced.bug": "Report a bug…"
 }

@@ -46,6 +46,8 @@ export interface Widget {
   lines?: string[]
   /** 0–100: a progress line under an activity */
   progress?: number
+  /** since when (ms since 1970): the island counts the time next to an activity (a call) */
+  since?: number
   /** opened in your browser on a click (http/https only) */
   link?: string
   at: number

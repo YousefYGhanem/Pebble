@@ -542,5 +542,22 @@
   "i.tip.ok": "فهمت",
   "island.pages": "الصفحات",
   "island.pagesHint": "الموجودة في صف صفحات الجزيرة (الرئيسية والوكلاء تبقيان دائمًا)",
-  "general.tipsAgain": "اعرض النصائح مرة أخرى"
+  "general.tipsAgain": "اعرض النصائح مرة أخرى",
+  "i.peek.device": "الصوت على {name}",
+  "i.peek.capsOn": "Caps Lock مُفعّل",
+  "i.peek.capsOff": "Caps Lock مُعطّل",
+  "i.peek.keyboard": "لوحة المفاتيح: {lang}",
+  "i.peek.muted": "الصوت مكتوم",
+  "i.peek.unmuted": "الصوت يعمل",
+  "i.peek.micOff": "الميكروفون مكتوم (كل التطبيقات)",
+  "i.peek.micOn": "الميكروفون يعمل",
+  "i.peek.offline": "غير متصل: انقطع اتصال الشبكة",
+  "i.peek.online": "عاد الاتصال",
+  "i.peek.charging": "يشحن · {n}%",
+  "i.peek.update": "Pebble {version} جاهز: أعد التشغيل من الرئيسية",
+  "i.home.update": "التحديث إلى {version}",
+  "general.micShortcut": "كتم / إلغاء كتم الميكروفون (كل التطبيقات)",
+  "notify.peeks": "لمحات",
+  "notify.peeksHint": "سطر قصير على الجزيرة: الشحن، الشبكة، Caps Lock، لغة لوحة المفاتيح، جهاز الصوت، الكتم",
+  "advanced.bug": "الإبلاغ عن خطأ…"
 }

@@ -52,7 +52,7 @@ export type SettingsAction =
   | { do: 'agent' | 'terminal' | 'connector'; id: string }
   | { do: 'connector.set'; id: string; key: string; value: unknown }
   | { do: 'copyWebhook'; id: string }
-  | { do: 'open'; what: 'settings' | 'themes' | 'log' | 'connectors' | 'plugins' | 'outfits' | 'extension' }
+  | { do: 'open'; what: 'settings' | 'themes' | 'log' | 'connectors' | 'plugins' | 'outfits' | 'extension' | 'bug' }
   | { do: 'copyExtensionKey' | 'diagnose' | 'copyDiagnostics' | 'welcome' | 'welcome.clicked' | 'welcome.done' | 'update.check' | 'update.install' }
   | { do: 'history.clear' | 'restart' | 'quit' }
   | { do: 'scene'; scene: Scene | null }
@@ -65,7 +65,7 @@ export type SettingsAction =
 /** the island's colours you can change in Settings (Look → Colours) */
 export const THEME_COLORS = ['background', 'text', 'muted', 'accent', 'ready', 'running', 'done', 'error', 'question'] as const
 
-const OPEN = ['settings', 'themes', 'log', 'connectors', 'plugins', 'outfits', 'extension']
+const OPEN = ['settings', 'themes', 'log', 'connectors', 'plugins', 'outfits', 'extension', 'bug']
 
 /** Only well-formed actions from the Settings window reach main (the patch itself is checked by the settings schema). */
 export function validSettingsAction(a: unknown): a is SettingsAction {

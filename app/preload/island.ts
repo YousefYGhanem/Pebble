@@ -15,6 +15,7 @@ const api: IslandApi = {
   tucked: on => ipcRenderer.send(CH.tucked, on),
   release: () => ipcRenderer.send(CH.release),
   opened: on => ipcRenderer.send(CH.opened, on),
+  onNotice: fn => { ipcRenderer.on(CH.notice, (_e, n) => fn(n)) },
   onPeek: fn => { ipcRenderer.on(CH.peek, (_e, on: boolean) => fn(on)) },
   answer: (id, answer) => ipcRenderer.send(CH.answer, id, answer),
   reply: (id, text) => ipcRenderer.send(CH.reply, id, text),

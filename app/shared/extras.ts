@@ -69,6 +69,8 @@ export interface ExtrasState {
   notes: Note[]
   focus: FocusTimer | null
   focusDone: FocusDone | null
+  /** the default microphone is muted (null: there is none) */
+  mic: boolean | null
   /** 0–100 */
   system: { cpu: number; ram: number }
   radios: { wifi?: boolean; bluetooth?: boolean } | null
@@ -88,6 +90,7 @@ export type Action =
   | { do: 'clip.clear' }
   | { do: 'clip.remove'; id: number }
   | { do: 'clip.pin'; id: number }
+  | { do: 'update.install' }
   | { do: 'tip.seen'; id: 'ask' | 'tuck' | 'drop' }
   | { do: 'notes.save'; notes: Note[] }
   | { do: 'focus.start'; seconds: number; break?: boolean }
@@ -150,4 +153,26 @@ export function focusFinished(prev: FocusDone | null, f: FocusTimer, now: number
 /** The clipboard list: pinned ones first and always kept, then the newest others up to max. */
 export function trimClips(list: ClipItem[], max: number): ClipItem[] {
   return [...list.filter(c => c.pinned), ...list.filter(c => !c.pinned).slice(0, max)]
+}
+
+/** A short notice the island shows for a moment (a "peek"): something on the PC just changed. */
+export type Notice =
+  | { kind: 'device'; name: string }
+  | { kind: 'caps'; on: boolean }
+  | { kind: 'keyboard'; lang: string }
+  | { kind: 'mute'; on: boolean }
+  | { kind: 'mic'; on: boolean }
+
+export interface PcState { muted: boolean; device: string; mic: boolean | null; caps: boolean; keyboard: string }
+
+/** What changed between two readings of the PC, as notices (the first reading is only the baseline). */
+export function noticesFor(prev: PcState | null, now: PcState): Notice[] {
+  if (!prev) return []
+  const out: Notice[] = []
+  if (now.device && prev.device && now.device !== prev.device) out.push({ kind: 'device', name: now.device })
+  if (now.caps !== prev.caps) out.push({ kind: 'caps', on: now.caps })
+  if (now.keyboard && prev.keyboard && now.keyboard !== prev.keyboard) out.push({ kind: 'keyboard', lang: now.keyboard })
+  if (now.muted !== prev.muted) out.push({ kind: 'mute', on: now.muted })
+  if (now.mic !== null && prev.mic !== null && now.mic !== prev.mic) out.push({ kind: 'mic', on: now.mic })
+  return out
 }
