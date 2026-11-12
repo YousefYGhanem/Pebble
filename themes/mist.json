@@ -1,0 +1,20 @@
+{
+  "name": "Mist",
+  "tokens": {
+    "background": "#f3f0fa",
+    "text": "#1d1830",
+    "muted": "#6b6680",
+    "accent": "#6a4cf0",
+    "onAccent": "#ffffff",
+    "ready": "#8a8798",
+    "running": "#2f6fe4",
+    "done": "#16a34a",
+    "error": "#dc2626",
+    "question": "#c47a06",
+    "radius": 20,
+    "pipBody": "#ffffff",
+    "pipVisor": "#231c3a",
+    "font": "'Segoe UI Variable', 'Segoe UI', sans-serif",
+    "fontSize": 13
+  }
+}

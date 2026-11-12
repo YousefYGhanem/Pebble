@@ -23,7 +23,8 @@ export function islandPath(ctx: CanvasRenderingContext2D, b: Box, notch: boolean
   ctx.closePath()
 }
 
-export function drawIsland(ctx: CanvasRenderingContext2D, b: Box, o: { notch: boolean; fill: string; alpha: number; shadow: boolean }) {
+/** edge: "r, g, b" of a thin rim and a faint sheen on top, so the island reads as glass rather than a flat cut-out */
+export function drawIsland(ctx: CanvasRenderingContext2D, b: Box, o: { notch: boolean; fill: string; alpha: number; shadow: boolean; edge?: string }) {
   if (b.w < 1 || b.h < 0.5) return
   ctx.save()
   islandPath(ctx, b, o.notch)
@@ -31,6 +32,24 @@ export function drawIsland(ctx: CanvasRenderingContext2D, b: Box, o: { notch: bo
   ctx.globalAlpha = o.alpha
   ctx.fillStyle = o.fill
   ctx.fill()
+  ctx.restore()
+  if (!o.edge || b.h < 8) return
+  ctx.save()
+  islandPath(ctx, b, o.notch)
+  ctx.clip()
+  const sheen = ctx.createLinearGradient(0, b.y, 0, b.y + Math.min(b.h, 60) * 0.6)
+  sheen.addColorStop(0, `rgba(${o.edge}, 0.07)`)
+  sheen.addColorStop(1, `rgba(${o.edge}, 0)`)
+  ctx.fillStyle = sheen
+  ctx.fillRect(b.x, b.y, b.w, b.h)
+  // the rim: drawn twice as wide and clipped to the inside, so it is a crisp 1 px line within the shape
+  islandPath(ctx, b, o.notch)
+  const rim = ctx.createLinearGradient(0, b.y, 0, b.y + b.h)
+  rim.addColorStop(0, `rgba(${o.edge}, 0.22)`)
+  rim.addColorStop(1, `rgba(${o.edge}, 0.08)`)
+  ctx.strokeStyle = rim
+  ctx.lineWidth = 2
+  ctx.stroke()
   ctx.restore()
 }
 

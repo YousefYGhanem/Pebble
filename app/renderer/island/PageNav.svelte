@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The page row at the bottom of the open island: an icon per page, the current one lit. One Tab stop (WAI-ARIA tabs):
+  // The page row at the top of the open island: an icon per page, the current one an accent pill with its name. One Tab stop (WAI-ARIA tabs):
   // the arrow keys, Home and End move between pages.
   import Icon from './Icon.svelte'
   import { PAGES, type Page } from './pages'
@@ -27,16 +27,20 @@
     <button role="tab" aria-selected={p.id === page} tabindex={p.id === page ? 0 : -1} class:group={p.id === 'music' || p.id === 'notes'}
       aria-label={badges[p.id] ? `${t(`i.page.${p.id}`)} · ${t('i.page.attention')}` : t(`i.page.${p.id}`)} title={t(`i.page.${p.id}`)} class:on={p.id === page} onclick={e => { e.stopPropagation(); page = p.id }}>
       <Icon name={p.icon} size={15} />
+      {#if p.id === page}<span>{t(`i.page.${p.id}`)}</span>{/if}
       {#if badges[p.id]}<i class="badge"></i>{/if}
     </button>
   {/each}
 </div>
 
 <style>
-  .nav { display: flex; justify-content: center; gap: 4px; padding: 4px 0 10px; }
-  button { position: relative; width: 34px; height: 28px; padding: 0; display: grid; place-items: center; background: none; color: var(--muted); border-radius: 10px; }
+  .nav { display: flex; justify-content: center; align-items: center; gap: 4px; padding: 10px 70px 2px; } /* 70 px: Pip's corner */
+  button { position: relative; min-width: 32px; height: 28px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: none; color: var(--muted); border-radius: var(--r-pill); }
   button:hover { color: var(--text); background: var(--surface1); }
   button.group { margin-inline-start: 12px; }
-  button.on { color: var(--text); background: var(--surface2); }
+  /* the page you are on: an accent pill with its name */
+  button.on { color: var(--on-accent); background: var(--accent); padding: 0 12px 0 10px; font-size: 0.86em; font-weight: 600; }
+  button.on:hover { background: var(--accent); color: var(--on-accent); }
   .badge { position: absolute; top: 4px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--question); }
 </style>

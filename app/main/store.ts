@@ -4,10 +4,17 @@ import { EventEmitter } from 'node:events'
 import { DEFAULTS, merge, parseSettings, themeSchema, type Settings, type Theme } from '../shared/settings'
 import defaultTheme from '../../themes/default.json'
 import highContrast from '../../themes/high-contrast.json'
+import black from '../../themes/black.json'
+import graphite from '../../themes/graphite.json'
+import midnight from '../../themes/midnight.json'
+import mist from '../../themes/mist.json'
 import { logger } from './log'
 
 const log = logger('store')
-const BUILT_IN: Record<string, Theme> = { default: themeSchema.parse(defaultTheme), 'high-contrast': themeSchema.parse(highContrast) }
+const BUILT_IN: Record<string, Theme> = {
+  default: themeSchema.parse(defaultTheme), black: themeSchema.parse(black), graphite: themeSchema.parse(graphite),
+  midnight: themeSchema.parse(midnight), mist: themeSchema.parse(mist), 'high-contrast': themeSchema.parse(highContrast)
+}
 
 export function writeJsonAtomic(file: string, value: unknown) {
   fs.mkdirSync(path.dirname(file), { recursive: true })

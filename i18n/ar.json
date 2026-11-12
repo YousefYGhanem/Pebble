@@ -568,5 +568,12 @@
   "i.focus.long": "طويلة",
   "i.focus.longBreak": "استراحة طويلة 15 د",
   "i.files.dropTitle": "أفلت الملفات هنا",
-  "i.files.dropSub": "على الجزيرة، من أي مجلد · اسحبها إلى أي تطبيق · النقر يفتح الملف"
+  "i.files.dropSub": "على الجزيرة، من أي مجلد · اسحبها إلى أي تطبيق · النقر يفتح الملف",
+  "theme.black": "أسود",
+  "theme.graphite": "جرافيت",
+  "theme.midnight": "منتصف الليل",
+  "theme.mist": "ضباب (فاتح)",
+  "i.music.view": "ما تعرضه الصفحة",
+  "i.music.player": "المشغّل",
+  "i.music.lyrics": "الكلمات"
 }

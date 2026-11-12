@@ -1,0 +1,20 @@
+{
+  "name": "Midnight",
+  "tokens": {
+    "background": "#0a1226",
+    "text": "#e9eefc",
+    "muted": "#8b99bb",
+    "accent": "#4f8cff",
+    "onAccent": "#ffffff",
+    "ready": "#6c7a99",
+    "running": "#38bdf8",
+    "done": "#34d399",
+    "error": "#f87171",
+    "question": "#fbbf24",
+    "radius": 20,
+    "pipBody": "#dbe6ff",
+    "pipVisor": "#0b1428",
+    "font": "'Segoe UI Variable', 'Segoe UI', sans-serif",
+    "fontSize": 13
+  }
+}

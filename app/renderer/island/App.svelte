@@ -371,7 +371,9 @@
       notch: s.island.style === 'notch',
       fill: thin ? line : tok.background,
       alpha: thin ? 1 : 1 - s.island.seeThrough / 100,
-      shadow: s.island.style === 'floating' && !thin
+      shadow: s.island.style === 'floating' && !thin,
+      // the album's colour while music plays, else a neutral light
+      edge: thin ? undefined : music && album ? album : '255, 255, 255'
     })
     // tucked, the line's pattern says the state without its colour: dashed = stopped, dotted = needs you
     if (thin && (status === 'error' || status === 'question')) {
@@ -667,6 +669,8 @@
       {:else if mode === 'open'}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <div class="pages" onclick={e => e.stopPropagation()}>
+          <!-- the page tabs on top, where the pointer comes in; the page you are on shows its name -->
+          <PageNav bind:page hidden={view.settings.island.hiddenPages} badges={{ agents: shown.some(x => x.ask || x.status === 'error') }} />
           {#key page}
             <div in:fly={{ x: reduced ? 0 : 24 * pageDir, duration: reduced ? 0 : 240, opacity: 0.15 }}>
               {#if page === 'agents'}
@@ -685,7 +689,6 @@
           {/key}
           {#if tip === 'tuck' || tip === 'drop'}<div class="tip" role="note">{t(`i.tip.${tip}`)}<button onclick={() => (tip = null)}>{t('i.tip.ok')}</button></div>{/if}
           {#if undo.text}<div class="undo" role="status">{undo.text}<button onclick={() => undo.take()}>{t('i.common.undo')}</button></div>{/if}
-          <PageNav bind:page hidden={view.settings.island.hiddenPages} badges={{ agents: shown.some(x => x.ask || x.status === 'error') }} />
         </div>
       {/if}
     </div>

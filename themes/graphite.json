@@ -1,0 +1,20 @@
+{
+  "name": "Graphite",
+  "tokens": {
+    "background": "#1e1e24",
+    "text": "#ececf1",
+    "muted": "#9b9ba8",
+    "accent": "#8f7dff",
+    "onAccent": "#ffffff",
+    "ready": "#7a7f8c",
+    "running": "#5b9bff",
+    "done": "#3ccf7a",
+    "error": "#ff6464",
+    "question": "#ffb020",
+    "radius": 20,
+    "pipBody": "#d9d6e4",
+    "pipVisor": "#121218",
+    "font": "'Segoe UI Variable', 'Segoe UI', sans-serif",
+    "fontSize": 13
+  }
+}

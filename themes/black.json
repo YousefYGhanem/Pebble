@@ -1,0 +1,18 @@
+{
+  "name": "Black",
+  "tokens": {
+    "background": "#000000",
+    "text": "#f5f5f7",
+    "muted": "#8e8e96",
+    "accent": "#7c5cff",
+    "onAccent": "#ffffff",
+    "ready": "#6b7280",
+    "running": "#3b82f6",
+    "done": "#22c55e",
+    "error": "#ef4444",
+    "question": "#f59e0b",
+    "radius": 20,
+    "font": "'Segoe UI Variable', 'Segoe UI', sans-serif",
+    "fontSize": 13
+  }
+}

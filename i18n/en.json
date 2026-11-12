@@ -568,5 +568,12 @@
   "i.focus.long": "Long",
   "i.focus.longBreak": "15 min long break",
   "i.files.dropTitle": "Drop files here",
-  "i.files.dropSub": "on the island, from any folder · drag them out into any app · a click opens one"
+  "i.files.dropSub": "on the island, from any folder · drag them out into any app · a click opens one",
+  "theme.black": "Black",
+  "theme.graphite": "Graphite",
+  "theme.midnight": "Midnight",
+  "theme.mist": "Mist (light)",
+  "i.music.view": "What the page shows",
+  "i.music.player": "Player",
+  "i.music.lyrics": "Lyrics"
 }

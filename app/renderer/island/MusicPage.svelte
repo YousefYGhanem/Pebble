@@ -13,6 +13,8 @@
     [/opera/i, 'Opera'], [/applemusic|apple/i, 'Apple Music'], [/zune|mediaplayer|music\.ui/i, 'Media Player'], [/vlc/i, 'VLC'], [/youtube/i, 'YouTube'], [/deezer/i, 'Deezer'], [/tidal/i, 'TIDAL']]
   const sourceOf = (app: string) => SOURCES.find(([r]) => r.test(app))?.[1] ?? app.replace(/^.*!/, '').replace(/\.exe$/i, '').slice(0, 16)
   let lyricList = $state<HTMLDivElement>()
+  // Player (both side by side) or Lyrics (the words alone, wide and big)
+  let view = $state<'player' | 'lyrics'>('player')
   // the line sung now, in the middle of the column (the list scrolls itself)
   $effect(() => {
     const el = lyricList?.children[line] as HTMLElement | undefined
@@ -44,11 +46,17 @@
 </script>
 
 <div class="page music" style:--album={color ?? '255, 255, 255'}>
-  <div class="page-head"><span class="page-title">{t('i.page.music')}</span><span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
+  <div class="page-head"><span class="page-title">{t('i.page.music')}</span>
+    {#if m && extras.lyrics}
+      <div class="seg" role="group" aria-label={t('i.music.view')}>
+        <button class:on={view === 'player'} aria-pressed={view === 'player'} onclick={() => (view = 'player')}>{t('i.music.player')}</button>
+        <button class:on={view === 'lyrics'} aria-pressed={view === 'lyrics'} onclick={() => (view = 'lyrics')}>{t('i.music.lyrics')}</button>
+      </div>
+    {/if}<span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
   {#if !m}
     <div class="empty">{t('i.music.nothing')}</div>
   {:else}
-    <div class="body" class:withLyrics={!!extras.lyrics}>
+    <div class="body" class:withLyrics={!!extras.lyrics} class:lyricsOnly={!!extras.lyrics && view === 'lyrics'}>
     <div class="player">
     <div class="top">
       <div class="coverbox">
@@ -89,6 +97,14 @@
   .music { background: linear-gradient(to top, rgba(var(--album), 0.22), transparent 70%); border-radius: 0 0 26px 26px; }
   .body { display: flex; flex-direction: column; gap: 10px; }
   .body.withLyrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
+  .body.lyricsOnly { grid-template-columns: 1fr; }
+  .body.lyricsOnly .player { display: none; }
+  .body.lyricsOnly .lyrics { height: 190px; padding: 70px 0; }
+  .body.lyricsOnly .ly { text-align: center; font-size: 1.12em; }
+  .body.lyricsOnly .ly.now { font-size: 1.4em; }
+  .seg { display: flex; gap: 2px; padding: 2px; border-radius: var(--r-pill); background: var(--surface1); }
+  .seg button { padding: 3px 12px; font-size: 0.84em; background: none; color: var(--muted); }
+  .seg button.on { background: var(--surface3); color: var(--text); }
   .player { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .top { display: flex; gap: 14px; align-items: center; }
   .coverbox { position: relative; flex: none; }

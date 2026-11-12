@@ -19,7 +19,7 @@ input, textarea { user-select: text; }
 /* every page: the same header line and spacing (the Agents page has its own header with session tabs) */
 .page { padding: 0 18px 2px; display: flex; flex-direction: column; gap: 10px; }
 .page-head { height: 44px; display: flex; align-items: center; gap: 12px; }
-.page-title { font-weight: 600; font-size: 1.05em; }
+.page-title { display: none; } /* the tab above says which page this is */
 .page-time { margin-inline-start: auto; color: var(--muted); }
 .page-head .pip-room { width: 64px; flex: none; } /* where Pip sits, next to the clock */
 .muted { color: var(--muted); }
