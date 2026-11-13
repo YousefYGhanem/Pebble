@@ -12,13 +12,14 @@ import { Store } from '../app/main/store'
 
 const at = (d: string) => new Date(d).getTime()
 
-test('usage alerts: once when passing 80% and 95%; the first report is only the baseline', () => {
+test('usage alerts: once when passing 75%, 90% and 100%; the first report is only the baseline', () => {
   const w = (used: number) => ({ fiveHour: { used, resetsAt: 1 }, sevenDay: { used: 10, resetsAt: 2 } })
   expect(usageAlerts(undefined, w(90))).toEqual([])
-  expect(usageAlerts(w(70), w(79))).toEqual([])
-  expect(usageAlerts(w(79), w(81))).toEqual([{ window: 'fiveHour', level: 80, resetsAt: 1 }])
-  expect(usageAlerts(w(81), w(85))).toEqual([])
-  expect(usageAlerts(w(70), w(97))).toEqual([{ window: 'fiveHour', level: 95, resetsAt: 1 }]) // only the highest
+  expect(usageAlerts(w(60), w(74))).toEqual([])
+  expect(usageAlerts(w(74), w(76))).toEqual([{ window: 'fiveHour', level: 75, resetsAt: 1 }])
+  expect(usageAlerts(w(76), w(85))).toEqual([])
+  expect(usageAlerts(w(70), w(97))).toEqual([{ window: 'fiveHour', level: 90, resetsAt: 1 }]) // only the highest
+  expect(usageAlerts(w(97), w(100))).toEqual([{ window: 'fiveHour', level: 100, resetsAt: 1 }])
   expect(usageAlerts(w(97), w(3))).toEqual([]) // a new window
 })
 

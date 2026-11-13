@@ -47,6 +47,8 @@ export type Answer =
 export interface Usage {
   fiveHour?: { used: number; resetsAt: number }
   sevenDay?: { used: number; resetsAt: number }
+  /** a spend limit (Claude behind an apps gateway): how much went, and of how many dollars when known */
+  spend?: { used: number; resetsAt: number; usd?: number; limitUsd?: number }
   tokens?: { session: number; week: number }
   at?: number
 }

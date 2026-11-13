@@ -357,8 +357,11 @@ function usageAlert(agent: Agent, prev: Usage | undefined, next: Usage) {
     const at = new Date(a.resetsAt)
     const when = a.window === 'fiveHour' ? at.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' })
       : at.toLocaleString(lang, { weekday: 'long', hour: '2-digit', minute: '2-digit' })
-    toast(tr(a.window === 'fiveHour' ? 'm.usageSession' : 'm.usageWeek', { agent: AGENT_NAMES[agent], n: a.level }), a.resetsAt ? tr('m.usageResets', { when }) : '')
+    const key = a.level >= 100 ? 'm.usageReached' : a.window === 'fiveHour' ? 'm.usageSession' : a.window === 'sevenDay' ? 'm.usageWeek' : 'm.usageSpend'
+    toast(tr(key, { agent: AGENT_NAMES[agent], n: a.level, window: tr(`m.window.${a.window}`) }), a.resetsAt ? tr('m.usageResets', { when }) : '')
     send(CH.worry)
+    // and a peek on the island: a ring as full as the limit is used
+    send(CH.notice, { kind: 'usage', agent: AGENT_NAMES[agent], window: a.window, level: a.level, when: a.resetsAt ? when : '' })
   }
 }
 

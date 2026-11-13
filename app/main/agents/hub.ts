@@ -322,9 +322,12 @@ export class Hub extends EventEmitter {
   private handleStatus(d: Record<string, unknown>, res: http.ServerResponse) {
     const num = (v: unknown) => (typeof v === 'number' && isFinite(v) ? v : undefined)
     const obj = (v: unknown) => (v && typeof v === 'object' ? (v as Record<string, unknown>) : {})
-    const rl = obj(d.rate_limits), five = obj(rl.five_hour), week = obj(rl.seven_day)
+    const rl = obj(d.rate_limits), five = obj(rl.five_hour), week = obj(rl.seven_day), spend = obj(rl.spend_limit)
     const window = (w: Record<string, unknown>) => num(w.used_percentage) === undefined ? undefined : { used: num(w.used_percentage)!, resetsAt: (num(w.resets_at) ?? 0) * 1000 }
-    if (rl.five_hour || rl.seven_day) this.noteUsage('claude', { fiveHour: window(five), sevenDay: window(week) })
+    if (rl.five_hour || rl.seven_day || rl.spend_limit) {
+      const sp = window(spend)
+      this.noteUsage('claude', { fiveHour: window(five), sevenDay: window(week), spend: sp && { ...sp, usd: num(spend.used_usd), limitUsd: num(spend.limit_usd) } })
+    }
     const model = typeof obj(d.model).display_name === 'string' ? String(obj(d.model).display_name) : undefined
     const context = num(obj(d.context_window).used_percentage)
     if (typeof d.session_id === 'string' && this.sessions.has(d.session_id)) this.patch(d.session_id, { model, context, provider: providerOf(model) })

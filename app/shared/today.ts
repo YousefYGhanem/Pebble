@@ -6,13 +6,14 @@ import type { Usage } from './ipc'
 
 // ---------- usage alerts ----------
 
-export type UsageWindow = 'fiveHour' | 'sevenDay'
-export const ALERT_LEVELS = [80, 95] as const
+export type UsageWindow = 'fiveHour' | 'sevenDay' | 'spend'
+// near (75), close (90), reached (100): a warning while there is still room to plan
+export const ALERT_LEVELS = [75, 90, 100] as const
 
 /** The limits a CLI just went past (only the highest, if a jump passed both). A new window starts below them again. */
 export function usageAlerts(prev: Usage | undefined, next: Usage): { window: UsageWindow; level: number; resetsAt: number }[] {
   const out: { window: UsageWindow; level: number; resetsAt: number }[] = []
-  for (const w of ['fiveHour', 'sevenDay'] as const) {
+  for (const w of ['fiveHour', 'sevenDay', 'spend'] as const) {
     const a = prev?.[w], b = next[w]
     if (!a || !b) continue // the first report after a start is the baseline, not news
     const level = [...ALERT_LEVELS].reverse().find(l => a.used < l && b.used >= l)

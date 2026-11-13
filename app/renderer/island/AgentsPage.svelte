@@ -42,7 +42,20 @@
   const u = $derived(usage[s?.agent ?? 'claude'] ?? {})
   const tokens = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n))
   const ring = (used: number) => `${(Math.min(100, used) / 100) * 56.5} 56.5`
-  const tone = (used: number) => (used >= 95 ? 'var(--error)' : used >= 80 ? 'var(--question)' : 'var(--text)')
+  const tone = (used: number) => (used >= 90 ? 'var(--error)' : used >= 75 ? 'var(--question)' : 'var(--text)')
+  let showUsage = $state(false)
+  type Limit = { key: 'fiveHour' | 'sevenDay' | 'spend'; used: number; resetsAt: number; extra?: string }
+  const limitsOf = (x: Usage): Limit[] => [
+    x.fiveHour && { key: 'fiveHour' as const, ...x.fiveHour },
+    x.sevenDay && { key: 'sevenDay' as const, ...x.sevenDay },
+    x.spend && { key: 'spend' as const, used: x.spend.used, resetsAt: x.spend.resetsAt, extra: x.spend.usd !== undefined && x.spend.limitUsd ? `$${x.spend.usd.toFixed(0)} / $${x.spend.limitUsd.toFixed(0)}` : undefined }
+  ].filter(Boolean) as Limit[]
+  // the closest any limit is to being reached (the Usage tab gets a dot from 75%)
+  const nearest = $derived(Math.max(0, ...Object.values(usage).flatMap(x => (x ? limitsOf(x).map(l => l.used) : []))))
+  const resetText = (at: number) => {
+    const d = new Date(at), soon = at - now < 20 * 3600_000
+    return soon ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })
+  }
 </script>
 
 <div class="page">
@@ -53,15 +66,39 @@
           <StatusMark status={x.status} size={9} />{x.project}
         </button>
       {/each}
-      <button role="tab" aria-selected={showHistory} class="tab" class:on={showHistory} title={t('i.agents.history')} onclick={e => { e.stopPropagation(); showHistory = !showHistory }}>
+      <button role="tab" aria-selected={showHistory} class="tab" class:on={showHistory} title={t('i.agents.history')} onclick={e => { e.stopPropagation(); showHistory = !showHistory; showUsage = false }}>
         <Icon name="history" />{t('i.agents.history')}
+      </button>
+      <button role="tab" aria-selected={showUsage} class="tab" class:on={showUsage} onclick={e => { e.stopPropagation(); showUsage = !showUsage; showHistory = false }}>
+        <Icon name="focus" />{t('i.usage.tab')}{#if nearest >= 75}<i class="warnmark" style:background={tone(nearest)}></i>{/if}
       </button>
     </div>
     <span class="time">{time}</span>
     <span class="pip-room"></span>
   </header>
 
-  {#if showHistory}
+  {#if showUsage}
+    <!-- every plan limit of every CLI that reported one: how much is used, and when it starts over -->
+    <div class="limits">
+      {#each Object.entries(usage) as [agent, x] (agent)}
+        {#if x}
+          {#each limitsOf(x) as l (l.key)}
+            <div class="limit">
+              <span class="lname">{AGENT_NAMES[agent as Agent]} · {t(`i.usage.${l.key}`)}</span>
+              <span class="lbar"><i style:width="{Math.min(100, l.used)}%" style:background={tone(l.used)}></i></span>
+              <span class="lval" style:color={tone(l.used)}>{Math.round(l.used)}%{#if l.extra} · {l.extra}{/if}</span>
+              <span class="lreset">{l.resetsAt ? t('i.usage.resets', { when: resetText(l.resetsAt) }) : ''}</span>
+            </div>
+          {/each}
+          {#if x.tokens}
+            <div class="limit"><span class="lname">{AGENT_NAMES[agent as Agent]} · {t('i.usage.tokens')}</span><span class="lval wide">{t('i.agents.tokens', { session: tokens(x.tokens.session), week: tokens(x.tokens.week) })}</span></div>
+          {/if}
+        {/if}
+      {:else}
+        <div class="empty">{t('i.usage.none')}</div>
+      {/each}
+    </div>
+  {:else if showHistory}
     <div class="history">
       {#each history as h (h.at)}
         <div class="h-item">
@@ -120,7 +157,7 @@
     </div>
   {/if}
 
-  {#if !showHistory}
+  {#if !showHistory && !showUsage}
     <footer>
       {#if u.fiveHour}
         <span class="usage" title={t('i.agents.usageOf', { name: AGENT_NAMES[s?.agent ?? 'claude'] })}>
@@ -140,6 +177,15 @@
 </div>
 
 <style>
+  .limits { display: flex; flex-direction: column; gap: 10px; padding: 6px 2px 10px; }
+  .limit { display: grid; grid-template-columns: minmax(150px, 1.2fr) 2fr auto minmax(120px, auto); align-items: center; gap: 12px; font-size: 0.9em; }
+  .lname { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lbar { height: 6px; border-radius: 3px; background: var(--surface3); overflow: hidden; }
+  .lbar > i { display: block; height: 100%; border-radius: 3px; }
+  .lval { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lval.wide { grid-column: 2 / -1; font-weight: 400; }
+  .lreset { color: var(--muted); font-size: 0.9em; text-align: end; white-space: nowrap; }
+  .warnmark { width: 6px; height: 6px; border-radius: 50%; }
   .page { padding: 0 18px 12px; display: flex; flex-direction: column; gap: 10px; }
   header { height: 44px; display: flex; align-items: center; gap: 12px; }
   .tabs { flex: 1; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }

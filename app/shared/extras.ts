@@ -177,6 +177,7 @@ export type Notice =
   | { kind: 'mute'; on: boolean }
   | { kind: 'mic'; on: boolean }
   | { kind: 'todo'; id: string; text: string }
+  | { kind: 'usage'; agent: string; window: 'fiveHour' | 'sevenDay' | 'spend'; level: number; when: string }
 
 export interface PcState { muted: boolean; device: string; mic: boolean | null; caps: boolean; keyboard: string }
 

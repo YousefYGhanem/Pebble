@@ -23,8 +23,8 @@ export function matchSite(w: { title?: string; process?: string }, sites: string
   return null
 }
 
-/** Whether the guard acts now: switched on, and (unless set to always) while a focus timer runs. */
-export const guardActive = (g: Settings['focusGuard'], focusing: boolean) => g.enabled && (!g.onlyDuringFocus || focusing)
+/** Whether the guard acts now: switched on, and while a focus timer runs (a breath before distractions is for focus time). */
+export const guardActive = (g: Settings['focusGuard'], focusing: boolean) => g.enabled && focusing
 
 /**
  * The focus guard ("one sec"): when you open a site or app from your list, a calm screen asks you to breathe once; then

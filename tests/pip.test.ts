@@ -69,3 +69,10 @@ test('PipStore keeps stats and reads your own SVG outfits', () => {
   expect(b.custom[0]!.data.startsWith('data:image/svg+xml;base64,')).toBe(true)
   vi.useRealTimers()
 })
+
+test("Pip's eyes stay readable on his visor: a light theme's dark text turns light", async () => {
+  const { restingEyes } = await import('../app/shared/pip')
+  expect(restingEyes('#f3f3f6', '#15151c')).toBe('#f3f3f6') // the dark default: its own light text
+  expect(restingEyes('#1d1830', '#231c3a')).toBe('#f3f3f6') // Mist: dark text on a dark visor → light eyes
+  expect(restingEyes('#1d1830', '#e8e4f4')).toBe('#1d1830') // a light visor keeps dark text
+})

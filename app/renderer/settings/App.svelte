@@ -193,25 +193,18 @@
         <section>
           <label class="row"><span>{t('notify.toasts')}<small>{t('notify.toastsHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.features.toasts} onchange={() => set('features.toasts', !s.features.toasts)} /></label>
+          <details class="more inner"><summary>{t('notify.which')}</summary>
           {#each ['asks', 'done', 'connectors', 'extras'] as const as k}
             <label class="row sub"><span>{t(`notify.${k}`)}<small>{t(`notify.${k}Hint`)}</small></span>
               <input type="checkbox" class="switch" checked={s.features.notify[k]} disabled={!s.features.toasts} onchange={() => set(`features.notify.${k}`, !s.features.notify[k])} /></label>
           {/each}
+          </details>
           <label class="row"><span>{t('notify.sound')}</span>
             <input type="checkbox" class="switch" checked={s.features.sound} onchange={() => set('features.sound', !s.features.sound)} /></label>
-          <label class="row"><span>{t('notify.doneSeconds')}<small>{t('unit.seconds')}</small></span>
-            <input type="number" min="1" max="600" value={s.features.doneSeconds} onchange={e => set('features.doneSeconds', num(e))} /></label>
           <label class="row"><span>{t('notify.peeks')}<small>{t('notify.peeksHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.features.peeks} onchange={() => set('features.peeks', !s.features.peeks)} /></label>
           <label class="row"><span>{t('notify.usage')}<small>{t('notify.usageHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.features.usageAlerts} onchange={() => set('features.usageAlerts', !s.features.usageAlerts)} /></label>
-        </section>
-        <h2>{t('rest.title')} <span class="muted">· {t('rest.hint')}</span></h2>
-        <section>
-          {#each ['away', 'games', 'battery'] as const as k}
-            <label class="row"><span>{t(`rest.${k}`)}{#if k === 'battery'}<small>{t('rest.batteryHint')}</small>{/if}</span>
-              <input type="checkbox" class="switch" checked={s.features.rest[k]} onchange={() => set(`features.rest.${k}`, !s.features.rest[k])} /></label>
-          {/each}
         </section>
 
       {:else if tab === 'island'}
@@ -309,8 +302,6 @@
                 <button class:on={s.motion.mode === m} aria-pressed={s.motion.mode === m} onclick={() => set('motion.mode', m)}>{t(`motion.${m}`)}</button>
               {/each}
             </div></div>
-          <label class="row"><span>{t('look.speed')}<small>{s.motion.speed.toFixed(2)}×</small></span>
-            <input type="range" min="0.5" max="2" step="0.05" value={s.motion.speed} onchange={e => set('motion.speed', num(e))} /></label>
           <button class="link" onclick={() => act({ do: 'open', what: 'themes' })}>{t('look.themesFolder')}</button>
           <div class="col"><span>{t('look.icon')}<small>{t('look.iconHint')}</small></span>
             <div class="icons" role="radiogroup" aria-label={t('look.icon')}>
@@ -353,10 +344,6 @@
             {/each}
           </div>
           <button class="link" onclick={() => act({ do: 'open', what: 'outfits' })}>{t('pip.addOutfit')}</button>
-          <label class="row"><span>{t('pip.followMouse')}</span>
-            <input type="checkbox" class="switch" checked={s.pip.followMouse} onchange={() => set('pip.followMouse', !s.pip.followMouse)} /></label>
-          <label class="row"><span>{t('pip.sleep')}<small>{t('unit.minutesAway')}</small></span>
-            <input type="number" min="1" max="240" value={s.pip.sleepAfterMinutes} onchange={e => set('pip.sleepAfterMinutes', num(e))} /></label>
         </section>
 
       {:else if tab === 'agents'}
@@ -446,8 +433,6 @@
         <section>
           <label class="row"><span>{t('guard.enabled')}</span>
             <input type="checkbox" class="switch" checked={s.focusGuard.enabled} onchange={() => set('focusGuard.enabled', !s.focusGuard.enabled)} /></label>
-          <label class="row"><span>{t('guard.onlyDuringFocus')}<small>{t('guard.onlyDuringFocusHint')}</small></span>
-            <input type="checkbox" class="switch" checked={s.focusGuard.onlyDuringFocus} onchange={() => set('focusGuard.onlyDuringFocus', !s.focusGuard.onlyDuringFocus)} /></label>
           <label class="col"><span>{t('guard.sites')}<small>{t('guard.sitesHint')}</small></span>
             <textarea rows="5" value={s.focusGuard.sites.join('\n')}
               onchange={e => set('focusGuard.sites', text(e).split('\n').map(x => x.trim()).filter(Boolean))}></textarea></label>

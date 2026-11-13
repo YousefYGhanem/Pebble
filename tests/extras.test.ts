@@ -115,11 +115,10 @@ describe.skipIf(!lanAddress())('phone drop server', () => {
   })
 })
 
-test('focus guard: only while a focus timer runs, unless set to always', () => {
-  const g = { enabled: true, onlyDuringFocus: true, sites: [], snoozeMinutes: 5 }
+test('focus guard: only while a focus timer runs', () => {
+  const g = { enabled: true, sites: [], snoozeMinutes: 5 }
   expect(guardActive(g, false)).toBe(false)
   expect(guardActive(g, true)).toBe(true)
-  expect(guardActive({ ...g, onlyDuringFocus: false }, false)).toBe(true)
   expect(guardActive({ ...g, enabled: false }, true)).toBe(false)
 })
 

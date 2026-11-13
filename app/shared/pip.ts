@@ -118,3 +118,18 @@ export function finishTask(stats: PipStats, f: Finished): { stats: PipStats; ear
   next.achievements.push(...earned)
   return { stats: next, earned }
 }
+
+/** Relative luminance of a #rrggbb colour (WCAG), 0 (black) … 1 (white). */
+const luminance = (hex: string) => {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(hex)
+  if (!m) return 0
+  const ch = (h: string) => { const c = parseInt(h, 16) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
+  return 0.2126 * ch(m[1]!) + 0.7152 * ch(m[2]!) + 0.0722 * ch(m[3]!)
+}
+
+/** Pip's eyes when nothing goes on: the theme's text colour, unless it would vanish on his visor (then light or dark). */
+export function restingEyes(text: string, visor: string): string {
+  const a = luminance(text), b = luminance(visor)
+  if ((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) >= 3) return text
+  return b < 0.4 ? '#f3f3f6' : '#15151c'
+}

@@ -132,8 +132,7 @@ The open island has a page row at the bottom: **Home, Agents, Music, Files, Clip
 | Notes | Quick notes, saved as you type (`%APPDATA%\Pebble\notes.json`) |
 | Focus | A timer; the island shows it as a ring around Pip and chimes at the end |
 
-**Focus guard** (Settings → Extras, off by default): while a focus timer runs (or always, if you untick *Only while a
-focus timer runs*), when you open a site or app from `focusGuard.sites` (a word in a browser tab's title, or a program
+**Focus guard** (Settings → Extras, off by default): while a focus timer runs, when you open a site or app from `focusGuard.sites` (a word in a browser tab's title, or a program
 name), a calm screen asks you to breathe once, then: go back (the window is
 minimised) or open it anyway (left alone for `focusGuard.snoozeMinutes`).
 

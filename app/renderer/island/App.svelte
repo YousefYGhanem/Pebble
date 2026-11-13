@@ -31,7 +31,7 @@
   import StatusMark from './StatusMark.svelte'
   import { undo } from './undo.svelte'
   import { drawPip, HATS } from './pip'
-  import { pipColors } from '../../shared/pip'
+  import { pipColors, restingEyes } from '../../shared/pip'
   import { confetti, hearts, particlesAlive, stepParticles } from './particles'
   import { moodFor, outfitFor, type Mood } from '../../shared/pip'
   import { sceneSetup } from './scenes'
@@ -275,7 +275,9 @@
       return
     }
     // a device name "Headphones (AirPods Pro)": the part in brackets is the device itself
-    if (n.kind === 'device') peek({ icon: 'speaker', title: /\(([^)]+)\)/.exec(n.name)?.[1] ?? n.name, sub: t('i.peek.deviceSub') })
+    if (n.kind === 'usage') peek({ icon: 'agents', title: t(n.level >= 100 ? 'i.peek.usageReached' : 'i.peek.usageTitle', { agent: n.agent, n: n.level }),
+      sub: `${t(`i.usage.${n.window}`)}${n.when ? ` · ${t('i.usage.resets', { when: n.when })}` : ''}`, value: `${n.level}%`, ring: n.level / 100, tone: 'warn' })
+    else if (n.kind === 'device') peek({ icon: 'speaker', title: /\(([^)]+)\)/.exec(n.name)?.[1] ?? n.name, sub: t('i.peek.deviceSub') })
     else if (n.kind === 'caps') peek({ icon: 'keyboard', title: 'Caps Lock', value: t(n.on ? 'i.peek.on' : 'i.peek.off'), tone: n.on ? 'warn' : 'info' })
     else if (n.kind === 'keyboard') peek({ icon: 'keyboard', title: t('i.peek.keyboardTitle'), value: languageName(n.lang) })
     else if (n.kind === 'mute') peek({ icon: 'speaker', title: t('i.peek.soundTitle'), value: t(n.on ? 'i.peek.mutedValue' : 'i.peek.on'), tone: n.on ? 'warn' : 'info' })
@@ -443,7 +445,7 @@
       const blink = bt >= 0 && bt < 1 && (mood === 'idle' || mood === 'curious' || mood === 'focused')
       drawPip(ctx, {
         x, y, size, mood, t: t / 1000, squash: k * 1.6,
-        color: status === 'ready' ? tok.text : colorOf(status), ...pipColors(s.pip, tok),
+        color: status === 'ready' ? restingEyes(tok.text, pipColors(s.pip, tok).visor) : colorOf(status), ...pipColors(s.pip, tok),
         open: openness * (blink && !wink ? Math.abs(1 - 2 * bt) : 1), wink: blink && wink,
         lookX: lookX.value / 100, lookY: lookY.value / 100,
         outfit, outfitImage: outfit ? images.get(outfit) : undefined

@@ -4,7 +4,7 @@
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t } from '../i18n.svelte'
   import { drawPip } from '../island/pip'
-  import { pipColors, type Mood } from '../../shared/pip'
+  import { pipColors, restingEyes, type Mood } from '../../shared/pip'
   import IslandDemo from './IslandDemo.svelte'
   import type { SettingsAction, SettingsView } from '../../shared/settings-ui'
 
@@ -13,6 +13,8 @@
   let name = $state('')
   let canvas = $state<HTMLCanvasElement>()
   const STEPS = 5
+  // C:\Users\you\Documents\… → ~\Documents\… (and it wraps instead of widening the window)
+  const shortPath = (p: string) => p.replace(/^[A-Za-z]:\\Users\\[^\\]+/, '~')
   // what you tried on the real island during the demo step (main tells): open, close, tuck, back
   let tried = $state<string[]>([])
   window.settingsApi.onIsland(what => { if (!tried.includes(what)) tried = [...tried, what] })
@@ -52,7 +54,7 @@
       const blink = (s % 3.6) < 0.14 ? Math.abs(1 - 2 * ((s % 3.6) / 0.14)) : 1
       ctx.setTransform(2, 0, 0, 2, 0, 0)
       ctx.clearRect(0, 0, 120, 100)
-      drawPip(ctx, { x: 60, y: 54 + (reduced ? 0 : Math.sin(s * 2) * 2), size: 52, mood, color: tok.text, ...look, open: blink, t: s })
+      drawPip(ctx, { x: 60, y: 54 + (reduced ? 0 : Math.sin(s * 2) * 2), size: 52, mood, color: restingEyes(tok.text, look.visor), ...look, open: blink, t: s })
       if (!reduced) frame = requestAnimationFrame(draw)
     }
     frame = requestAnimationFrame(draw)
@@ -91,7 +93,7 @@
           <p>{t('welcome.terminalsHint')}</p>
           <div class="list">
             {#each v.terminals as term}
-              <label class="row"><span>{({ powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' } as Record<string, string>)[term.id] ?? term.id}<small class="file">{term.file}</small></span>
+              <label class="row"><span>{({ powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' } as Record<string, string>)[term.id] ?? term.id}<small class="file">{shortPath(term.file)}</small></span>
                 <input type="checkbox" class="switch" checked={term.on} onchange={() => act({ do: 'terminal', id: term.id })} /></label>
             {/each}
           </div>
@@ -129,11 +131,12 @@
   .muted { color: var(--muted); }
   .field { display: flex; flex-direction: column; gap: 8px; align-items: center; }
   .list { width: 100%; max-width: 380px; background: color-mix(in srgb, var(--text) 5%, transparent); border-radius: 12px; padding: 4px 16px; text-align: start; }
-  .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; }
+  .row > span { min-width: 0; }
   .row + .row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
   select, .name { font: inherit; color: inherit; background: color-mix(in srgb, var(--text) 7%, var(--background)); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); border-radius: 10px; padding: 8px 12px; min-width: 220px; }
   .name { font-size: 16px; text-align: center; }
-  .file { display: block; font-size: 11px; color: var(--muted); direction: ltr; text-align: start; }
+  .file { display: block; font-size: 11px; color: var(--muted); direction: ltr; text-align: start; overflow-wrap: anywhere; }
   .switch { appearance: none; width: 40px; height: 22px; border-radius: 11px; background: color-mix(in srgb, var(--text) 20%, transparent); position: relative; cursor: pointer; transition: background 0.15s; }
   .switch::after { content: ''; position: absolute; top: 3px; inset-inline-start: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--text); transition: translate 0.18s cubic-bezier(.3, 1.4, .6, 1); }
   .switch:checked { background: var(--accent); }
