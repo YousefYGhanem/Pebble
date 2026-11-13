@@ -22,6 +22,7 @@
   import { focusLeft, lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
   import type { Widget } from '../../shared/connectors'
   import { chirp, type Chirp } from './sound'
+  import { playNoise } from './noise'
   import { RectSpring, Spring, contentOpacity, jelly, type Rect } from './spring'
   import { modeFor, rank, sizeFor, type Mode } from './layout'
   import { drawIsland, drawSplitPill, islandPath } from './draw'
@@ -68,6 +69,14 @@
   // a peek: an icon in a ring (ring: how full, 0–1), a title over a short line, and a value on the right
   interface Peek { icon: string; title: string; sub?: string; value?: string; ring?: number; tone?: 'ok' | 'warn' | 'info' }
   let notice = $state<(Peek & { n: number }) | null>(null)
+  // a task that is due: stays until you tick it or snooze it (or ten minutes pass)
+  let reminder = $state<{ id: string; text: string } | null>(null)
+  let reminderTimer: ReturnType<typeof setTimeout> | undefined
+  function remindDone(how: 'done' | 'snooze') {
+    if (!reminder) return
+    act(how === 'done' ? { do: 'todo.toggle', id: reminder.id } : { do: 'todo.snooze', id: reminder.id, minutes: 10 })
+    reminder = null
+  }
   let noticeN = 0
   function peek(p: Peek) {
     if (scene || !view?.settings.features.peeks) return
@@ -83,9 +92,9 @@
   /** a connector's live thing (a match, a call, an upload): it takes the small island while it lasts */
   const activity = $derived(widgets.find(w => w.kind === 'activity'))
   const chipText = (c: string) => widgets.find(w => `widget:${w.plugin}/${w.id}` === c)?.text ?? ''
-  const mode = $derived<Mode>(phase === 'normal' ? modeFor({ tucked, open, sessions: shown, extra: music || focusOn || dropping || !!activity || !!notice }) : 'resting')
+  const mode = $derived<Mode>(phase === 'normal' ? modeFor({ tucked, open, sessions: shown, extra: music || focusOn || dropping || !!activity || !!notice || !!reminder || !!extras?.strip }) : 'resting')
   /** what the medium island shows: a drop > music > an agent > a connector's live activity > the focus timer */
-  const medium = $derived<'drop' | 'notice' | 'music' | 'agent' | 'activity' | 'focus'>(dropping ? 'drop' : notice ? 'notice' : music && !(busy && busy.status === 'error') ? 'music' : busy ? 'agent' : activity ? 'activity' : focusOn ? 'focus' : 'agent')
+  const medium = $derived<'strip' | 'drop' | 'reminder' | 'notice' | 'music' | 'agent' | 'activity' | 'focus'>(extras?.strip ? 'strip' : dropping ? 'drop' : reminder ? 'reminder' : notice ? 'notice' : music && !(busy && busy.status === 'error') ? 'music' : busy ? 'agent' : activity ? 'activity' : focusOn ? 'focus' : 'agent')
   const chips = $derived(view ? [view.settings.island.chips.left, view.settings.island.chips.right] : ['none', 'none'])
   const chipCount = $derived(chips.filter(c => c !== 'none').length)
   const lyric = $derived(extras?.lyrics && extras.media ? extras.lyrics[lyricIndex(extras.lyrics, positionNow(extras.media, now) + 250)]?.text ?? '' : '')
@@ -94,7 +103,9 @@
   const target = $derived.by(() => {
     if (!view) return { w: 0, h: 0, r: 0 }
     const t0 = sizeFor(mode, view.settings.island, contentHeight)
-    const t = mode === 'medium' && medium === 'notice' && notice ? { w: Math.max(t0.w, 340), h: Math.max(t0.h, 52), r: 26 } : t0
+    const t = mode === 'medium' && medium === 'notice' && notice ? { w: Math.max(t0.w, 340), h: Math.max(t0.h, 52), r: 26 }
+      : mode === 'medium' && medium === 'strip' ? { w: 230, h: 24, r: 12 }
+      : mode === 'medium' && view.settings.island.compact === 'minimal' ? { ...t0, w: Math.min(t0.w, 200) } : t0
     const room = chips.reduce((n, c) => n + (c === 'none' ? 0 : c.startsWith('widget:') ? 110 : 52), 0)
     return mode === 'resting' && room ? { ...t, w: t.w + room } : t // room for the chips left and right of Pip
   })
@@ -208,6 +219,11 @@
     })
   }).catch(() => {})
 
+  // the focus sound plays while a round runs (not on a break, not paused)
+  $effect(() => {
+    const f = extras?.focus
+    playNoise(!scene && f && !f.break && f.left === undefined ? (view?.settings.music.focusSound ?? 'off') : 'off')
+  })
   // opened or closed: the welcome tour ticks it off while you try
   $effect(() => { const on = mode === 'open'; if (!scene) window.pebble.opened(on) })
   // tucked away: every service rests (main), until the island comes back
@@ -251,6 +267,13 @@
   })
   window.pebble.onTuck(() => { tucked = !tucked; open = false })
   window.pebble.onNotice(n => {
+    if (n.kind === 'todo') {
+      reminder = { id: n.id, text: n.text }
+      kick(); say('question')
+      clearTimeout(reminderTimer)
+      reminderTimer = setTimeout(() => (reminder = null), 10 * 60_000)
+      return
+    }
     // a device name "Headphones (AirPods Pro)": the part in brackets is the device itself
     if (n.kind === 'device') peek({ icon: 'speaker', title: /\(([^)]+)\)/.exec(n.name)?.[1] ?? n.name, sub: t('i.peek.deviceSub') })
     else if (n.kind === 'caps') peek({ icon: 'keyboard', title: 'Caps Lock', value: t(n.on ? 'i.peek.on' : 'i.peek.off'), tone: n.on ? 'warn' : 'info' })
@@ -475,10 +498,10 @@
   function openIfResting() {
     if (!hovering) return
     if (speed > 0.6) { hoverTimer = setTimeout(openIfResting, 120); return } // px/ms: still moving fast
-    if (mode === 'resting' || mode === 'medium') open = true
+    if ((mode === 'resting' || mode === 'medium') && !extras?.strip) open = true
   }
   /** tucked, the island lets clicks through to the window below (pointing at it still brings it back) */
-  const catching = () => hovering && mode !== 'tucked'
+  const catching = () => hovering && mode !== 'tucked' && !extras?.strip // the game strip never takes the game's clicks
 
   function setHover(on: boolean) {
     if (on === hovering) return
@@ -586,7 +609,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
   <div class="clip" class:reduced bind:this={clip} role="region" aria-label={t('i.island.name')} onclick={onClick} oncontextmenu={onRightClick}
     title={mode === 'resting' || mode === 'medium' ? t('i.island.hint') : mode === 'tucked' ? t('i.island.tuckedHint') : undefined}>
-    <div class="content mode-{mode}" class:micmuted={!!extras?.mic} bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
+    <div class="content mode-{mode}" class:micmuted={!!extras?.mic} class:minimal={view.settings.island.compact === 'minimal'} bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
       {#if (mode === 'resting' || mode === 'medium') && extras?.mic}
         <!-- the microphone is muted for every app: a reminder while it is -->
         <div class="micoff" title={t('i.peek.micOff')} style:height="{mode === 'resting' ? view.settings.island.restingHeight : view.settings.island.height}px"><Icon name="micoff" size={12} /></div>
@@ -603,6 +626,19 @@
               {:else if c.startsWith('widget:')}<span class="wchip">{chipText(c)}</span>{/if}
             </span>
           {/each}
+        </div>
+      {:else if mode === 'medium' && medium === 'strip' && extras}
+        <!-- in a full-screen game: the time and the PC's load, small, clicks go to the game -->
+        <div class="strip" style:height="24px">
+          <span>{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span>CPU {extras.system.cpu}%</span><span>RAM {extras.system.ram}%</span>
+        </div>
+      {:else if mode === 'medium' && medium === 'reminder' && reminder}
+        <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+        <div class="line reminder" role="alert" style:height="{view.settings.island.height}px" onclick={e => e.stopPropagation()}>
+          <Icon name="check" size={14} /><span class="title">{reminder.text}</span>
+          <button class="small likely" onclick={() => remindDone('done')}>{t('i.todo.done')}</button>
+          <button class="small" onclick={() => remindDone('snooze')}>{t('i.todo.snooze')}</button>
         </div>
       {:else if mode === 'medium' && medium === 'notice' && notice}
         <div class="line peek tone-{notice.tone ?? 'info'}" role="status" style:height="{target.h}px">
@@ -680,8 +716,8 @@
               {:else if page === 'music' && extras}<MusicPage {extras} {now} {act} {reduced} color={album} />
               {:else if page === 'files' && extras}<FilesPage {extras} {now} {act} {reduced} />
               {:else if page === 'clipboard' && extras}<ClipboardPage {extras} {now} {act} enabled={view.settings.clipboard.enabled} />
-              {:else if page === 'notes' && extras}<NotesPage notes={extras.notes} {now} {act} />
-              {:else if page === 'focus' && extras}<FocusPage focus={extras.focus} done={extras.focusDone} {now} {act} />
+              {:else if page === 'notes' && extras}<NotesPage notes={extras.notes} todos={extras.todos} {now} {act} />
+              {:else if page === 'focus' && extras}<FocusPage focus={extras.focus} done={extras.focusDone} sound={view.settings.music.focusSound} {now} {act} />
               {:else if page === 'chat' && view.chat}<ChatPage chat={view.chat} {act} {listen} name={view.settings.pip.name} />
               {:else if page === 'widgets'}<WidgetsPage {widgets} connectors={view.connectors} {now} {act} />
               {/if}
@@ -714,6 +750,11 @@
   .ptext b, .ptext small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ptext small { color: var(--muted); font-size: 0.82em; }
   .pval { flex: none; font-weight: 700; font-size: 1.15em; font-variant-numeric: tabular-nums; }
+  /* minimal: the small island keeps its signs only (the words are a hover or a click away) */
+  .content.minimal .line:not(.peek) .title, .content.minimal .line:not(.peek) .count { display: none; }
+  .content.minimal .line:not(.peek) { gap: 12px; }
+  .reminder button.small { padding: 3px 10px; font-size: 0.82em; flex: none; }
+  .strip { display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 0.78em; font-variant-numeric: tabular-nums; color: var(--muted); padding-inline-end: 30px; }
   .who { font-size: 0.78em; color: var(--muted); margin-bottom: 2px; }
   .who.tipline { color: var(--accent-text); }
   .tip { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--accent) 22%, transparent); font-size: 0.86em; }

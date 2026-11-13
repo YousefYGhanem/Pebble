@@ -1,10 +1,11 @@
+import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { EventEmitter } from 'node:events'
-import { app, clipboard, nativeImage, shell } from 'electron'
+import { app, clipboard, ClipboardItem, nativeImage, shell } from 'electron'
 import type { RestLevel } from '../rest'
-import { focusFinished, noticesFor, trimClips, type PcState, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
+import { focusFinished, nextDue, noticesFor, toggleTodo, trimClips, type PcState, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
 import type { Native } from '../native'
 import { Lyrics } from './lyrics'
@@ -12,7 +13,7 @@ import { writeJsonAtomic } from '../store'
 import { logger } from '../log'
 
 const log = logger('extras')
-const MAX_SHELF = 24, MAX_CLIPS = 25, MAX_NOTES = 50
+const MAX_SHELF = 24, MAX_CLIPS = 25, MAX_NOTES = 50, MAX_TODOS = 100
 const IMAGE = /\.(png|jpe?g|gif|webp|bmp)$/i
 // password managers mark what they copy like this; Windows' own clipboard history skips it too
 const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipboard Viewer Ignore']
@@ -22,7 +23,7 @@ const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipbo
  * 'peak' (0–1, ~30 a second while music plays) and 'focus-done'.
  */
 export class Extras extends EventEmitter {
-  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
   private lyrics: Lyrics
   private songKey = ''
   private lastClip = ''
@@ -35,6 +36,8 @@ export class Extras extends EventEmitter {
     super()
     this.lyrics = new Lyrics(dir)
     try { const v = JSON.parse(fs.readFileSync(this.file('notes'), 'utf8')); if (Array.isArray(v)) this.state.notes = v.slice(0, MAX_NOTES) } catch {}
+    try { const v = JSON.parse(fs.readFileSync(this.file('todos'), 'utf8')); if (Array.isArray(v)) this.state.todos = v.slice(0, MAX_TODOS) } catch {}
+    this.remind()
     try {
       const v = JSON.parse(fs.readFileSync(this.file('shelf'), 'utf8'))
       if (Array.isArray(v)) void this.addToShelf(v.filter(f => typeof f?.path === 'string').map(f => f.path), v.map(f => f.addedAt))
@@ -53,11 +56,15 @@ export class Extras extends EventEmitter {
       this.state.mic = a?.mic ?? null
       // what changed on the PC: the island peeks at it (Settings → General → Peeks)
       if (a) { for (const n of noticesFor(this.pc, a)) this.emit('notice', n); this.pc = a }
+      // Windows counts each copy: the clipboard is read only when the count moved
+      const seq = (a as { clip?: number } | null)?.clip
+      if (seq !== undefined && seq !== this.clipSeq) { this.clipSeq = seq; void this.readClipboard() }
       this.changed()
     })
-    this.native.on('ready', () => void this.readRadios())
+    this.native.on('ready', () => { void this.readRadios(); this.readPower() })
     this.applySettings()
-    setInterval(() => void this.readClipboard(), 1000).unref()
+    // without the native helper (its PC poll tells when the clipboard changed), a check each second
+    setInterval(() => { if (!this.native.available) void this.readClipboard() }, 1000).unref()
     setInterval(() => this.sampleSystem(), 3000).unref()
     setInterval(() => void this.readRadios(), 60_000).unref()
   }
@@ -140,26 +147,65 @@ export class Extras extends EventEmitter {
   // ---------- clipboard: kept in memory only, never written to disk ----------
 
   private reading = false
+  private clipSeq = -1
+  /** copied pictures, by clip id (memory only; the state carries a small preview) */
+  private images = new Map<number, Electron.NativeImage>()
+  private lastImage = ''
   private async readClipboard() {
     if (!this.settings().clipboard.enabled) { if (this.state.clipboard.length) { this.state.clipboard = []; this.changed() } return }
     if (this.reading || this.deep()) return // away or in a game: nothing new gets copied
     this.reading = true
-    let text = ''
+    let text = '', picture: Electron.NativeImage | null = null
     try {
       text = await clipboard.readText()
-      if (text === this.lastClip) return // the usual case, each second: nothing new (the format checks only for new text)
-      this.lastClip = text
+      if (!text.trim() && await clipboard.has('image/png')) {
+        const item = (await clipboard.read()).find(i => i.types.includes('image/png'))
+        if (item) picture = nativeImage.createFromBuffer(Buffer.from(await (await item.getType('image/png')).arrayBuffer()))
+      }
+      else {
+        if (text === this.lastClip) return // nothing new (the format checks only for new text)
+        this.lastClip = text
+      }
       for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) return
     } catch { return } finally { this.reading = false }
+    if (picture && !picture.isEmpty()) return this.addPicture(picture)
     if (!text.trim()) return
     this.state.clipboard = trimClips([{ id: ++this.clipId, text: text.slice(0, 5000), at: Date.now() }, ...this.state.clipboard.filter(c => c.text !== text.slice(0, 5000))], MAX_CLIPS)
     this.changed()
   }
 
+  /** A copied picture: a small preview in the list, the picture itself kept here (the newest 8). */
+  private addPicture(img: Electron.NativeImage) {
+    const { width, height } = img.getSize()
+    const small = img.resize({ width: Math.min(160, width), quality: 'good' })
+    const preview = `data:image/jpeg;base64,${small.toJPEG(72).toString('base64')}`
+    if (preview === this.lastImage) return // the same picture again (copied back from the list)
+    this.lastImage = preview
+    const id = ++this.clipId
+    this.images.set(id, img)
+    let list = trimClips([{ id, text: '', image: preview, size: `${width}×${height}`, at: Date.now() }, ...this.state.clipboard], MAX_CLIPS)
+    // pictures are big: the newest 8 (pinned ones stay)
+    const pictures = list.filter(c => c.image && !c.pinned)
+    for (const old of pictures.slice(8)) list = list.filter(c => c.id !== old.id)
+    for (const key of [...this.images.keys()]) if (!list.some(c => c.id === key)) this.images.delete(key)
+    this.state.clipboard = list
+    this.changed()
+  }
+
   // ---------- PC ----------
 
+  /** the game strip shows the PC's readings, so they go on during a game */
+  setStrip(on: boolean) {
+    if (on === this.state.strip) return
+    this.state.strip = on
+    if (on) this.sampleSystem()
+    this.changed()
+  }
+  /** Windows' power mode, read again when Home asks (it can change elsewhere) */
+  readPower() { this.native.request<string | null>('power.get').then(p => { if (p !== this.state.power) { this.state.power = p as ExtrasState['power']; this.changed() } }).catch(() => {}) }
+
   private sampleSystem() {
-    if (this.rest !== 'awake') return
+    if (this.rest !== 'awake' && !this.state.strip) return
     const now = os.cpus()
     let busy = 0, total = 0
     now.forEach((c, i) => {
@@ -186,6 +232,30 @@ export class Extras extends EventEmitter {
 
   // ---------- focus timer ----------
 
+  // ---------- tasks: one timer, for the next task with a time ----------
+
+  private todoTimer?: NodeJS.Timeout
+  private saveTodos() {
+    try { writeJsonAtomic(this.file('todos'), this.state.todos) } catch {}
+    this.remind()
+    this.changed()
+  }
+  /** Sets the timer for the next due task; when it fires, the island shows it (Done / Snooze) and Windows notifies. */
+  private remind() {
+    clearTimeout(this.todoTimer)
+    const t = nextDue(this.state.todos)
+    if (!t?.due) return
+    // timers longer than about 24 days overflow: wake up a day before and look again
+    this.todoTimer = setTimeout(() => {
+      if (t.due! > Date.now() + 1000) return this.remind()
+      this.emit('notice', { kind: 'todo', id: t.id, text: t.text })
+      // fired once: it comes back only if snoozed (or its next day, if it repeats)
+      this.state.todos = this.state.todos.map(x => (x.id === t.id ? { ...x, due: x.daily ? toggleTodo({ ...x, done: false }, Date.now()).due : undefined } : x))
+      this.saveTodos()
+    }, Math.min(Math.max(0, t.due - Date.now()), 86_400_000))
+    this.todoTimer.unref?.()
+  }
+
   private schedule() {
     clearTimeout(this.focusTimer)
     const f = this.state.focus
@@ -204,7 +274,7 @@ export class Extras extends EventEmitter {
     const s = this.state
     switch (a.do) {
       case 'media': return this.native.request('media.control', { action: a.action, positionMs: a.positionMs ?? 0 })
-      case 'volume': return this.native.request('audio.set', { volume: Math.round(a.volume) })
+      case 'volume': return this.native.request('audio.set', { ...(a.volume !== undefined ? { volume: Math.round(a.volume) } : {}), ...(a.muted !== undefined ? { muted: a.muted } : {}) })
       case 'shelf.add': return this.addToShelf(a.paths)
       case 'shelf.open': if (s.shelf.some(f => f.path === a.path)) await shell.openPath(a.path); return
       case 'shelf.reveal': if (s.shelf.some(f => f.path === a.path)) shell.showItemInFolder(a.path); return
@@ -212,12 +282,18 @@ export class Extras extends EventEmitter {
       case 'shelf.clear': s.shelf = []; return this.saveShelf()
       case 'clip.copy': {
         const c = s.clipboard.find(x => x.id === a.id)
-        if (c) { this.lastClip = c.text; await clipboard.writeText(c.text) }
+        const img = c?.image ? this.images.get(c.id) : undefined
+        if (img) { this.lastImage = c!.image!; await clipboard.write([new ClipboardItem({ 'image/png': new Blob([new Uint8Array(img.toPNG())], { type: 'image/png' }) })]) }
+        else if (c) { this.lastClip = c.text; await clipboard.writeText(c.text) }
         return
       }
       case 'clip.clear': s.clipboard = s.clipboard.filter(c => c.pinned); return this.changed() // pinned ones stay
       case 'clip.pin': s.clipboard = trimClips(s.clipboard.map(c => (c.id === a.id ? { ...c, pinned: !c.pinned } : c)), MAX_CLIPS); return this.changed()
       case 'clip.remove': s.clipboard = s.clipboard.filter(c => c.id !== a.id); return this.changed()
+      case 'todo.add': s.todos = [{ id: randomUUID(), text: a.text.trim().slice(0, 300), at: Date.now(), done: false, due: a.due, daily: a.daily || undefined }, ...s.todos].slice(0, MAX_TODOS); return this.saveTodos()
+      case 'todo.toggle': s.todos = s.todos.map(t => (t.id === a.id ? toggleTodo(t, Date.now()) : t)); return this.saveTodos()
+      case 'todo.remove': s.todos = s.todos.filter(t => t.id !== a.id); return this.saveTodos()
+      case 'todo.snooze': s.todos = s.todos.map(t => (t.id === a.id ? { ...t, due: Date.now() + a.minutes * 60_000 } : t)); return this.saveTodos()
       case 'notes.save':
         s.notes = a.notes.slice(0, MAX_NOTES)
         try { writeJsonAtomic(this.file('notes'), s.notes) } catch {}
@@ -249,12 +325,18 @@ export function validAction(a: unknown): a is Action {
   const str = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length < 4096
   switch (o.do) {
     case 'media': return ['toggle', 'next', 'previous', 'seek'].includes(o.action as string) && (o.positionMs === undefined || (typeof o.positionMs === 'number' && o.positionMs >= 0))
-    case 'volume': return typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100
+    case 'volume': return (o.volume === undefined || (typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100)) && (o.muted === undefined || typeof o.muted === 'boolean') && (o.volume !== undefined || o.muted !== undefined)
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
-    case 'update.install': return true
+    case 'update.install': case 'mic.toggle': case 'pebble.sounds': return true
+    case 'power': return ['efficiency', 'balanced', 'performance'].includes(o.mode as string)
+    case 'focus.sound': return ['off', 'rain', 'deep', 'waves'].includes(o.sound as string)
     case 'tip.seen': return o.id === 'ask' || o.id === 'tuck' || o.id === 'drop'
+    case 'todo.add': return typeof o.text === 'string' && !!o.text.trim() && o.text.length <= 300
+      && (o.due === undefined || (typeof o.due === 'number' && o.due > 0)) && (o.daily === undefined || typeof o.daily === 'boolean')
+    case 'todo.toggle': case 'todo.remove': return typeof o.id === 'string' && o.id.length <= 64
+    case 'todo.snooze': return typeof o.id === 'string' && o.id.length <= 64 && Number.isInteger(o.minutes) && (o.minutes as number) >= 1 && (o.minutes as number) <= 24 * 60
     case 'notes.save': return Array.isArray(o.notes) && o.notes.length <= MAX_NOTES
       && o.notes.every((n: Note) => n && typeof n.id === 'string' && typeof n.text === 'string' && n.text.length <= 20000 && typeof n.at === 'number')
     case 'settings.open': return o.tab === undefined || o.tab === 'connectors'

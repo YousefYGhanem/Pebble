@@ -26,6 +26,7 @@
     micoff: 'M9 4a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0z M5 11a7 7 0 0 0 14 0 M12 18v3 M3 3l18 18',
     keyboard: 'M3 6h18v12H3z M7 10h.01 M11 10h.01 M15 10h.01 M7 14h10',
     battery: 'M3 8h15v8H3z M20 11v2 M6 11h6',
+    mute: 'M4 9h4l5-4v14l-5-4H4z M16 9l6 6 M22 9l-6 6',
     download: 'M12 4v11 M7 10l5 5 5-5 M5 20h14',
     next: 'M5 4l11 8-11 8z M19 4v16',
     previous: 'M19 4L8 12l11 8z M5 4v16',

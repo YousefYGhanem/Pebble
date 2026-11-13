@@ -8,6 +8,8 @@
 
   let { extras, now, act, enabled }: { extras: ExtrasState; now: number; act: (a: Action) => void; enabled: boolean } = $props()
   let copied = $state(-1)
+  let kind = $state<'all' | 'text' | 'pictures'>('all')
+  const hasPictures = $derived(extras.clipboard.some(c => c.image))
 
   function copy(id: number) {
     act({ do: 'clip.copy', id })
@@ -21,6 +23,12 @@
     <span class="page-title">{t('i.page.clipboard')}</span>
     {#if extras.clipboard.length && !undo.hides('clipboard')}<button class="ghost" onclick={() => undo.offer(t('i.undo.clipboard'), { hides: 'clipboard', commit: () => act({ do: 'clip.clear' }) })}><Icon name="trash" size={13} />{t('i.common.clear')}</button>{/if}
     <span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span>
+  
+    {#if hasPictures}
+      <div class="kinds" role="group" aria-label={t('i.clip.kinds')}>
+        {#each ['all', 'text', 'pictures'] as const as k}<button class:on={kind === k} aria-pressed={kind === k} onclick={() => (kind = k)}>{t(`i.clip.${k}`)}</button>{/each}
+      </div>
+    {/if}
   </div>
   {#if !enabled}
     <div class="empty">{t('i.clip.off')}</div>
@@ -28,11 +36,12 @@
     <div class="empty">{t('i.clip.empty')}</div>
   {:else}
     <div class="list">
-      {#each extras.clipboard.filter(c => !undo.hides(`clipboard:${c.id}`)) as c (c.id)}
+      {#each extras.clipboard.filter(c => !undo.hides(`clipboard:${c.id}`) && (kind === 'all' || (kind === 'pictures') === !!c.image)) as c (c.id)}
         <div class="row">
           <button class="copy" onclick={() => copy(c.id)} title={t('i.clip.again')}>
             <!-- a key or a token shows only its ends: the island is on screen for anyone to see -->
-            <span class="text" class:secret={looksSecret(c.text)}>{looksSecret(c.text) ? maskSecret(c.text) : c.text}</span>
+            {#if c.image}<img class="pic" src={c.image} alt="" /><span class="text muted">{t('i.clip.picture')} · {c.size}</span>
+            {:else}<span class="text" class:secret={looksSecret(c.text)}>{looksSecret(c.text) ? maskSecret(c.text) : c.text}</span>{/if}
             <span class="when muted">{copied === c.id ? t('i.clip.copied') : ago(c.at, now)}</span>
           </button>
           <button class="ghost remove" class:pinned={c.pinned} title={t(c.pinned ? 'i.clip.unpin' : 'i.clip.pin')} aria-label={t(c.pinned ? 'i.clip.unpin' : 'i.clip.pin')} aria-pressed={!!c.pinned}
@@ -46,6 +55,10 @@
 </div>
 
 <style>
+  .kinds { display: flex; gap: 2px; padding: 2px; border-radius: var(--r-pill); background: var(--surface1); }
+  .kinds button { padding: 3px 11px; font-size: 0.82em; background: none; color: var(--muted); }
+  .kinds button.on { background: var(--surface3); color: var(--text); }
+  .pic { width: 56px; height: 40px; object-fit: cover; border-radius: var(--r-s); flex: none; }
   .list { display: flex; flex-direction: column; max-height: 270px; overflow: auto; margin: 0 -8px 8px; }
   .row { display: flex; align-items: flex-start; border-radius: 10px; }
   .row:hover, .row:focus-within { background: var(--surface2); }

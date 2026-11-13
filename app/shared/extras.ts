@@ -27,8 +27,10 @@ export interface ShelfFile {
   addedAt: number
 }
 
-export interface ClipItem { id: number; text: string; at: number; pinned?: boolean }
+export interface ClipItem { id: number; text: string; at: number; pinned?: boolean; /** a copied picture: a small JPEG preview (the picture itself stays in main) */ image?: string; size?: string }
 export interface Note { id: string; text: string; at: number }
+/** A task: an optional time (a reminder on the island), done, and every day again if it repeats. */
+export interface Todo { id: string; text: string; at: number; done: boolean; doneAt?: number; due?: number; daily?: boolean }
 
 export interface FocusTimer {
   /** total length, s */
@@ -69,6 +71,11 @@ export interface ExtrasState {
   notes: Note[]
   focus: FocusTimer | null
   focusDone: FocusDone | null
+  todos: Todo[]
+  /** Windows' power mode (null: not available) */
+  power: 'efficiency' | 'balanced' | 'performance' | null
+  /** the game strip shows (a full-screen game, Settings → Island → Game strip) */
+  strip: boolean
   /** the default microphone is muted (null: there is none) */
   mic: boolean | null
   /** 0–100 */
@@ -82,7 +89,7 @@ export interface ExtrasState {
 /** Everything the island can ask main to do with the extras (validated in main). */
 export type Action =
   | { do: 'media'; action: 'toggle' | 'next' | 'previous' | 'seek'; positionMs?: number }
-  | { do: 'volume'; volume: number }
+  | { do: 'volume'; volume?: number; muted?: boolean }
   | { do: 'shelf.add'; paths: string[] }
   | { do: 'shelf.open' | 'shelf.reveal' | 'shelf.remove' | 'shelf.drag'; path: string }
   | { do: 'shelf.clear' }
@@ -91,6 +98,13 @@ export type Action =
   | { do: 'clip.remove'; id: number }
   | { do: 'clip.pin'; id: number }
   | { do: 'update.install' }
+  | { do: 'focus.sound'; sound: 'off' | 'rain' | 'deep' | 'waves' }
+  | { do: 'mic.toggle' }
+  | { do: 'power'; mode: 'efficiency' | 'balanced' | 'performance' }
+  | { do: 'pebble.sounds' }
+  | { do: 'todo.add'; text: string; due?: number; daily?: boolean }
+  | { do: 'todo.toggle' | 'todo.remove'; id: string }
+  | { do: 'todo.snooze'; id: string; minutes: number }
   | { do: 'tip.seen'; id: 'ask' | 'tuck' | 'drop' }
   | { do: 'notes.save'; notes: Note[] }
   | { do: 'focus.start'; seconds: number; break?: boolean }
@@ -162,6 +176,7 @@ export type Notice =
   | { kind: 'keyboard'; lang: string }
   | { kind: 'mute'; on: boolean }
   | { kind: 'mic'; on: boolean }
+  | { kind: 'todo'; id: string; text: string }
 
 export interface PcState { muted: boolean; device: string; mic: boolean | null; caps: boolean; keyboard: string }
 
@@ -175,4 +190,29 @@ export function noticesFor(prev: PcState | null, now: PcState): Notice[] {
   if (now.muted !== prev.muted) out.push({ kind: 'mute', on: now.muted })
   if (now.mic !== null && prev.mic !== null && now.mic !== prev.mic) out.push({ kind: 'mic', on: now.mic })
   return out
+}
+
+// ---------- tasks ----------
+
+const dayOf = (t: number) => new Date(t).toDateString()
+
+/** Ticked or unticked; a daily task ticked moves on to its next day (and is open again). */
+export function toggleTodo(t: Todo, now: number): Todo {
+  if (t.done) return { ...t, done: false, doneAt: undefined }
+  if (t.daily && t.due) {
+    let due = t.due
+    while (due <= now) due += 86_400_000
+    return { ...t, done: false, doneAt: now, due }
+  }
+  return { ...t, done: true, doneAt: now }
+}
+
+/** The next reminder to give: the earliest open task with a time (null: none). */
+export const nextDue = (list: Todo[]) => list.filter(t => !t.done && t.due).sort((a, b) => a.due! - b.due!)[0] ?? null
+
+/** Today's tasks: the ones due today or ticked today, and how many are done ("4/5 done today"). */
+export function todayProgress(list: Todo[], now: number): { done: number; total: number } {
+  const today = dayOf(now)
+  const mine = list.filter(t => (t.due && dayOf(t.due) === today) || (t.doneAt && dayOf(t.doneAt) === today) || (!t.due && !t.done))
+  return { done: mine.filter(t => t.doneAt && dayOf(t.doneAt) === today).length, total: mine.length }
 }

@@ -2,7 +2,7 @@
   // Home: a small dashboard. The date and time, Wi-Fi and Bluetooth switches, and a tile for each part of Pebble that
   // has something going on; a click goes to its page.
   import type { Action, ExtrasState } from '../../shared/extras'
-  import { focusLeft } from '../../shared/extras'
+  import { focusLeft, nextDue, todayProgress } from '../../shared/extras'
   import type { Session } from '../../shared/state'
   import Icon from './Icon.svelte'
   import { clock, type Page } from './pages'
@@ -15,6 +15,8 @@
   let { sessions, extras, widgets = [], day, update = null, now, act, go }: { sessions: Session[]; extras: ExtrasState; widgets?: Widget[]; day: Days; update?: string | null; now: number; act: (a: Action) => void; go: (p: Page) => void } = $props()
   // what your agents did today (yesterday's, until today has something)
   const days = $derived(daysAt(day, now))
+  const todos = $derived(todayProgress(extras.todos, now))
+  const next = $derived(nextDue(extras.todos))
   const shownDay = $derived(days.today.tasks || Object.values(days.today.spent).some(x => spentOf(x!) > 0) ? { d: days.today, label: t('i.day.today') } : days.yesterday ? { d: days.yesterday, label: t('i.day.yesterday') } : null)
   const span = (s: number) => s >= 3600 ? t('i.day.h', { h: Math.floor(s / 3600), m: Math.round((s % 3600) / 60) }) : t('i.day.m', { m: Math.max(1, Math.round(s / 60)) })
   const compact = (n: number) => n >= 1e6 ? `${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `${Math.round(n / 1e3)}k` : String(n)
@@ -99,12 +101,43 @@
     </button>
   {/if}
 
-  <div class="system muted">
-    <span>{t('i.home.cpu', { n: extras.system.cpu })}</span><span>{t('i.home.memory', { n: extras.system.ram })}</span>
+  {#if todos.total}
+    <button class="todoline" onclick={() => go('notes')}><Icon name="check" size={13} />{t('i.todo.today', { done: todos.done, total: todos.total })}
+      {#if next}<span class="muted">· {t('i.todo.next', { text: next.text, time: new Date(next.due!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}</span>{/if}</button>
+  {/if}
+
+  <!-- quick controls: what you change often, one click away -->
+  <div class="quick">
+    {#if extras.volume}
+      <label class="vol" title={t('i.music.volume')}>
+        <button class="qbtn" aria-label={t(extras.volume.muted ? 'i.quick.unmute' : 'i.quick.mute')} aria-pressed={extras.volume.muted} onclick={() => act({ do: 'volume', muted: !extras.volume!.muted })}><Icon name={extras.volume.muted ? 'mute' : 'volume'} size={14} /></button>
+        <input type="range" min="0" max="100" value={extras.volume.level} onchange={e => act({ do: 'volume', volume: Number((e.currentTarget as HTMLInputElement).value) })} aria-label={t('i.music.volume')} />
+      </label>
+    {/if}
+    {#if extras.mic !== null}
+      <button class="qbtn" class:off={extras.mic} aria-pressed={extras.mic} title={t(extras.mic ? 'i.quick.micOn' : 'i.quick.micOff')} aria-label={t(extras.mic ? 'i.quick.micOn' : 'i.quick.micOff')} onclick={() => act({ do: 'mic.toggle' })}><Icon name={extras.mic ? 'micoff' : 'mic'} size={14} /></button>
+    {/if}
+    {#if extras.power}
+      <div class="power" role="group" aria-label={t('i.quick.power')}>
+        {#each ['efficiency', 'balanced', 'performance'] as const as p}<button class:on={extras.power === p} aria-pressed={extras.power === p} onclick={() => act({ do: 'power', mode: p })}>{t(`i.quick.${p}`)}</button>{/each}
+      </div>
+    {/if}
+    <span class="load muted">CPU {extras.system.cpu}% · RAM {extras.system.ram}%</span>
   </div>
 </div>
 
 <style>
+  .quick { display: flex; align-items: center; gap: 10px; padding-bottom: 6px; font-size: 0.85em; }
+  .vol { display: inline-flex; align-items: center; gap: 4px; }
+  .vol input { width: 110px; }
+  .qbtn { width: 30px; height: 28px; padding: 0; display: inline-grid; place-items: center; background: var(--surface1); color: var(--text); }
+  .qbtn.off { color: var(--error); }
+  .power { display: flex; gap: 2px; padding: 2px; border-radius: var(--r-pill); background: var(--surface1); }
+  .power button { padding: 3px 10px; background: none; color: var(--muted); }
+  .power button.on { background: var(--surface3); color: var(--text); }
+  .load { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+  .todoline { display: flex; align-items: center; gap: 8px; background: none; padding: 2px 4px; font-size: 0.88em; text-align: start; }
+  .todoline .muted { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .when { display: flex; align-items: baseline; gap: 10px; }
   .big { font-size: 1.5em; font-weight: 700; font-variant-numeric: tabular-nums; }
   .radio { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; background: var(--surface2); color: var(--muted); }
@@ -122,5 +155,4 @@
   .day { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; padding: 10px 12px; border-radius: 16px; background: var(--surface1); }
   .day:hover { background: var(--surface2); }
   .facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9em; }
-  .system { display: flex; gap: 16px; font-size: 0.85em; padding-bottom: 6px; }
 </style>

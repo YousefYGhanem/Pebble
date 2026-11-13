@@ -100,7 +100,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -201,7 +201,10 @@ const inGame = () => store.settings.island.gameMode && fullscreen.current === is
 let peeking = false
 function updateVisibility() {
   if (!island) return
-  const hide = inGame() && !shownAnyway && !peeking
+  // the game strip: a slim line instead of nothing (Settings → Island → Game strip)
+  const strip = inGame() && store.settings.island.gameStrip && !shownAnyway && !peeking
+  extras.setStrip(strip)
+  const hide = inGame() && !shownAnyway && !peeking && !strip
   if (hide && island.isVisible()) island.hide()
   if (!hide && !island.isVisible()) island.showInactive()
 }
@@ -514,6 +517,10 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
   if (a.do === 'update.install') { updater.install(); return }
+  if (a.do === 'mic.toggle') { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)); return }
+  if (a.do === 'pebble.sounds') { store.update({ features: { sound: !store.settings.features.sound } }); return }
+  if (a.do === 'power') { native.request('power.set', { mode: a.mode }).then(() => extras.readPower()).catch(err => log.warn('power:', err.message)); return }
+  if (a.do === 'focus.sound') { store.update({ music: { focusSound: a.sound } }); return }
   if (a.do === 'tip.seen') { const seen = store.settings.general.tipsSeen; if (!seen.includes(a.id)) store.update({ general: { tipsSeen: [...seen, a.id] } }); return }
   if (a.do === 'chat.send') { void chat.send(a.text); return }
   if (a.do === 'chat.stop') { chat.stop(); return }
@@ -618,7 +625,11 @@ app.whenReady().then(async () => {
   native.watch('drag', true, 'drop-target')
   extras.on('change', () => { push(); guard.apply() }) // the focus timer started, paused or ended
   extras.on('peak', (p: number) => send(CH.peak, p))
-  extras.on('notice', (n: unknown) => { if (store.settings.features.peeks) send(CH.notice, n) })
+  extras.on('notice', (n: { kind: string; text?: string }) => {
+    // a task's reminder always shows (peeks can be off); it also goes to Windows' notifications
+    if (n.kind === 'todo') { bringBack(); send(CH.notice, n); toast(tr('m.todoDue'), n.text ?? '', undefined, undefined, { kind: 'extras' }) }
+    else if (store.settings.features.peeks) send(CH.notice, n)
+  })
   extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) }), undefined, undefined, { kind: 'extras' }))
   drop.on('change', push)
   // an answer streams in many small pieces: show them at most ~20 times a second

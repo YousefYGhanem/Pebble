@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, test, expect } from 'vitest'
-import { focusFinished, focusLeft, noticesFor, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
+import { focusFinished, focusLeft, nextDue, noticesFor, todayProgress, toggleTodo, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
 import { Lyrics, parseLrc, plainTitle } from '../app/main/extras/lyrics'
 import { guardActive, matchSite } from '../app/main/extras/guard'
 import { DropServer, lanAddress, safeName } from '../app/main/extras/drop'
@@ -165,4 +165,31 @@ test('peeks: what changed on the PC becomes a notice; the first reading is only 
     { kind: 'device', name: 'Headphones (AirPods)' }, { kind: 'caps', on: true }, { kind: 'keyboard', lang: 'ar-SA' }, { kind: 'mute', on: true }, { kind: 'mic', on: true }])
   // no microphone, or a name not read: no notice
   expect(noticesFor({ ...pc, mic: null, device: '' }, { ...pc, mic: true, device: 'X' })).toEqual([])
+})
+
+test('tasks: a daily one ticked moves to its next day; the next reminder is the earliest open task; today counts', () => {
+  const now = new Date(2026, 10, 13, 9, 0).getTime(), at = (h: number, d = 13) => new Date(2026, 10, d, h, 0).getTime()
+  const once = { id: 'a', text: 'call Sam', at: now, done: false, due: at(15) }
+  const daily = { id: 'b', text: 'water', at: now, done: false, due: at(8), daily: true }
+  expect(toggleTodo(once, now)).toMatchObject({ done: true, doneAt: now })
+  expect(toggleTodo(toggleTodo(once, now), now)).toMatchObject({ done: false, doneAt: undefined })
+  expect(toggleTodo(daily, now)).toMatchObject({ done: false, doneAt: now, due: at(8, 14) }) // tomorrow at 8, open again
+  expect(nextDue([once, daily, { id: 'c', text: 'x', at: now, done: true, due: at(7) }])?.id).toBe('b')
+  expect(nextDue([{ id: 'd', text: 'no time', at: now, done: false }])).toBeNull()
+  const list = [toggleTodo(daily, now), once, { id: 'e', text: 'someday', at: now, done: false }]
+  expect(todayProgress(list, now)).toEqual({ done: 1, total: 3 })
+})
+
+test('actions: tasks, the focus sound, quick controls and volume with mute are checked', () => {
+  expect(validAction({ do: 'todo.add', text: 'call Sam', due: Date.now() + 60_000, daily: false })).toBe(true)
+  expect(validAction({ do: 'todo.add', text: '   ' })).toBe(false)
+  expect(validAction({ do: 'todo.snooze', id: 'a', minutes: 10 })).toBe(true)
+  expect(validAction({ do: 'todo.snooze', id: 'a', minutes: 0 })).toBe(false)
+  expect(validAction({ do: 'focus.sound', sound: 'rain' })).toBe(true)
+  expect(validAction({ do: 'focus.sound', sound: 'jazz' })).toBe(false)
+  expect(validAction({ do: 'power', mode: 'performance' })).toBe(true)
+  expect(validAction({ do: 'power', mode: 'turbo' })).toBe(false)
+  expect(validAction({ do: 'volume', muted: true })).toBe(true)
+  expect(validAction({ do: 'volume' })).toBe(false)
+  expect(validAction({ do: 'mic.toggle' })).toBe(true)
 })

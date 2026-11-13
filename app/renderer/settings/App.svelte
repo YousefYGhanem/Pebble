@@ -236,8 +236,16 @@
           {/if}
           <label class="row"><span>{t('island.gameMode')}</span>
             <input type="checkbox" class="switch" checked={s.island.gameMode} onchange={() => set('island.gameMode', !s.island.gameMode)} /></label>
+          <label class="row"><span>{t('island.gameStrip')}<small>{t('island.gameStripHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.island.gameStrip} disabled={!s.island.gameMode} onchange={() => set('island.gameStrip', !s.island.gameStrip)} /></label>
           <label class="row"><span>{t('island.seeThrough')}<small>{s.island.seeThrough}%</small></span>
             <input type="range" min="0" max="60" value={s.island.seeThrough} onchange={e => set('island.seeThrough', num(e))} /></label>
+          <div class="row"><span>{t('island.compact')}<small>{t('island.compactHint')}</small></span>
+            <div class="seg">
+              {#each ['detailed', 'minimal'] as const as c}
+                <button class:on={s.island.compact === c} aria-pressed={s.island.compact === c} onclick={() => set('island.compact', c)}>{t(`island.compact.${c}`)}</button>
+              {/each}
+            </div></div>
           <label class="row"><span>{t('island.skins')}<small>{t('island.skinsHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.island.skins} onchange={() => set('island.skins', !s.island.skins)} /></label>
         </section>
@@ -425,6 +433,12 @@
             <input type="checkbox" class="switch" checked={s.music.enabled} onchange={() => set('music.enabled', !s.music.enabled)} /></label>
           <label class="row"><span>{t('extras.lyrics')}<small>{t('extras.lyricsHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.music.lyrics} disabled={!s.music.enabled} onchange={() => set('music.lyrics', !s.music.lyrics)} /></label>
+          <div class="row"><span>{t('i.focus.sound')}<small>{t('extras.focusSoundHint')}</small></span>
+            <div class="seg">
+              {#each ['off', 'rain', 'deep', 'waves'] as const as k}
+                <button class:on={s.music.focusSound === k} aria-pressed={s.music.focusSound === k} onclick={() => set('music.focusSound', k)}>{t(`i.focus.sound.${k}`)}</button>
+              {/each}
+            </div></div>
           <label class="row"><span>{t('extras.clipboard')}<small>{t('extras.clipboardHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.clipboard.enabled} onchange={() => set('clipboard.enabled', !s.clipboard.enabled)} /></label>
         </section>

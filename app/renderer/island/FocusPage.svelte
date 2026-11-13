@@ -4,7 +4,7 @@
   import { clock } from './pages'
   import { t } from '../i18n.svelte'
 
-  let { focus, done, now, act }: { focus: FocusTimer | null; done: FocusDone | null; now: number; act: (a: Action) => void } = $props()
+  let { focus, done, sound = 'off', now, act }: { focus: FocusTimer | null; done: FocusDone | null; sound?: 'off' | 'rain' | 'deep' | 'waves'; now: number; act: (a: Action) => void } = $props()
   // a round just ended (within half an hour): offer a short break, or another round (Pomodoro: work, then rest)
   const next = $derived(!focus && done && now - done.at < 30 * 60_000 ? done : null)
   // rounds of four (Pomodoro): which one this is, and after the fourth a long break
@@ -60,11 +60,20 @@
           <button class="ghost" onclick={() => act({ do: 'focus.stop' })}>{t('i.common.stop')}</button>
         </div>
       {/if}
+      <!-- a sound while the round runs (made by Pebble; it stops on breaks) -->
+      <div class="sounds" role="group" aria-label={t('i.focus.sound')}>
+        <span class="muted">{t('i.focus.sound')}</span>
+        {#each ['off', 'rain', 'deep', 'waves'] as const as k}<button class:on={sound === k} aria-pressed={sound === k} onclick={() => act({ do: 'focus.sound', sound: k })}>{t(`i.focus.sound.${k}`)}</button>{/each}
+      </div>
     </div>
   </div>
 </div>
 
 <style>
+  .sounds { display: flex; align-items: center; gap: 4px; margin-top: 8px; font-size: 0.82em; }
+  .sounds .muted { margin-inline-end: 4px; }
+  .sounds button { padding: 2px 10px; background: none; color: var(--muted); }
+  .sounds button.on { background: var(--surface3); color: var(--text); }
   .track { display: flex; gap: 5px; align-items: center; margin: 6px 0 4px; }
   .seg { position: relative; width: 38px; height: 6px; border-radius: 3px; background: var(--surface3); }
   .seg.full { background: var(--accent); }

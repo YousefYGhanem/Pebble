@@ -72,6 +72,8 @@ static class Server
         "media.control" => await Media.Control(Str(a, "action"), Long(a, "positionMs")),
         "audio.get" => AudioState(),
         "audio.set" => AudioSet(a),
+        "power.get" => Win32.PowerMode(),
+        "power.set" => Win32.SetPowerMode(Str(a, "mode")),
         "mic.mute" => Audio.MicSetMute(a["on"]?.GetValue<bool>() ?? !(Audio.MicMuted() ?? false)),
         "radios.get" => await Radios.Get(),
         "radios.set" => await Radios.Set(Str(a, "kind"), a["on"]?.GetValue<bool>() ?? false),
@@ -103,11 +105,11 @@ static class Server
         return r;
     }
     // the 'audio' watch also carries what the island peeks at: the speakers' name, the mic's mute, Caps Lock and the
-    // keyboard language (one poll, an event only when something changed)
+    // keyboard language, and Windows' clipboard counter (one poll, an event only when something changed)
     static JsonObject AudioState()
     {
         var (v, m, d) = Audio.Get();
-        return new JsonObject { ["volume"] = v, ["muted"] = m, ["device"] = d, ["mic"] = Audio.MicMuted(), ["caps"] = Win32.CapsLock(), ["keyboard"] = Win32.KeyboardLanguage() };
+        return new JsonObject { ["volume"] = v, ["muted"] = m, ["device"] = d, ["mic"] = Audio.MicMuted(), ["caps"] = Win32.CapsLock(), ["keyboard"] = Win32.KeyboardLanguage(), ["clip"] = Win32.GetClipboardSequenceNumber() };
     }
     static JsonObject AudioSet(JsonObject a)
     {

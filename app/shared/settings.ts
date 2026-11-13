@@ -50,8 +50,12 @@ export const settingsSchema = z.object({
     seeThrough: z.number().min(0).max(60),
     /** hide while something runs full screen on the island's screen */
     gameMode: z.boolean(),
+    /** in a full-screen game, a slim strip with the time, CPU and memory instead of nothing */
+    gameStrip: z.boolean(),
     /** living skins: fire or frost from the processor, a web at night, vines after a long day */
     skins: z.boolean(),
+    /** the small island while something goes on: a line of text (detailed), or only its signs (minimal: a mark, a cover, Pip) */
+    compact: z.enum(['detailed', 'minimal']),
     /** what the resting island shows left and right of Pip */
     chips: z.object({ left: CHIP, right: CHIP }),
     /** pages left out of the page row (Home and Agents always stay) */
@@ -61,7 +65,9 @@ export const settingsSchema = z.object({
     /** now playing from Windows' media controls (any player), with controls and a sound wave */
     enabled: z.boolean(),
     /** timed lyrics from LRCLIB (only the song's title, artist, album and length are sent) */
-    lyrics: z.boolean()
+    lyrics: z.boolean(),
+    /** a sound made by Pebble while a focus round runs */
+    focusSound: z.enum(['off', 'rain', 'deep', 'waves'])
   }),
   /** your last 25 copied texts, kept in memory only (never on disk); password managers' copies are skipped */
   clipboard: z.object({ enabled: z.boolean() }),
@@ -137,9 +143,9 @@ export const DEFAULTS: Settings = {
   island: {
     style: 'notch', openOn: 'hover', display: 'main',
     restingWidth: 180, restingHeight: 32, width: 340, height: 36, askWidth: 460, openWidth: 680,
-    offsetTop: 8, seeThrough: 0, gameMode: true, skins: true, chips: { left: 'none', right: 'none' }, hiddenPages: []
+    offsetTop: 8, seeThrough: 0, gameMode: true, gameStrip: false, skins: true, compact: 'detailed', chips: { left: 'none', right: 'none' }, hiddenPages: []
   },
-  music: { enabled: true, lyrics: true },
+  music: { enabled: true, lyrics: true, focusSound: 'off' },
   clipboard: { enabled: true },
   focusGuard: { enabled: false, onlyDuringFocus: true, sites: ['youtube', 'tiktok', 'instagram', 'reddit', 'netflix', 'twitch', 'facebook'], snoozeMinutes: 5 },
   pip: { name: 'Pip', outfit: 'auto', followMouse: true, look: 'theme', body: '#ece9f6', visor: '#15151c', sleepAfterMinutes: 10 },

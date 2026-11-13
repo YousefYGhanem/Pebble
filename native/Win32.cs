@@ -67,6 +67,10 @@ static unsafe partial class Win32
     [LibraryImport("gdi32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static partial bool DeleteDC(nint dc);
     [LibraryImport("ole32.dll")] public static partial int PropVariantClear(ref PROPVARIANT pv);
     [LibraryImport("user32.dll")] public static partial short GetKeyState(int key);
+    [LibraryImport("user32.dll")] public static partial uint GetClipboardSequenceNumber();
+    // the power mode of Settings → System → Power (Windows 10 1709+): an overlay on the power plan
+    [LibraryImport("powrprof.dll")] public static partial uint PowerGetEffectiveOverlayScheme(out Guid overlay);
+    [LibraryImport("powrprof.dll")] public static partial uint PowerSetActiveOverlayScheme(in Guid overlay);
     [LibraryImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static partial bool AttachThreadInput(uint from, uint to, [MarshalAs(UnmanagedType.Bool)] bool attach);
     [LibraryImport("kernel32.dll")] public static partial uint GetCurrentThreadId();
     [LibraryImport("user32.dll")] public static partial nint GetKeyboardLayout(uint thread);
@@ -128,5 +132,24 @@ static unsafe partial class Win32
         var buf = stackalloc char[85];
         var n = LCIDToLocaleName(lcid, buf, 85, 0);
         return n > 1 ? new string(buf, 0, n - 1) : "";
+    }
+
+    static readonly (string name, Guid id)[] PowerModes = [
+        ("efficiency", new("961cc777-2547-4f9d-8174-7d86181b8a7a")),
+        ("balanced", Guid.Empty),
+        ("performance", new("ded574b5-45a0-4f42-8737-46345c09c238"))];
+
+    /// <summary>"efficiency", "balanced" or "performance" (null: not available on this PC).</summary>
+    public static string? PowerMode()
+    {
+        if (PowerGetEffectiveOverlayScheme(out var id) != 0) return null;
+        foreach (var (name, g) in PowerModes) if (g == id) return name;
+        return "balanced";
+    }
+
+    public static string? SetPowerMode(string name)
+    {
+        foreach (var (n, g) in PowerModes) if (n == name) { PowerSetActiveOverlayScheme(g); return PowerMode(); }
+        throw new ArgumentException("unknown power mode " + name);
     }
 }
