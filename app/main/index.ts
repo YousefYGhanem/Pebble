@@ -472,7 +472,9 @@ ipcMain.on(CH.opened, (e, on: unknown) => {
   settingsWin.islandDid(islandOpen ? 'open' : 'close')
 })
 ipcMain.on(CH.catchMouse, (e, on: unknown) => {
-  if (fromIsland(e) && !catchingDrag) island!.setIgnoreMouseEvents(on !== true, { forward: true }) // a file drag over it keeps the catch
+  if (!fromIsland(e)) return
+  islandWants = on === true
+  applyCatch()
 })
 /** Only well-formed answers from the island reach an agent. */
 function validAnswer(a: unknown): a is Answer {
@@ -607,12 +609,16 @@ ipcMain.on(CH.act, (e, a: unknown) => {
 // Dropping files on the island: the window lets clicks through, so Windows would give the drop to the app below. While
 // you drag (left button down) over the island's area, the window catches the mouse so it receives the drop.
 let catchingDrag = false
+/** the island catches the mouse while the pointer is on it (its own say), or while a file is dragged over it (the drag
+ * watch): both, so the end of one never switches off the other (a click is a button press the drag watch sees too) */
+let islandWants = false
+function applyCatch() { if (island && !island.isDestroyed()) island.setIgnoreMouseEvents(!(islandWants || catchingDrag), { forward: true }) }
 native.on('drag', (c: { x: number; y: number } | null) => {
   if (!island || island.isDestroyed()) return
   const b = island.getBounds()
   const p = c ? screen.screenToDipPoint({ x: c.x, y: c.y }) : null
   const over = !!p && p.y >= b.y && p.y <= b.y + 90 && Math.abs(p.x - (b.x + b.width / 2)) <= 260
-  if (over !== catchingDrag) { catchingDrag = over; island.setIgnoreMouseEvents(!over, { forward: true }) }
+  if (over !== catchingDrag) { catchingDrag = over; applyCatch() }
 })
 
 // Goodbye: the island plays its closing animation before Pebble really quits (at most 1.5 s).
