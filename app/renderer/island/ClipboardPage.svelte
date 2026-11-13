@@ -1,5 +1,6 @@
 <script lang="ts">
   // Clipboard: your last copied texts (kept in memory only, never on disk). Click one to copy it again.
+  import Empty from './Empty.svelte'
   import { looksSecret, maskSecret, type Action, type ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import { ago, hhmm } from './pages'
@@ -31,9 +32,9 @@
     {/if}
   </div>
   {#if !enabled}
-    <div class="empty">{t('i.clip.off')}</div>
+    <Empty icon="clipboard" text={t('i.clip.off')}><button class="ghost" onclick={() => act({ do: 'settings.open' })}>{t('i.chat.openSettings')}</button></Empty>
   {:else if !extras.clipboard.length || undo.hides('clipboard')}
-    <div class="empty">{t('i.clip.empty')}</div>
+    <Empty icon="clipboard" text={t('i.clip.empty')} />
   {:else}
     <div class="list">
       {#each extras.clipboard.filter(c => !undo.hides(`clipboard:${c.id}`) && (kind === 'all' || (kind === 'pictures') === !!c.image)) as c (c.id)}

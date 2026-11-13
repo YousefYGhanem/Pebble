@@ -1,6 +1,7 @@
 <script lang="ts">
   // Notes: quick notes, kept on this PC (userData/notes.json). The list on the left, the note on the right; saved as you
   // type (half a second after you stop).
+  import Empty from './Empty.svelte'
   import { todayProgress, type Action, type Note, type Todo } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import { t } from '../i18n.svelte'
@@ -81,11 +82,11 @@
           <button class="ghost" aria-label={t('i.common.delete')} title={t('i.common.delete')} onclick={() => undo.offer(t('i.undo.todo'), { hides: `todo:${x.id}`, commit: () => act({ do: 'todo.remove', id: x.id }) })}><Icon name="close" size={11} /></button>
         </div>
       {:else}
-        <div class="empty">{t('i.todo.none')}</div>
+        <Empty icon="check" text={t('i.todo.none')} />
       {/each}
     </div>
   {:else if !draft.length}
-    <div class="empty">{t('i.notes.none')}</div>
+    <Empty icon="notes" text={t('i.notes.none')} />
   {:else}
     <div class="notes">
       <div class="list">

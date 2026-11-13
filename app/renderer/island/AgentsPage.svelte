@@ -2,6 +2,7 @@
   // The Agents page, like a Live Activity: one tab per session. Left: what it does now, a live timer and the steps
   // of this turn. Right: the code it changes, or its answer, with a reply box once it stopped. Questions, plans and
   // permissions take the full width. Bottom: plan usage and context, and "jump to terminal".
+  import Empty from './Empty.svelte'
   import type { Answer, HistoryItem, Usage } from '../../shared/ipc'
   import { AGENT_NAMES, type Agent, type Session } from '../../shared/state'
   import { ago as agoAt, detailText, hhmm, stepsSummary } from './pages'
@@ -109,11 +110,11 @@
           {#if h.result}<div class="h-result">{h.result.split('\n')[0]}</div>{/if}
         </div>
       {:else}
-        <div class="empty">{t('i.agents.historyEmpty')}</div>
+        <Empty icon="history" text={t('i.agents.historyEmpty')} />
       {/each}
     </div>
   {:else if !s}
-    <div class="empty">{t('i.agents.none')}</div>
+    <Empty icon="agents" text={t('i.agents.none')} />
   {:else if s.ask}
     <AskView session={s} onanswer={a => onanswer(s.id, a)} />
   {:else}

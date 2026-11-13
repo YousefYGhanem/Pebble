@@ -1,5 +1,6 @@
 <script lang="ts">
   // Widgets: every connector's card, and the connectors that need something (a key, a city…) or failed.
+  import Empty from './Empty.svelte'
   import type { ConnectorInfo, Widget } from '../../shared/connectors'
   import type { Action } from '../../shared/extras'
   import WidgetCard from './WidgetCard.svelte'
@@ -14,7 +15,7 @@
 <div class="page">
   <div class="page-head"><span class="page-title">{t('i.page.widgets')}</span><span class="page-time">{hhmm(now)}</span><span class="pip-room"></span></div>
   {#if !cards.length && !trouble.length}
-    <div class="empty">{t('i.widgets.none')}</div>
+    <Empty icon="grid" text={t('i.widgets.none')}><button class="ghost" onclick={() => act({ do: 'settings.open', tab: 'connectors' })}>{t('i.chat.openSettings')}</button></Empty>
   {/if}
   {#if cards.length}
     <div class="grid">

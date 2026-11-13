@@ -2,6 +2,7 @@
   // Music: what plays on this PC (any player, from Windows' media controls). Cover with the player it comes from, song, a
   // progress line you can click to jump (a wave while it plays), controls, volume, and the lyrics beside it: a column that
   // follows the song. The album's colour rises from the bottom of the page.
+  import Empty from './Empty.svelte'
   import { lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import Wave from './Wave.svelte'
@@ -76,7 +77,7 @@
       {/each}
     </div>
   {:else if !m}
-    <div class="empty">{t('i.music.nothing')}</div>
+    <Empty icon="music" text={t('i.music.nothing')} />
   {:else}
     <div class="body" class:withLyrics={!!extras.lyrics} class:lyricsOnly={!!extras.lyrics && view === 'lyrics'}>
     <div class="player">
