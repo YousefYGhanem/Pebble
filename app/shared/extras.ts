@@ -216,7 +216,7 @@ export function toggleTodo(t: Todo, now: number): Todo {
   if (t.done) return { ...t, done: false, doneAt: undefined }
   if (t.daily && t.due) {
     let due = t.due
-    while (due <= now) due += 86_400_000
+    while (due <= now) { const d = new Date(due); d.setDate(d.getDate() + 1); due = d.getTime() } // same clock time across DST
     return { ...t, done: false, doneAt: now, due }
   }
   return { ...t, done: true, doneAt: now }

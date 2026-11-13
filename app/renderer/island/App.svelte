@@ -502,8 +502,11 @@
   function openIfResting() {
     if (!hovering) return
     if (speed > 0.6) { hoverTimer = setTimeout(openIfResting, 120); return } // px/ms: still moving fast
-    if ((mode === 'resting' || mode === 'medium') && !extras?.strip) open = true
+    if ((mode === 'resting' || mode === 'medium') && !extras?.strip && !holding()) open = true
   }
+  /** a line you answer or that goes away by itself (a reminder, a notice, a meeting's Join): hovering leaves it in place
+   * until it is answered or gone; a click still opens the island */
+  const holding = () => mode === 'medium' && (medium === 'reminder' || medium === 'notice' || (medium === 'activity' && !!activity?.link))
   /** tucked, the island lets clicks through to the window below (pointing at it still brings it back) */
   const catching = () => hovering && mode !== 'tucked' && !extras?.strip // the game strip never takes the game's clicks
 
@@ -515,8 +518,7 @@
     if (on) {
       clearTimeout(leaveTimer)
       if (mode === 'tucked') hoverTimer = setTimeout(() => (tucked = false), 500)
-      // a reminder's buttons need the pointer: it stays put while you reach for them
-      else if (view?.settings.island.openOn === 'hover' && (mode === 'resting' || (mode === 'medium' && medium !== 'reminder'))) hoverTimer = setTimeout(openIfResting, 350)
+      else if (view?.settings.island.openOn === 'hover' && (mode === 'resting' || mode === 'medium') && !holding()) hoverTimer = setTimeout(openIfResting, 350)
     } else if (open) {
       leaveTimer = setTimeout(() => { if (!hovering && !shown.some(x => x.ask) && !typing()) open = false }, 700)
     }

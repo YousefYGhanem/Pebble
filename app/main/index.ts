@@ -357,9 +357,14 @@ function applyRest() {
 }
 
 // ---------- usage alerts: 80% and 95% of a CLI's session or week ----------
+const alerted = new Map<string, number>()
 function usageAlert(agent: Agent, prev: Usage | undefined, next: Usage) {
   if (!store.settings.features.usageAlerts) return
   for (const a of usageAlerts(prev, next)) {
+    // the status line and Anthropic's own reading can differ by a point or two: one alert per level and window
+    const once = `${agent}:${a.window}:${Math.round(a.resetsAt / 600_000)}`
+    if ((alerted.get(once) ?? 0) >= a.level) continue
+    alerted.set(once, a.level)
     const lang = store.settings.general.language
     const at = new Date(a.resetsAt)
     const when = a.window === 'fiveHour' ? at.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' })
@@ -695,6 +700,9 @@ app.whenReady().then(async () => {
     extras.state.prayer = next
     push()
     prayerTimer = setTimeout(() => {
+      // a timer that waited out a sleep, or the 24 h cap: no news, just look again
+      const late = Date.now() - next.at
+      if (late < -5_000 || late > 120_000) { schedulePrayer(); return }
       send(CH.notice, { kind: 'prayer', name: next.name })
       bringBack()
       if (p.notify) toast(tr(`prayer.${next.name}`), tr('m.prayerNow', { city: p.city }), undefined, undefined, { kind: 'extras' })
@@ -726,8 +734,9 @@ app.whenReady().then(async () => {
   const front = { app: '', since: Date.now() }
   const creditFront = () => {
     const now = Date.now()
-    // no input for 5 minutes: you are away, and that stretch does not count
-    if (powerMonitor.getSystemIdleTime() < 300) screenDay = countTime(screenDay, front.app, (now - front.since) / 1000, now)
+    // no input for 5 minutes: you are away; and a gap longer than the minute's look (sleep, switched off) is not app time
+    const seconds = (now - front.since) / 1000
+    if (powerMonitor.getSystemIdleTime() < 300 && seconds <= 90) screenDay = countTime(screenDay, front.app, seconds, now)
     front.since = now
   }
   native.on('foreground', (w: { process?: string } | null) => {
@@ -745,7 +754,7 @@ app.whenReady().then(async () => {
     showScreen()
     try { writeJsonAtomic(screenFile, screenDay) } catch (err) { log.warn('screen time:', (err as Error).message) }
   }, 60_000).unref()
-  applyScreen = () => { native.watch('foreground', store.settings.screenTime.enabled, 'screentime'); showScreen() }
+  applyScreen = () => { front.since = Date.now(); native.watch('foreground', store.settings.screenTime.enabled, 'screentime'); showScreen() }
   applyScreen()
   // Claude's plan usage from Anthropic every 5 minutes (also the Claude app's sessions, which run no status line)
   const planUsage = async () => {
@@ -783,6 +792,7 @@ app.whenReady().then(async () => {
   })
   hub.on('usage', (agent: Agent, prev: Usage | undefined, next: Usage) => { today.usage(agent, next); usageAlert(agent, prev, next) })
   onBattery = powerMonitor.isOnBatteryPower()
+  powerMonitor.on('resume', () => schedulePrayer())
   powerMonitor.on('on-battery', () => { onBattery = true; applyRest() })
   powerMonitor.on('on-ac', () => { onBattery = false; applyRest() })
   hub.on('finished', (s: Session) => {

@@ -1,4 +1,4 @@
-import { CalculationMethod, Coordinates, Madhab, PrayerTimes } from 'adhan'
+import { CalculationMethod, Coordinates, Madhab, PolarCircleResolution, PrayerTimes } from 'adhan'
 
 // Prayer times, worked out on this PC (adhan, MIT): no network once your city is known. The five prayers of a day
 // (sunrise is not one of them), and which comes next.
@@ -12,6 +12,7 @@ export type Method = (typeof METHODS)[number]
 export function prayerDay(lat: number, lng: number, method: Method, madhab: 'shafi' | 'hanafi', day: Date): { name: Prayer; at: number }[] {
   const params = CalculationMethod[method]()
   params.madhab = madhab === 'hanafi' ? Madhab.Hanafi : Madhab.Shafi
+  params.polarCircleResolution = PolarCircleResolution.AqrabYaum // near the poles: the nearest day with a sunset
   const p = new PrayerTimes(new Coordinates(lat, lng), day, params)
   return PRAYERS.map(name => ({ name, at: p[name].getTime() }))
 }
@@ -19,7 +20,7 @@ export function prayerDay(lat: number, lng: number, method: Method, madhab: 'sha
 /** The next prayer from now (tomorrow's Fajr after Isha). */
 export function nextPrayer(lat: number, lng: number, method: Method, madhab: 'shafi' | 'hanafi', now: number): { name: Prayer; at: number } {
   const today = prayerDay(lat, lng, method, madhab, new Date(now))
-  return today.find(p => p.at > now) ?? prayerDay(lat, lng, method, madhab, new Date(now + 86_400_000))[0]!
+  return today.find(p => Number.isFinite(p.at) && p.at > now) ?? prayerDay(lat, lng, method, madhab, new Date(now + 86_400_000)).find(p => Number.isFinite(p.at))!
 }
 
 /** Your city's coordinates (Open-Meteo's free geocoding: only the name you typed is sent). */

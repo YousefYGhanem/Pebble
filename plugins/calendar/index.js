@@ -52,12 +52,18 @@ module.exports = pebble => {
     const at = next.allDay ? next.start.toLocaleDateString() : next.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     pebble.widget('card', { kind: 'card', title: 'Next', icon: 'focus', text: next.title, lines: [soon ? `in ${mins} min` : at, ...events.slice(1, 3).map(e => e.title)] })
     pebble.widget('next', { kind: 'chip', text: soon ? `${next.title.slice(0, 18)} · ${mins}m` : at })
+    const due = next.start - Number(pebble.settings.remindMinutes ?? 5) * 60_000
+    if (!next.allDay && due > Date.now() && due - Date.now() < 300_000) pebble.after(due - Date.now() + 1000, () => remindOf(next))
+    remindOf(next)
+  })
+  function remindOf(next) {
     const remind = Number(pebble.settings.remindMinutes ?? 5), key = next.title + next.start.getTime()
+    const mins = Math.round((next.start - Date.now()) / 60000)
     if (!next.allDay && mins <= remind && mins >= 0 && pebble.store.get('reminded') !== key) {
       pebble.notify({ title: next.title, body: `Starts in ${mins} minute${mins === 1 ? '' : 's'}`, link: next.join || undefined })
       pebble.store.set('reminded', key)
     }
-  })
+  }
 }
 module.exports.parseIcs = parseIcs
 module.exports.joinLink = joinLink

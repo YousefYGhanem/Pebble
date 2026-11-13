@@ -153,8 +153,14 @@ export class Extras extends EventEmitter {
   private lastImage = ''
   /** when you asked for a snip: the next picture copied within a minute is it */
   private snipping = 0
+  private snipSeq = -1
   private async readClipboard() {
-    if (this.snipping && Date.now() - this.snipping < 60_000 && await this.takeSnip()) return
+    if (this.snipping && Date.now() - this.snipping < 60_000 && (this.clipSeq !== this.snipSeq || !this.native.available)) {
+      const at = this.snipping
+      this.snipping = 0 // before any await: a second clipboard event for the same snip is not a second snip
+      if (await this.takeSnip()) return
+      this.snipping = at
+    }
     if (!this.settings().clipboard.enabled) { if (this.state.clipboard.length) { this.state.clipboard = []; this.changed() } return }
     if (this.reading || this.deep()) return // away or in a game: nothing new gets copied
     this.reading = true
@@ -187,8 +193,8 @@ export class Extras extends EventEmitter {
       if (!item) return false
       png = Buffer.from(await (await item.getType('image/png')).arrayBuffer())
     } catch { return false }
-    this.snipping = 0
-    const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ').replace(/:/g, '.')
+    const d = new Date(), two = (n: number) => String(n).padStart(2, '0')
+    const stamp = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}.${two(d.getMinutes())}.${two(d.getSeconds())}`
     const file = path.join(app.getPath('pictures'), 'Pebble', `Snip ${stamp}.png`)
     try { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, png) } catch { return false }
     await this.addToShelf([file])
@@ -312,7 +318,7 @@ export class Extras extends EventEmitter {
       case 'shelf.reveal': if (s.shelf.some(f => f.path === a.path)) shell.showItemInFolder(a.path); return
       case 'shelf.remove': s.shelf = s.shelf.filter(f => f.path !== a.path); return this.saveShelf()
       case 'shelf.clear': s.shelf = []; return this.saveShelf()
-      case 'snip': this.snipping = Date.now(); await shell.openExternal('ms-screenclip:'); return
+      case 'snip': this.snipping = Date.now(); this.snipSeq = this.clipSeq; await shell.openExternal('ms-screenclip:'); return
       case 'clip.copy': {
         const c = s.clipboard.find(x => x.id === a.id)
         const img = c?.image ? this.images.get(c.id) : undefined

@@ -16,3 +16,8 @@ test('prayer times: five a day, in order; after Isha the next is tomorrow\'s Faj
   const hanafi = prayerDay(...JERUSALEM, 'MuslimWorldLeague', 'hanafi', new Date(2026, 10, 13, 12))
   expect(hanafi[2]!.at).toBeGreaterThan(day[2]!.at)
 })
+
+test('near the poles every prayer time is a real time', () => {
+  const p = nextPrayer(78.2, 15.6, 'MuslimWorldLeague', 'shafi', new Date(2026, 5, 21, 12).getTime()) // Svalbard, midsummer
+  expect(Number.isFinite(p.at)).toBe(true)
+})

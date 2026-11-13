@@ -48,3 +48,14 @@ test('renewing the sign-in: new tokens go back into the file, every other field 
   expect(JSON.parse(fs.readFileSync(file, 'utf8')).claudeAiOauth.accessToken).toBe('new') // unchanged
   expect(fs.readdirSync(dir)).toEqual(['.credentials.json']) // no temporary file left
 })
+
+test('renewing: when the file cannot be swapped in, the new tokens are still written (the old refresh token is dead)', async () => {
+  const { renewSignIn } = await import('../app/main/agents/claude-usage')
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pebble-renew2-'))
+  const file = path.join(dir, '.credentials.json')
+  fs.writeFileSync(file, JSON.stringify({ claudeAiOauth: { accessToken: 'old', refreshToken: 'r1', expiresAt: 1 } }))
+  fs.mkdirSync(`${file}.pebble-tmp`) // the temporary file cannot be made
+  const ok = (async () => Response.json({ access_token: 'new', refresh_token: 'r2', expires_in: 3600 })) as unknown as typeof fetch
+  expect(await renewSignIn(file, ok)).toBe(true)
+  expect(JSON.parse(fs.readFileSync(file, 'utf8')).claudeAiOauth).toMatchObject({ accessToken: 'new', refreshToken: 'r2' })
+})

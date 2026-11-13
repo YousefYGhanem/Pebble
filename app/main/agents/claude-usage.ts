@@ -59,10 +59,14 @@ export async function renewSignIn(file: string, post: typeof fetch = fetch): Pro
     try { now = JSON.parse(fs.readFileSync(file, 'utf8')) } catch { now = all }
     now.claudeAiOauth = { ...(now.claudeAiOauth as object), accessToken: j.access_token, ...(j.refresh_token ? { refreshToken: j.refresh_token } : {}),
       expiresAt: Date.now() + (j.expires_in ?? 3600) * 1000 }
-    const tmp = `${file}.pebble-tmp`
-    fs.writeFileSync(tmp, JSON.stringify(now), { mode: 0o600 })
-    fs.renameSync(tmp, file)
-    return true
+    // the old refresh token no longer works: the new ones must reach the file (Claude Code or antivirus may hold it a moment)
+    const tmp = `${file}.pebble-tmp`, text = JSON.stringify(now)
+    for (let i = 0; ; i++) {
+      try { fs.writeFileSync(tmp, text, { mode: 0o600 }); fs.renameSync(tmp, file); return true } catch { /* busy */ }
+      try { fs.writeFileSync(file, text, { mode: 0o600 }); return true } catch { /* busy too */ } finally { try { fs.rmSync(tmp, { force: true }) } catch { /* gone */ } }
+      if (i >= 4) return false
+      await new Promise(r => setTimeout(r, 250))
+    }
   }
   return false
 }
