@@ -627,5 +627,19 @@
   "m.window.fiveHour": "الجلسة",
   "m.window.sevenDay": "الأسبوعي",
   "m.window.spend": "الإنفاق",
-  "i.usage.expired": "انتهت صلاحية تسجيل دخول Claude Code على هذا الجهاز، فلا يستطيع Pebble طلب استخدام خطتك من Anthropic. شغّل claude مرة في الطرفية: يجدد تسجيل الدخول، وتظهر الأرقام خلال 5 دقائق."
+  "i.usage.expired": "انتهت صلاحية تسجيل دخول Claude Code على هذا الجهاز، فلا يستطيع Pebble طلب استخدام خطتك من Anthropic. شغّل claude مرة في الطرفية: يجدد تسجيل الدخول، وتظهر الأرقام خلال 5 دقائق.",
+  "i.well.water": "حان وقت كوب ماء",
+  "i.well.stand": "تجلس منذ مدة: قف وتمدّد",
+  "i.well.drank": "شربت",
+  "i.well.later": "لاحقًا",
+  "i.well.today": "الماء اليوم: {n}",
+  "well.title": "{pip} يذكّرك",
+  "well.hint": "فقط ضمن ساعاتك، ولا أثناء غيابك",
+  "well.water": "اشرب الماء",
+  "well.every": "كل هذا العدد من الدقائق",
+  "well.stand": "قف",
+  "well.after": "بعد هذا العدد من دقائق الجلوس",
+  "well.hours": "بين (الساعات)",
+  "well.from": "من",
+  "well.to": "إلى"
 }

@@ -139,6 +139,16 @@ describe('built-in connectors', () => {
     expect(ev[1]).toMatchObject({ title: 'Holiday', allDay: true })
   })
 
+  test("iCal: an online meeting's address becomes its Join link (Teams, Zoom, Meet)", () => {
+    const { parseIcs } = exportsOf('calendar')
+    const ics = ['BEGIN:VEVENT', 'SUMMARY:Standup', 'DTSTART:20261103T090000Z',
+      'DESCRIPTION:Join: https://teams.microsoft.com/l/meetup-join/19%3ameeting_x%40thread.v2/0?context=y\\nBye', 'END:VEVENT',
+      'BEGIN:VEVENT', 'SUMMARY:Call', 'DTSTART:20261103T100000Z', 'LOCATION:https://us02web.zoom.us/j/123?pwd=abc', 'END:VEVENT',
+      'BEGIN:VEVENT', 'SUMMARY:Lunch', 'DTSTART:20261103T120000Z', 'END:VEVENT'].join('\r\n')
+    const ev = parseIcs(ics) as { join: string }[]
+    expect(ev.map(e => e.join)).toEqual(['https://teams.microsoft.com/l/meetup-join/19%3ameeting_x%40thread.v2/0?context=y', 'https://us02web.zoom.us/j/123?pwd=abc', ''])
+  })
+
   test('watch: a JSON path or a regular expression', () => {
     const { pick } = exportsOf('watch')
     expect(pick('{"data":{"price":42.5}}', 'data.price')).toBe('42.5')

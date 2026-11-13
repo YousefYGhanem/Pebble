@@ -627,5 +627,19 @@
   "m.window.fiveHour": "session",
   "m.window.sevenDay": "weekly",
   "m.window.spend": "spend",
-  "i.usage.expired": "Claude Code's sign-in on this PC has expired, so Pebble cannot ask Anthropic for your plan usage. Run claude once in a terminal: it renews the sign-in, and the numbers appear within 5 minutes."
+  "i.usage.expired": "Claude Code's sign-in on this PC has expired, so Pebble cannot ask Anthropic for your plan usage. Run claude once in a terminal: it renews the sign-in, and the numbers appear within 5 minutes.",
+  "i.well.water": "Time for a glass of water",
+  "i.well.stand": "You've been sitting a while: stand up and stretch",
+  "i.well.drank": "Drank",
+  "i.well.later": "Later",
+  "i.well.today": "Water today: {n}",
+  "well.title": "{pip} reminds you",
+  "well.hint": "only within your hours, never while you are away",
+  "well.water": "Drink water",
+  "well.every": "every this many minutes",
+  "well.stand": "Stand up",
+  "well.after": "after this many minutes of sitting",
+  "well.hours": "Between (hours)",
+  "well.from": "From",
+  "well.to": "To"
 }

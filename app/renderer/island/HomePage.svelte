@@ -101,6 +101,7 @@
     </button>
   {/if}
 
+  {#if extras.glasses}<span class="todoline muted"><Icon name="water" size={13} />{t('i.well.today', { n: extras.glasses })}</span>{/if}
   {#if todos.total}
     <button class="todoline" onclick={() => go('notes')}><Icon name="check" size={13} />{t('i.todo.today', { done: todos.done, total: todos.total })}
       {#if next}<span class="muted">· {t('i.todo.next', { text: next.text, time: new Date(next.due!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}</span>{/if}</button>

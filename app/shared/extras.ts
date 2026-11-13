@@ -72,6 +72,8 @@ export interface ExtrasState {
   focus: FocusTimer | null
   focusDone: FocusDone | null
   todos: Todo[]
+  /** glasses of water today (the water reminder's Done) */
+  glasses: number
   /** Windows' power mode (null: not available) */
   power: 'efficiency' | 'balanced' | 'performance' | null
   /** the game strip shows (a full-screen game, Settings → Island → Game strip) */
@@ -100,6 +102,7 @@ export type Action =
   | { do: 'update.install' }
   | { do: 'focus.sound'; sound: 'off' | 'rain' | 'deep' | 'waves' }
   | { do: 'mic.toggle' }
+  | { do: 'wellness'; what: 'water' | 'stand'; done: boolean }
   | { do: 'power'; mode: 'efficiency' | 'balanced' | 'performance' }
   | { do: 'pebble.sounds' }
   | { do: 'todo.add'; text: string; due?: number; daily?: boolean }
@@ -177,6 +180,7 @@ export type Notice =
   | { kind: 'mute'; on: boolean }
   | { kind: 'mic'; on: boolean }
   | { kind: 'todo'; id: string; text: string }
+  | { kind: 'wellness'; what: 'water' | 'stand' }
   | { kind: 'usage'; agent: string; window: 'fiveHour' | 'sevenDay' | 'spend'; level: number; when: string }
 
 export interface PcState { muted: boolean; device: string; mic: boolean | null; caps: boolean; keyboard: string }

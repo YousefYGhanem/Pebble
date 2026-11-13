@@ -23,7 +23,7 @@ const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipbo
  * 'peak' (0–1, ~30 a second while music plays) and 'focus-done'.
  */
 export class Extras extends EventEmitter {
-  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
   private lyrics: Lyrics
   private songKey = ''
   private lastClip = ''
@@ -329,6 +329,7 @@ export function validAction(a: unknown): a is Action {
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
+    case 'wellness': return (o.what === 'water' || o.what === 'stand') && typeof o.done === 'boolean'
     case 'update.install': case 'mic.toggle': case 'pebble.sounds': return true
     case 'power': return ['efficiency', 'balanced', 'performance'].includes(o.mode as string)
     case 'focus.sound': return ['off', 'rain', 'deep', 'waves'].includes(o.sound as string)

@@ -19,6 +19,7 @@ import { History } from './history'
 import { Today } from './today'
 import { restLevel, type RestLevel } from './rest'
 import { emptyDay, usageAlerts } from '../shared/today'
+import { freshWellness, wellnessAnswer, wellnessCheck } from '../shared/wellness'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
 import { buildTray, trayStatus } from './tray'
@@ -101,7 +102,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -197,6 +198,7 @@ function toast(title: string, body: string, sessionId?: string, link?: string, o
 const agentName = (s: Session) => (s.agent === 'cli' ? s.project : AGENT_NAMES[s.agent]) + (s.provider ? ` (${s.provider})` : '')
 
 /** Game mode: hidden while something covers the island's screen, unless you brought it back yourself. */
+let wellnessAnswerHandler: (what: 'water' | 'stand', done: boolean) => void = () => {}
 const inGame = () => store.settings.island.gameMode && fullscreen.current === islandDisplay(store.settings).id
 /** a question came during a full-screen game: the island shows as its thin line until it is answered */
 let peeking = false
@@ -521,6 +523,7 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
   if (a.do === 'update.install') { updater.install(); return }
+  if (a.do === 'wellness') { wellnessAnswerHandler(a.what, a.done); return }
   if (a.do === 'mic.toggle') { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)); return }
   if (a.do === 'pebble.sounds') { store.update({ features: { sound: !store.settings.features.sound } }); return }
   if (a.do === 'power') { native.request('power.set', { mode: a.mode }).then(() => extras.readPower()).catch(err => log.warn('power:', err.message)); return }
@@ -673,6 +676,21 @@ app.whenReady().then(async () => {
     if (peeking && !hub.list().some(s => s.ask)) { peeking = false; send(CH.peek, false); updateVisibility() }
   })
   // Codex's plan usage, from its newest session file
+  // water and stand-up reminders: a look each minute (not while resting: away, a game, tucked)
+  let wellness = freshWellness(Date.now())
+  setInterval(() => {
+    const c = store.settings.wellness
+    if ((!c.water && !c.stand) || rest === 'deep' || rest === 'off') return
+    const r = wellnessCheck(wellness, Date.now(), powerMonitor.getSystemIdleTime(), c)
+    wellness = r.st
+    if (extras.state.glasses !== wellness.glasses) { extras.state.glasses = wellness.glasses; push() }
+    if (r.due) { send(CH.notice, { kind: 'wellness', what: r.due }); bringBack() }
+  }, 60_000).unref()
+  wellnessAnswerHandler = (what, done) => {
+    wellness = wellnessAnswer(wellness, what, done, Date.now(), store.settings.wellness)
+    extras.state.glasses = wellness.glasses
+    push()
+  }
   // Claude's plan usage from Anthropic every 5 minutes (also the Claude app's sessions, which run no status line)
   const planUsage = async () => {
     if (!store.settings.agents.claude.enabled || rest === 'deep' || rest === 'off') return

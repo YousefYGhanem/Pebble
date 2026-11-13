@@ -429,6 +429,17 @@
           <label class="row"><span>{t('extras.clipboard')}<small>{t('extras.clipboardHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.clipboard.enabled} onchange={() => set('clipboard.enabled', !s.clipboard.enabled)} /></label>
         </section>
+        <h2>{t('well.title', { pip })} <span class="muted">· {t('well.hint')}</span></h2>
+        <section>
+          <label class="row"><span>{t('well.water')}<small>{t('well.every')}</small></span>
+            <span class="inline"><input type="number" min="15" max="240" value={s.wellness.waterMinutes} disabled={!s.wellness.water} onchange={e => set('wellness.waterMinutes', num(e))} />
+            <input type="checkbox" class="switch" checked={s.wellness.water} onchange={() => set('wellness.water', !s.wellness.water)} /></span></label>
+          <label class="row"><span>{t('well.stand')}<small>{t('well.after')}</small></span>
+            <span class="inline"><input type="number" min="15" max="180" value={s.wellness.standMinutes} disabled={!s.wellness.stand} onchange={e => set('wellness.standMinutes', num(e))} />
+            <input type="checkbox" class="switch" checked={s.wellness.stand} onchange={() => set('wellness.stand', !s.wellness.stand)} /></span></label>
+          <div class="row"><span>{t('well.hours')}</span>
+            <span class="inline"><input type="number" min="0" max="23" value={s.wellness.from} onchange={e => set('wellness.from', num(e))} aria-label={t('well.from')} />–<input type="number" min="1" max="24" value={s.wellness.to} onchange={e => set('wellness.to', num(e))} aria-label={t('well.to')} /></span></div>
+        </section>
         <h2>{t('guard.title')}</h2>
         <section>
           <label class="row"><span>{t('guard.enabled')}</span>

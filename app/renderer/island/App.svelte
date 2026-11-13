@@ -70,11 +70,12 @@
   interface Peek { icon: string; title: string; sub?: string; value?: string; ring?: number; tone?: 'ok' | 'warn' | 'info' }
   let notice = $state<(Peek & { n: number }) | null>(null)
   // a task that is due: stays until you tick it or snooze it (or ten minutes pass)
-  let reminder = $state<{ id: string; text: string } | null>(null)
+  let reminder = $state<{ id: string; text: string; wellness?: 'water' | 'stand' } | null>(null)
   let reminderTimer: ReturnType<typeof setTimeout> | undefined
   function remindDone(how: 'done' | 'snooze') {
     if (!reminder) return
-    act(how === 'done' ? { do: 'todo.toggle', id: reminder.id } : { do: 'todo.snooze', id: reminder.id, minutes: 10 })
+    if (reminder.wellness) act({ do: 'wellness', what: reminder.wellness, done: how === 'done' })
+    else act(how === 'done' ? { do: 'todo.toggle', id: reminder.id } : { do: 'todo.snooze', id: reminder.id, minutes: 10 })
     reminder = null
   }
   let noticeN = 0
@@ -267,8 +268,8 @@
   })
   window.pebble.onTuck(() => { tucked = !tucked; open = false })
   window.pebble.onNotice(n => {
-    if (n.kind === 'todo') {
-      reminder = { id: n.id, text: n.text }
+    if (n.kind === 'todo' || n.kind === 'wellness') {
+      reminder = n.kind === 'todo' ? { id: n.id, text: n.text } : { id: n.what, text: t(`i.well.${n.what}`), wellness: n.what }
       kick(); say('question')
       clearTimeout(reminderTimer)
       reminderTimer = setTimeout(() => (reminder = null), 10 * 60_000)
@@ -638,9 +639,9 @@
       {:else if mode === 'medium' && medium === 'reminder' && reminder}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <div class="line reminder" role="alert" style:height="{view.settings.island.height}px" onclick={e => e.stopPropagation()}>
-          <Icon name="check" size={14} /><span class="title">{reminder.text}</span>
-          <button class="small likely" onclick={() => remindDone('done')}>{t('i.todo.done')}</button>
-          <button class="small" onclick={() => remindDone('snooze')}>{t('i.todo.snooze')}</button>
+          <Icon name={reminder.wellness === 'water' ? 'water' : reminder.wellness === 'stand' ? 'stand' : 'check'} size={14} /><span class="title">{reminder.text}</span>
+          <button class="small likely" onclick={() => remindDone('done')}>{t(reminder.wellness === 'water' ? 'i.well.drank' : 'i.todo.done')}</button>
+          <button class="small" onclick={() => remindDone('snooze')}>{t(reminder.wellness ? 'i.well.later' : 'i.todo.snooze')}</button>
         </div>
       {:else if mode === 'medium' && medium === 'notice' && notice}
         <div class="line peek tone-{notice.tone ?? 'info'}" role="status" style:height="{target.h}px">

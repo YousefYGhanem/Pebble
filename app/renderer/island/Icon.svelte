@@ -27,6 +27,8 @@
     keyboard: 'M3 6h18v12H3z M7 10h.01 M11 10h.01 M15 10h.01 M7 14h10',
     battery: 'M3 8h15v8H3z M20 11v2 M6 11h6',
     mute: 'M4 9h4l5-4v14l-5-4H4z M16 9l6 6 M22 9l-6 6',
+    water: 'M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z',
+    stand: 'M12 5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M12 7v7 M8 10l4-3 4 3 M10 21l2-7 2 7',
     download: 'M12 4v11 M7 10l5 5 5-5 M5 20h14',
     next: 'M5 4l11 8-11 8z M19 4v16',
     previous: 'M19 4L8 12l11 8z M5 4v16',

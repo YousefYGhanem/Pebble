@@ -71,6 +71,12 @@ export const settingsSchema = z.object({
   }),
   /** your last 25 copied texts, kept in memory only (never on disk); password managers' copies are skipped */
   clipboard: z.object({ enabled: z.boolean() }),
+  /** Pip reminds you to drink water and to stand up, within these hours (off until you switch them on) */
+  wellness: z.object({
+    water: z.boolean(), waterMinutes: z.number().int().min(15).max(240),
+    stand: z.boolean(), standMinutes: z.number().int().min(15).max(180),
+    from: z.number().int().min(0).max(23), to: z.number().int().min(1).max(24)
+  }),
   focusGuard: z.object({
     enabled: z.boolean(),
     /** apps (program name) or sites (word in a browser tab's title) */
@@ -145,6 +151,7 @@ export const DEFAULTS: Settings = {
   },
   music: { enabled: true, lyrics: true, focusSound: 'off' },
   clipboard: { enabled: true },
+  wellness: { water: false, waterMinutes: 60, stand: false, standMinutes: 45, from: 9, to: 21 },
   focusGuard: { enabled: false, sites: ['youtube', 'tiktok', 'instagram', 'reddit', 'netflix', 'twitch', 'facebook'], snoozeMinutes: 5 },
   pip: { name: 'Pip', outfit: 'auto', followMouse: true, look: 'theme', body: '#ece9f6', visor: '#15151c', sleepAfterMinutes: 10 },
   motion: { mode: 'system', speed: 1 },
