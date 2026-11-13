@@ -131,7 +131,7 @@ export class Hub extends EventEmitter {
   /** Emits 'usage' (agent, before, now): alerts and the day's summary follow it. */
   private noteUsage(agent: Agent, u: Usage) {
     const prev = this.usage[agent]
-    this.usage[agent] = { ...u, at: Date.now() }
+    this.usage[agent] = { ...prev, ...u, at: Date.now() }
     this.emit('usage', agent, prev, this.usage[agent])
   }
 

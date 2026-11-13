@@ -49,6 +49,10 @@ export interface Usage {
   sevenDay?: { used: number; resetsAt: number }
   /** a spend limit (Claude behind an apps gateway): how much went, and of how many dollars when known */
   spend?: { used: number; resetsAt: number; usd?: number; limitUsd?: number }
+  /** other weekly limits (Opus, Sonnet…), from Anthropic's plan usage */
+  extra?: { name: string; used: number; resetsAt: number }[]
+  /** why there are no numbers: the sign-in on this PC expired (Claude Code renews it when it runs in a terminal) */
+  note?: 'expired'
   tokens?: { session: number; week: number }
   at?: number
 }

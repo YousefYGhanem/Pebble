@@ -619,12 +619,13 @@
   "i.usage.spend": "Spend limit",
   "i.usage.tokens": "Tokens",
   "i.usage.resets": "resets {when}",
-  "i.usage.none": "No plan usage yet. Claude Code reports it to Pebble through its status line after its first answer in a terminal; Codex from its session files; DeepSeek Harness from its logs.",
+  "i.usage.none": "No plan usage yet. Pebble asks Anthropic every 5 minutes with your Claude sign-in; Codex reports from its session files, DeepSeek Harness from its logs.",
   "i.peek.usageTitle": "{agent}: {n}% used",
   "i.peek.usageReached": "{agent}: limit reached",
   "m.usageSpend": "{agent}: {n}% of the spend limit used",
   "m.usageReached": "{agent}: the {window} limit is reached",
   "m.window.fiveHour": "session",
   "m.window.sevenDay": "weekly",
-  "m.window.spend": "spend"
+  "m.window.spend": "spend",
+  "i.usage.expired": "Claude Code's sign-in on this PC has expired, so Pebble cannot ask Anthropic for your plan usage. Run claude once in a terminal: it renews the sign-in, and the numbers appear within 5 minutes."
 }

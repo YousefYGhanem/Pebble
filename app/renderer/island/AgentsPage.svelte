@@ -44,11 +44,12 @@
   const ring = (used: number) => `${(Math.min(100, used) / 100) * 56.5} 56.5`
   const tone = (used: number) => (used >= 90 ? 'var(--error)' : used >= 75 ? 'var(--question)' : 'var(--text)')
   let showUsage = $state(false)
-  type Limit = { key: 'fiveHour' | 'sevenDay' | 'spend'; used: number; resetsAt: number; extra?: string }
+  type Limit = { key: 'fiveHour' | 'sevenDay' | 'spend'; used: number; resetsAt: number; extra?: string; name?: string }
   const limitsOf = (x: Usage): Limit[] => [
     x.fiveHour && { key: 'fiveHour' as const, ...x.fiveHour },
     x.sevenDay && { key: 'sevenDay' as const, ...x.sevenDay },
-    x.spend && { key: 'spend' as const, used: x.spend.used, resetsAt: x.spend.resetsAt, extra: x.spend.usd !== undefined && x.spend.limitUsd ? `$${x.spend.usd.toFixed(0)} / $${x.spend.limitUsd.toFixed(0)}` : undefined }
+    x.spend && { key: 'spend' as const, used: x.spend.used, resetsAt: x.spend.resetsAt, extra: x.spend.usd !== undefined && x.spend.limitUsd ? `$${x.spend.usd.toFixed(0)} / $${x.spend.limitUsd.toFixed(0)}` : undefined },
+    ...(x.extra ?? []).map(e => ({ key: 'sevenDay' as const, name: e.name, used: e.used, resetsAt: e.resetsAt }))
   ].filter(Boolean) as Limit[]
   // the closest any limit is to being reached (the Usage tab gets a dot from 75%)
   const nearest = $derived(Math.max(0, ...Object.values(usage).flatMap(x => (x ? limitsOf(x).map(l => l.used) : []))))
@@ -82,9 +83,10 @@
     <div class="limits">
       {#each Object.entries(usage) as [agent, x] (agent)}
         {#if x}
-          {#each limitsOf(x) as l (l.key)}
+          {#if x.note === 'expired' && !limitsOf(x).length}<div class="empty">{t('i.usage.expired')}</div>{/if}
+          {#each limitsOf(x) as l (l.key + (l.name ?? ''))}
             <div class="limit">
-              <span class="lname">{AGENT_NAMES[agent as Agent]} · {t(`i.usage.${l.key}`)}</span>
+              <span class="lname">{AGENT_NAMES[agent as Agent]} · {t(`i.usage.${l.key}`)}{#if l.name} ({l.name}){/if}</span>
               <span class="lbar"><i style:width="{Math.min(100, l.used)}%" style:background={tone(l.used)}></i></span>
               <span class="lval" style:color={tone(l.used)}>{Math.round(l.used)}%{#if l.extra} · {l.extra}{/if}</span>
               <span class="lreset">{l.resetsAt ? t('i.usage.resets', { when: resetText(l.resetsAt) }) : ''}</span>

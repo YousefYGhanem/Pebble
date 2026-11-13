@@ -37,6 +37,7 @@ import { diagnose } from './diagnostics'
 import { Updater } from './updater'
 import { DshWatch, use as useDsh } from './agents/dsh'
 import { readCodexUsage } from './agents/codex-usage'
+import { fetchPlanUsage } from './agents/claude-usage'
 import { applyWord, FIX_PROMPT, parseFixes, readWord } from './ai/word'
 import { ChatApps, loadExtensionKey } from './chatapps'
 import { PROVIDERS, type ProviderId } from '../shared/chat'
@@ -672,6 +673,15 @@ app.whenReady().then(async () => {
     if (peeking && !hub.list().some(s => s.ask)) { peeking = false; send(CH.peek, false); updateVisibility() }
   })
   // Codex's plan usage, from its newest session file
+  // Claude's plan usage from Anthropic every 5 minutes (also the Claude app's sessions, which run no status line)
+  const planUsage = async () => {
+    if (!store.settings.agents.claude.enabled || rest === 'deep' || rest === 'off') return
+    const r = await fetchPlanUsage()
+    if ('usage' in r) hub.setUsage('claude', { ...r.usage, note: undefined })
+    else if (r.problem === 'expired' && !hub.usage.claude?.fiveHour) hub.setUsage('claude', { note: 'expired' })
+  }
+  setTimeout(() => void planUsage(), 5_000).unref()
+  setInterval(() => void planUsage(), 5 * 60_000).unref()
   let codexUsage = ''
   setInterval(() => {
     if (!store.settings.agents.codex.enabled) return
