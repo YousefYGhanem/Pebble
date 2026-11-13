@@ -682,5 +682,9 @@
   "extras.screenTime": "Screen time",
   "extras.screenTimeHint": "Your top apps today on Home. Counted on this PC only, never sent anywhere.",
   "i.files.snip": "Snip",
-  "i.files.snipHint": "Snip part of the screen: it lands here, and its text goes to the clipboard list"
+  "i.files.snipHint": "Snip part of the screen: it lands here, and its text goes to the clipboard list",
+  "island.position": "Where along the top",
+  "island.pos.left": "Left",
+  "island.pos.center": "Middle",
+  "island.pos.right": "Right"
 }

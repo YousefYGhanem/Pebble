@@ -39,6 +39,8 @@ export const settingsSchema = z.object({
     openOn: z.enum(['hover', 'click']),
     /** 'main' or a display id (Settings → Island → Screen) */
     display: z.union([z.literal('main'), z.number().int()]),
+    /** where along the top: the middle, or toward a side (as far as it still opens fully on screen) */
+    position: z.enum(['left', 'center', 'right']),
     restingWidth: z.number().int().min(60).max(600),
     restingHeight: z.number().int().min(20).max(60),
     width: z.number().int().min(120).max(1200),
@@ -158,7 +160,7 @@ export const DEFAULTS: Settings = {
   theme: 'default',
   general: { language: 'en', welcomed: false, tipsSeen: [], startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space', micShortcut: 'Control+Alt+M' },
   island: {
-    style: 'notch', openOn: 'hover', display: 'main',
+    style: 'notch', openOn: 'hover', display: 'main', position: 'center',
     restingWidth: 180, restingHeight: 32, width: 340, height: 36, askWidth: 460, openWidth: 680,
     offsetTop: 8, seeThrough: 0, gameMode: true, gameStrip: false, skins: true, compact: 'detailed', chips: { left: 'none', right: 'none' }, hiddenPages: []
   },

@@ -220,6 +220,12 @@
               <button class:on={s.island.openOn === 'hover'} aria-pressed={s.island.openOn === 'hover'} onclick={() => set('island.openOn', 'hover')}>{t('island.hover')}</button>
               <button class:on={s.island.openOn === 'click'} aria-pressed={s.island.openOn === 'click'} onclick={() => set('island.openOn', 'click')}>{t('island.click')}</button>
             </div></div>
+          <div class="row"><span>{t('island.position')}</span>
+            <div class="seg">
+              {#each ['left', 'center', 'right'] as const as p}
+                <button class:on={s.island.position === p} aria-pressed={s.island.position === p} onclick={() => set('island.position', p)}>{t(`island.pos.${p}`)}</button>
+              {/each}
+            </div></div>
           {#if v.displays.length > 1}
             <label class="row"><span>{t('island.screen')}</span>
               <select value={String(s.island.display)} onchange={e => { const x = text(e); set('island.display', x === 'main' ? 'main' : Number(x)) }}>

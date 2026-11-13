@@ -35,5 +35,8 @@ export function createIsland(settings: Settings, offscreen = false): BrowserWind
 export function placeIsland(win: BrowserWindow, settings: Settings) {
   const area = islandDisplay(settings).workArea
   const width = windowWidth(settings.island)
-  win.setBounds({ x: Math.round(area.x + (area.width - width) / 2), y: area.y, width, height: WINDOW_HEIGHT })
+  // the island sits in the middle of its window: toward a side, the window touches that edge so the open island still fits
+  const free = area.width - width
+  const x = settings.island.position === 'left' ? 0 : settings.island.position === 'right' ? free : free / 2
+  win.setBounds({ x: Math.round(area.x + Math.max(0, x)), y: area.y, width, height: WINDOW_HEIGHT })
 }
