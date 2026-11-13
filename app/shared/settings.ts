@@ -147,7 +147,7 @@ export const settingsSchema = z.object({
     doneSeconds: z.number().min(1).max(600)
   }),
   /** Pip's chat: who answers (API keys are kept encrypted, outside this file); model '' = the provider's default */
-  chat: z.object({ provider: z.enum(PROVIDER_IDS), model: z.string().max(100), readAloud: z.boolean() }),
+  chat: z.object({ provider: z.enum(PROVIDER_IDS), model: z.string().max(100).regex(/^[\w.:/@-]*$/), readAloud: z.boolean() }),
   /** chat apps followed as sessions: desktop apps by process name (UI Automation, beta); the browser goes through the extension */
   chatApps: z.object({ desktop: z.array(z.enum(['claude', 'chatgpt'])) }),
   server: z.object({ port: z.number().int().min(1024).max(65535) })

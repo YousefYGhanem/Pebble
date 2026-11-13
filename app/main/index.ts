@@ -126,7 +126,7 @@ const connectors = new ConnectorHost({
     const r = await dialog.showMessageBox({
       type: 'question', title: 'Pebble', buttons: ['Allow', 'Do not allow'], defaultId: 1, cancelId: 1, noLink: true,
       message: `Allow the connector "${m.name}"?`,
-      detail: `${m.description}\n\nIt may:\n• ${describePermissions(m).join('\n• ')}\n\nOnly allow connectors you trust: a connector runs code on this PC.`
+      detail: `${m.description}\n\nIt may:\n• ${describePermissions(m).join('\n• ')}\n\nOnly allow connectors you trust: a connector runs code on this PC with your rights, so the list above is what it says it does, not a limit.`
     })
     return r.response === 0
   },
@@ -639,6 +639,11 @@ app.on('second-instance', (_e, argv) => {
 })
 app.on('window-all-closed', () => {}) // the island lives in the tray; only Quit ends Pebble
 app.on('will-quit', () => { hub.close(); drop.stop(); connectors.stopAll(); fullscreen.stop(); native.stop(); globalShortcut.unregisterAll() })
+
+app.on('web-contents-created', (_e, wc) => {
+  wc.on('will-navigate', e => e.preventDefault())
+  wc.setWindowOpenHandler(({ url }) => { if (/^https?:\/\//.test(url)) void shell.openExternal(url); return { action: 'deny' } })
+})
 
 app.whenReady().then(async () => {
   if (captureDir) return

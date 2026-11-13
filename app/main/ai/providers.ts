@@ -115,9 +115,9 @@ function run(a: Ask, cmd: string, args: string[], onLine: (l: string) => void, n
 async function claudeCli(a: Ask) {
   // its own settings: Pebble's hooks stay off, or this chat would show up as an agent session
   const settings = path.join(a.sandbox, 'pebble-chat-settings.json')
-  fs.writeFileSync(settings, JSON.stringify({ disableAllHooks: true }))
+  fs.writeFileSync(settings, JSON.stringify({ disableAllHooks: true, permissions: { deny: ['Bash', 'Edit', 'Write', 'NotebookEdit', 'WebFetch', 'WebSearch'] } }))
   let streamed = false, failed = ''
-  await run(a, 'claude', ['-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages', '--settings', `"${settings}"`,
+  await run(a, 'claude', ['-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages', '--strict-mcp-config', '--settings', `"${settings}"`,
     ...(a.model ? ['--model', a.model] : [])], l => {
     let e: Record<string, any>
     try { e = JSON.parse(l) } catch { return }

@@ -97,9 +97,9 @@ describe.skipIf(!lanAddress())('phone drop server', () => {
     await drop.start()
     try {
       const u = new URL(drop.state!.url)
-      const base = `http://127.0.0.1:${u.port}${u.pathname}`
+      const base = `${u.origin}${u.pathname}`
       expect(drop.state!.qr.startsWith('data:image/svg+xml;base64,')).toBe(true)
-      expect((await fetch(`http://127.0.0.1:${u.port}/wrongkey`)).status).toBe(404)
+      expect((await fetch(`${u.origin}/wrongkey`)).status).toBe(404)
       const page = await (await fetch(base)).text()
       expect(page).toContain('report.txt')
       expect(drop.state!.connected).toBe(true)

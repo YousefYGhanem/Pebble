@@ -10,6 +10,8 @@ import { logger } from '../log'
 
 const log = logger('drop')
 const MAX_UPLOAD = 500 * 1024 * 1024
+/** all uploads of one hour together (a phone cannot fill the disk) */
+const MAX_SESSION = 4 * 1024 ** 3
 const LIFETIME = 60 * 60 * 1000
 /** the same port every time (easy to type, and to allow in a firewall); another one if it is taken */
 const PORT = 47902
@@ -46,6 +48,7 @@ export class DropServer extends EventEmitter {
   state: Drop | null = null
   private server?: http.Server
   private key = ''
+  private taken = 0
   private timer?: NodeJS.Timeout
 
   constructor(private shelf: () => ShelfFile[], private downloads: string) { super() }
@@ -55,11 +58,12 @@ export class DropServer extends EventEmitter {
     const ip = lanAddress()
     if (!ip) throw new Error('This PC is not on a network (Wi-Fi or cable).')
     this.key = randomBytes(16).toString('hex')
+    this.taken = 0
     const server = http.createServer((req, res) => this.handle(req, res))
     // in the log, whether a phone gets through at all (a firewall or the Wi-Fi drops it before it reaches Pebble)
     server.on('connection', s => log.info(`phone drop: connection from ${s.remoteAddress}`))
     server.on('clientError', (err: NodeJS.ErrnoException, socket) => { log.warn(`phone drop: bad request (${err.code ?? err.message})`); socket.destroy() })
-    const listen = (port: number) => new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, '0.0.0.0', resolve) })
+    const listen = (port: number) => new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, ip, resolve) })
     await listen(PORT).catch(() => listen(0))
     this.server = server
     const url = `http://${ip}:${(server.address() as { port: number }).port}/${this.key}`
@@ -102,7 +106,8 @@ export class DropServer extends EventEmitter {
     }
     if (req.method === 'PUT' && what === 'upload') {
       const size = Number(req.headers['content-length'] ?? 0)
-      if (!size || size > MAX_UPLOAD) { res.writeHead(413).end(); return }
+      if (!size || size > MAX_UPLOAD || this.taken + size > MAX_SESSION) { res.writeHead(413).end(); return }
+      this.taken += size
       fs.mkdirSync(this.downloads, { recursive: true })
       const target = uniquePath(this.downloads, safeName(url.searchParams.get('name') ?? 'file'))
       const out = fs.createWriteStream(target)
@@ -111,6 +116,8 @@ export class DropServer extends EventEmitter {
       req.pipe(out)
       out.on('finish', () => {
         if (got !== size) { fs.rm(target, () => {}); res.writeHead(400).end(); return }
+        // Mark of the Web: a program sent from the phone gets Windows' "are you sure" before it runs
+        try { fs.writeFileSync(`${target}:Zone.Identifier`, '[ZoneTransfer]\r\nZoneId=3\r\n') } catch { /* not NTFS */ }
         this.state!.received++
         this.emit('received', [target])
         this.emit('change')
