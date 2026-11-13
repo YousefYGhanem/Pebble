@@ -46,7 +46,7 @@ publish:
   owner: YousefYGhanem
   repo: Pebble
   releaseType: draft # the release workflow publishes it once everything is uploaded
-# The Microsoft Store package (npm run dist:store → dist/*.appx). The Store signs it and keeps it updated, so Pebble's own
+# The Microsoft Store package (npm run dist:store → dist/store/*.appx, apart from the running dist/win-unpacked). The Store signs it and keeps it updated, so Pebble's own
 # updater stays off there. See docs/STORES.md before an upload.
 appx:
   # from Partner Center → Pebble → Product identity
