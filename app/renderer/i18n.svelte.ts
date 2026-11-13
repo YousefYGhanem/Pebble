@@ -6,8 +6,8 @@ export { LANGUAGES } from '../shared/i18n'
 
 let language = $state('en')
 
-/** mirror: lay the window out right to left for Arabic. The island does not (Pip sits at a fixed spot on the right):
- *  there only each line of text runs right to left. */
+/** mirror: lay the window out right to left for Arabic. The island mirrors only its open pages (App.svelte), so Pip
+ *  keeps his spot on the right. */
 export function setLanguage(id: string, mirror = true) {
   language = id in WORDS ? id : 'en'
   document.documentElement.lang = language

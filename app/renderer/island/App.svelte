@@ -5,6 +5,7 @@
   import type { Scene } from '../../shared/island'
   import { applyTheme } from '../theme'
   import { locale, setLanguage, t } from '../i18n.svelte'
+  import { WORDS } from '../../shared/i18n'
   import AgentsPage from './AgentsPage.svelte'
   import HomePage from './HomePage.svelte'
   import MusicPage from './MusicPage.svelte'
@@ -620,7 +621,7 @@
   <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
   <div class="clip" class:reduced bind:this={clip} role="region" aria-label={t('i.island.name')} onclick={onClick} oncontextmenu={onRightClick}
     title={mode === 'resting' || mode === 'medium' ? t('i.island.hint') : mode === 'tucked' ? t('i.island.tuckedHint') : undefined}>
-    <div class="content mode-{mode}" class:micmuted={!!extras?.mic} class:minimal={view.settings.island.compact === 'minimal'} bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
+    <div class="content mode-{mode}" dir={mode === 'open' && WORDS[locale()]?.['language.dir'] === 'rtl' ? 'rtl' : 'ltr'} class:micmuted={!!extras?.mic} class:minimal={view.settings.island.compact === 'minimal'} bind:this={content} bind:offsetHeight={contentHeight} style:width="{target.w}px">
       {#if (mode === 'resting' || mode === 'medium') && extras?.mic}
         <!-- the microphone is muted for every app: a reminder while it is -->
         <div class="micoff" title={t('i.peek.micOff')} style:height="{mode === 'resting' ? view.settings.island.restingHeight : view.settings.island.height}px"><Icon name="micoff" size={12} /></div>
