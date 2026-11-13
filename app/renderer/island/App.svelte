@@ -276,7 +276,8 @@
       return
     }
     // a device name "Headphones (AirPods Pro)": the part in brackets is the device itself
-    if (n.kind === 'usage') peek({ icon: 'agents', title: t(n.level >= 100 ? 'i.peek.usageReached' : 'i.peek.usageTitle', { agent: n.agent, n: n.level }),
+    if (n.kind === 'prayer') { peek({ icon: 'moon', title: t(`prayer.${n.name}`), sub: t('i.prayer.now'), tone: 'ok' }); say('done') }
+    else if (n.kind === 'usage') peek({ icon: 'agents', title: t(n.level >= 100 ? 'i.peek.usageReached' : 'i.peek.usageTitle', { agent: n.agent, n: n.level }),
       sub: `${t(`i.usage.${n.window}`)}${n.when ? ` · ${t('i.usage.resets', { when: n.when })}` : ''}`, value: `${n.level}%`, ring: n.level / 100, tone: 'warn' })
     else if (n.kind === 'device') peek({ icon: 'speaker', title: /\(([^)]+)\)/.exec(n.name)?.[1] ?? n.name, sub: t('i.peek.deviceSub') })
     else if (n.kind === 'caps') peek({ icon: 'keyboard', title: 'Caps Lock', value: t(n.on ? 'i.peek.on' : 'i.peek.off'), tone: n.on ? 'warn' : 'info' })
@@ -626,6 +627,7 @@
               {:else if c === 'battery' && battery}<span class:low={battery.level <= 15 && !battery.charging} class:charging={battery.charging}>{battery.level}%</span>
               {:else if c === 'cpu'}{extras?.system.cpu ?? 0}%<small>{t('i.home.cpuChip')}</small>
               {:else if c === 'ram'}{extras?.system.ram ?? 0}%<small>{t('i.home.ramChip')}</small>
+              {:else if c === 'prayer' && extras?.prayer}{t(`prayer.${extras.prayer.name}`)} <small>{new Date(extras.prayer.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
               {:else if c.startsWith('widget:')}<span class="wchip">{chipText(c)}</span>{/if}
             </span>
           {/each}

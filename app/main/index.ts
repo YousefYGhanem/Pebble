@@ -20,6 +20,7 @@ import { Today } from './today'
 import { restLevel, type RestLevel } from './rest'
 import { emptyDay, usageAlerts } from '../shared/today'
 import { freshWellness, wellnessAnswer, wellnessCheck } from '../shared/wellness'
+import { findCity, nextPrayer } from './prayer'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
 import { buildTray, trayStatus } from './tray'
@@ -102,7 +103,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], prayer: null, glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -198,6 +199,7 @@ function toast(title: string, body: string, sessionId?: string, link?: string, o
 const agentName = (s: Session) => (s.agent === 'cli' ? s.project : AGENT_NAMES[s.agent]) + (s.provider ? ` (${s.provider})` : '')
 
 /** Game mode: hidden while something covers the island's screen, unless you brought it back yourself. */
+let schedulePrayer = () => {}
 let wellnessAnswerHandler: (what: 'water' | 'stand', done: boolean) => void = () => {}
 const inGame = () => store.settings.island.gameMode && fullscreen.current === islandDisplay(store.settings).id
 /** a question came during a full-screen game: the island shows as its thin line until it is answered */
@@ -396,6 +398,11 @@ const settingsWin = new SettingsWindow({
     scene
   }),
   update: patch => { try { store.update(patch) } catch (err) { return (err as Error).message } },
+  findCity: async name => {
+    const c = await findCity(name, store.settings.general.language).catch(() => null)
+    if (!c) return tr('prayer.notFound', { name })
+    store.update({ prayer: { city: c.city, lat: c.lat, lng: c.lng } })
+  },
   editTheme: tokens => { try { store.editTheme(tokens) } catch (err) { return (err as Error).message } },
   toggleAgent: id => { const a = agents().find(x => x.id === id); if (a) setConnected(a, !connected(a)) },
   toggleTerminal: id => { const sh = terminals.shells(documents()).find(x => x === id); if (sh) setTerminal(sh, !terminals.installed(sh, documents())) },
@@ -676,6 +683,25 @@ app.whenReady().then(async () => {
     if (peeking && !hub.list().some(s => s.ask)) { peeking = false; send(CH.peek, false); updateVisibility() }
   })
   // Codex's plan usage, from its newest session file
+  // prayer times: worked out here; one timer for the next one, set again after it and when the settings change
+  let prayerTimer: NodeJS.Timeout | undefined
+  schedulePrayer = () => {
+    clearTimeout(prayerTimer)
+    const p = store.settings.prayer
+    if (!p.enabled || p.lat === null || p.lng === null) { if (extras.state.prayer) { extras.state.prayer = null; push() } return }
+    const next = nextPrayer(p.lat, p.lng, p.method, p.madhab, Date.now())
+    extras.state.prayer = next
+    push()
+    prayerTimer = setTimeout(() => {
+      send(CH.notice, { kind: 'prayer', name: next.name })
+      bringBack()
+      if (p.notify) toast(tr(`prayer.${next.name}`), tr('m.prayerNow', { city: p.city }), undefined, undefined, { kind: 'extras' })
+      if (p.pauseMusic && extras.state.media?.playing) void extras.act({ do: 'media', action: 'toggle' })
+      setTimeout(() => schedulePrayer(), 60_000) // the one after it
+    }, Math.min(Math.max(0, next.at - Date.now()), 86_400_000))
+    prayerTimer.unref?.()
+  }
+  schedulePrayer()
   // water and stand-up reminders: a look each minute (not while resting: away, a game, tucked)
   let wellness = freshWellness(Date.now())
   setInterval(() => {
@@ -747,7 +773,7 @@ app.whenReady().then(async () => {
     updateVisibility()
     applyRest()
   })
-  store.on('change', () => { applySettings(); refreshTray(); push() })
+  store.on('change', () => { applySettings(); refreshTray(); schedulePrayer(); push() })
   updater.on('change', (s: { state: string; version?: string }) => {
     refreshTray()
     if (s.state === 'ready') toast(tr('m.updateReady', { version: s.version ?? '' }), tr('m.updateReadyBody'))

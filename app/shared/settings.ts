@@ -4,7 +4,7 @@ import { PIP_LOOKS } from './pip'
 
 // Everything the user can change. settings.json in userData holds only what differs from DEFAULTS;
 // it is merged over DEFAULTS and then checked against this schema.
-export const CHIPS = ['none', 'time', 'battery', 'cpu', 'ram'] as const
+export const CHIPS = ['none', 'time', 'battery', 'cpu', 'ram', 'prayer'] as const
 
 /** a built-in chip, or a connector's chip widget: "widget:<connector>/<widget>" */
 const CHIP = z.union([z.enum(CHIPS), z.string().regex(/^widget:[a-z0-9-]+\/[\w-]+$/)])
@@ -76,6 +76,17 @@ export const settingsSchema = z.object({
     water: z.boolean(), waterMinutes: z.number().int().min(15).max(240),
     stand: z.boolean(), standMinutes: z.number().int().min(15).max(180),
     from: z.number().int().min(0).max(23), to: z.number().int().min(1).max(24)
+  }),
+  /** prayer times, worked out on this PC from your city: the next one on the island, a reminder at each */
+  prayer: z.object({
+    enabled: z.boolean(),
+    city: z.string().max(120), lat: z.number().min(-90).max(90).nullable(), lng: z.number().min(-180).max(180).nullable(),
+    method: z.enum(['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey']),
+    madhab: z.enum(['shafi', 'hanafi']),
+    /** a Windows notification at each prayer (the island always shows it) */
+    notify: z.boolean(),
+    /** music that plays pauses at the prayer's time */
+    pauseMusic: z.boolean()
   }),
   focusGuard: z.object({
     enabled: z.boolean(),
@@ -152,6 +163,7 @@ export const DEFAULTS: Settings = {
   music: { enabled: true, lyrics: true, focusSound: 'off' },
   clipboard: { enabled: true },
   wellness: { water: false, waterMinutes: 60, stand: false, standMinutes: 45, from: 9, to: 21 },
+  prayer: { enabled: false, city: '', lat: null, lng: null, method: 'MuslimWorldLeague', madhab: 'shafi', notify: true, pauseMusic: true },
   focusGuard: { enabled: false, sites: ['youtube', 'tiktok', 'instagram', 'reddit', 'netflix', 'twitch', 'facebook'], snoozeMinutes: 5 },
   pip: { name: 'Pip', outfit: 'auto', followMouse: true, look: 'theme', body: '#ece9f6', visor: '#15151c', sleepAfterMinutes: 10 },
   motion: { mode: 'system', speed: 1 },

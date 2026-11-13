@@ -13,6 +13,8 @@ export interface SettingsDeps {
   view(): Omit<SettingsView, 'error'>
   /** saves a settings.json change; returns the problem in words when it was refused */
   update(patch: Record<string, unknown>): string | undefined
+  /** your city for the prayer times; the problem in words when it was not found */
+  findCity(name: string): Promise<string | undefined>
   /** your own colours (themes/custom.json); the problem in words when refused */
   editTheme(tokens: Record<string, string | number>): string | undefined
   toggleAgent(id: string): void
@@ -135,6 +137,7 @@ export class SettingsWindow {
         case 'scene': this.d.playScene(a.scene); break
         case 'copyExtensionKey': clipboard.writeText(this.d.view().extension.key); break
         case 'chat.key': this.d.setChatKey(a.provider, a.value); this.models = undefined; break // a new key: list its models again
+        case 'prayer.find': this.error = await this.d.findCity(a.city.trim()); break
         case 'chat.models': {
           const { provider, list } = this.d.chatModels()
           this.models = { provider, list: [], loading: true }

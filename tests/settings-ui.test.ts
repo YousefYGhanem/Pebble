@@ -8,7 +8,7 @@ const NOT_SHOWN = ['version', 'general.welcomed'] // bookkeeping, not choices
 // right as they are for nearly everyone: kept in settings.json for whoever wants to change them, not in the window
 const AUTOMATIC = ['features.rest.away', 'features.rest.games', 'features.rest.battery', 'features.doneSeconds', 'motion.speed', 'pip.followMouse', 'pip.sleepAfterMinutes']
 // the Agents switches set agents.<id>.enabled through their own action (it also installs or removes the hooks)
-const BY_ACTION = /^agents\.\w+\.enabled$/
+const BY_ACTION = /^agents\.\w+\.enabled$|^prayer\.(lat|lng|city)$/
 
 test('the Settings window shows every option', () => {
   const src = fs.readFileSync(path.join(__dirname, '../app/renderer/settings/App.svelte'), 'utf8')

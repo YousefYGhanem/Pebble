@@ -440,6 +440,29 @@
           <div class="row"><span>{t('well.hours')}</span>
             <span class="inline"><input type="number" min="0" max="23" value={s.wellness.from} onchange={e => set('wellness.from', num(e))} aria-label={t('well.from')} />–<input type="number" min="1" max="24" value={s.wellness.to} onchange={e => set('wellness.to', num(e))} aria-label={t('well.to')} /></span></div>
         </section>
+        <h2>{t('prayer.title')} <span class="muted">· {t('prayer.hint')}</span></h2>
+        <section>
+          <label class="row"><span>{t('prayer.enabled')}</span>
+            <input type="checkbox" class="switch" checked={s.prayer.enabled} onchange={() => set('prayer.enabled', !s.prayer.enabled)} /></label>
+          {#if s.prayer.enabled}
+            <form class="row" onsubmit={e => { e.preventDefault(); const c = (e.currentTarget.elements.namedItem('city') as HTMLInputElement).value; if (c.trim()) act({ do: 'prayer.find', city: c }) }}>
+              <span>{t('prayer.city')}<small>{s.prayer.lat !== null ? `${s.prayer.city} · ${s.prayer.lat.toFixed(2)}, ${s.prayer.lng?.toFixed(2)}` : t('prayer.cityHint')}</small></span>
+              <span class="inline"><input type="text" name="city" placeholder={s.prayer.city || t('prayer.cityPlaceholder')} /><button type="submit">{t('prayer.find')}</button></span>
+            </form>
+            <label class="row"><span>{t('prayer.method')}</span>
+              <select value={s.prayer.method} onchange={e => set('prayer.method', text(e))}>
+                {#each ['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey'] as m}<option value={m}>{t(`prayer.m.${m}`)}</option>{/each}
+              </select></label>
+            <div class="row"><span>{t('prayer.asr')}</span>
+              <div class="seg">
+                {#each ['shafi', 'hanafi'] as const as m}<button class:on={s.prayer.madhab === m} aria-pressed={s.prayer.madhab === m} onclick={() => set('prayer.madhab', m)}>{t(`prayer.${m}`)}</button>{/each}
+              </div></div>
+            <label class="row"><span>{t('prayer.notify')}</span>
+              <input type="checkbox" class="switch" checked={s.prayer.notify} onchange={() => set('prayer.notify', !s.prayer.notify)} /></label>
+            <label class="row"><span>{t('prayer.pauseMusic')}</span>
+              <input type="checkbox" class="switch" checked={s.prayer.pauseMusic} onchange={() => set('prayer.pauseMusic', !s.prayer.pauseMusic)} /></label>
+          {/if}
+        </section>
         <h2>{t('guard.title')}</h2>
         <section>
           <label class="row"><span>{t('guard.enabled')}</span>
