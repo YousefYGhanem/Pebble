@@ -51,21 +51,37 @@ CLI…) runs. Needs the Pebble app for Windows.
 
 ## Pebble (Microsoft Store)
 
-`npm run dist:store` builds `dist/Pebble <version>.appx`. Not uploaded yet: it needs a Partner Center developer account.
+Product type in Partner Center: **MSIX or PWA app**. Identity: `YousefGhanem.PebblePet`, publisher
+`CN=75D4754E-F120-440E-A79A-0581F3A0BAAE` (in `electron-builder.yml` under `appx:`).
 
-**Before the first upload:**
-1. In Partner Center, reserve the name **Pebble** (or another if taken). Under *Product identity*, copy
-   `Package/Identity/Name`, `Package/Identity/Publisher` and `Package/Properties/PublisherDisplayName` into the three
-   commented lines under `appx:` in `electron-builder.yml`.
-2. **Files outside the package.** A Store app's writes to `%APPDATA%` are redirected to a private copy that other
-   programs cannot see. Pebble's agent hooks read `%APPDATA%\Pebble\hook-token` and its plugins, so as packaged now,
-   Claude Code, Codex and the others could not reach Pebble. Fix: a custom manifest (`appx.customManifestPath`) that
-   declares the restricted capability `unvirtualizedResources` with
-   `<desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>`. The Store asks why:
-   "Pebble writes hook settings that coding tools on the same PC read (Claude Code, Codex, Gemini CLI)."
-3. Also restricted, with the same kind of reason: `runFullTrust` (every Electron app has it).
-4. Test the package on this PC (sideloaded) before submitting: agents reaching the island, Start with Windows, the
-   native helper, uninstalling.
+**Building the package:** `npm run dist:store`. On a PC where Windows blocks electron-builder's bundled
+`makeappx.exe` ("spawn UNKNOWN"), the package files are still prepared in `dist/store/__appx-x64`; pack them with the
+Windows SDK's own tool:
+
+```
+"C:\Program Files (x86)\Windows Kitsin.0.26100.0d\makeappx.exe" pack /o /f dist\store\__appx-x64\mapping.txt /p "dist\store\Pebble <version>.appx"
+```
+
+Upload the `.appx` unsigned: the Store signs it.
+
+**What the Store package does differently (done):**
+- `build/appxmanifest.xml` (electron-builder's own, plus one line) turns off file-write virtualization, so
+  `%APPDATA%\Pebble` (the agents' hook token, hook scripts, settings) is the real folder that coding tools read. This
+  needs the restricted capability `unvirtualizedResources`.
+- Agents' hooks and terminals run a copy of `pebble-native.exe` in `%APPDATA%\Pebble
+ative\<version>`, because
+  programs outside the package cannot start an exe inside WindowsApps.
+- Pebble's own updater is off (the Store updates it). It starts with Windows through a startup task, which you
+  switch in Windows Settings → Apps → Startup (Pebble's own "Start with Windows" switch does not apply there).
+
+**When submitting, Partner Center asks why for the restricted capabilities:**
+- `runFullTrust`: "Pebble is a desktop app (Electron) with a native helper for audio, windows and notifications."
+- `unvirtualizedResources`: "Pebble writes hook settings and a token in its AppData folder that coding tools on the same
+  PC (Claude Code, Codex, Gemini CLI) read to report to it; with virtualization they would not see them."
+
+**Before the first submission, test the package** with a Partner Center *package flight* (a private test group with
+only you): install from the Store link, then check that an agent reaches the island, Start with Windows, the native
+helper (music, volume), and uninstalling.
 
 **After that (needs the package identity):** island notifications. Windows lets an app read your other notifications
 (`UserNotificationListener`) only when it is a packaged app and you allow it once. The Store version would show them as

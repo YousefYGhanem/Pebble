@@ -47,12 +47,17 @@ publish:
   repo: Pebble
   releaseType: draft # the release workflow publishes it once everything is uploaded
 # The Microsoft Store package (npm run dist:store → dist/*.appx). The Store signs it and keeps it updated, so Pebble's own
-# updater stays off there. Fill in the three values from Partner Center → your app → Product identity first
-# (docs/STORES.md lists what is still to do before the first upload).
+# updater stays off there. See docs/STORES.md before an upload.
 appx:
-  # identityName: 12345YousefGhanem.Pebble
-  # publisher: CN=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-  # publisherDisplayName: Yousef Ghanem
+  # from Partner Center → Pebble → Product identity
+  identityName: YousefGhanem.PebblePet
+  publisher: CN=75D4754E-F120-440E-A79A-0581F3A0BAAE
+  publisherDisplayName: Yousef Ghanem
+  # agents outside the package must see Pebble's real files in %APPDATA% (docs/STORES.md)
+  customManifestPath: appxmanifest.xml
+  capabilities: [runFullTrust, unvirtualizedResources]
+  minVersion: 10.0.19041.0
+  maxVersionTested: 10.0.26100.0
   displayName: Pebble
   applicationId: Pebble
   backgroundColor: transparent

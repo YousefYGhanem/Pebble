@@ -153,7 +153,18 @@ const chatApps = new ChatApps(hub, extensionKey, { native, followed: () => store
 const drop = new DropServer(() => extras.state.shelf, app.getPath('downloads'))
 const guard = new FocusGuard(native, () => store.settings, () => !!extras.state.focus && extras.state.focus.left === undefined && !extras.state.focus.break, guardPreload(), guardPage)
 const fullscreen = new FullscreenWatch(native)
-const agents = () => adapters({ port: store.settings.server.port, token, nativeExe: nativeExe(app.getAppPath(), app.isPackaged) })
+// The helper as agents' hooks and terminals run it. A Store install lives in WindowsApps, where other programs cannot
+// start an exe: they get a copy in Pebble's data folder (real files there: build/appxmanifest.xml), refreshed per version.
+let hookExePath: string | undefined
+function hookExe(): string {
+  const exe = nativeExe(app.getAppPath(), app.isPackaged)
+  if (!process.windowsStore) return exe
+  if (hookExePath) return hookExePath
+  const copy = path.join(userData, 'native', app.getVersion(), 'pebble-native.exe')
+  try { if (!fs.existsSync(copy)) { fs.mkdirSync(path.dirname(copy), { recursive: true }); fs.copyFileSync(exe, copy) } return (hookExePath = copy) }
+  catch (err) { log.warn('helper copy for hooks:', (err as Error).message); return exe }
+}
+const agents = () => adapters({ port: store.settings.server.port, token, nativeExe: hookExe() })
 const documents = () => app.getPath('documents')
 let shownAnyway = false // you opened the island yourself while a game runs: it stays until the game ends
 
@@ -310,7 +321,7 @@ function setConnected(a: Adapter, on: boolean) {
 
 function setTerminal(sh: terminals.Shell, on: boolean) {
   try {
-    on ? terminals.install(sh, { nativeExe: nativeExe(app.getAppPath(), app.isPackaged), minSeconds: store.settings.terminals.minSeconds }, documents()) : terminals.remove(sh, documents())
+    on ? terminals.install(sh, { nativeExe: hookExe(), minSeconds: store.settings.terminals.minSeconds }, documents()) : terminals.remove(sh, documents())
     log.info(`terminal ${sh}: ${on ? 'added' : 'removed'} (open a new terminal)`)
   } catch (err) { log.error(`terminal ${sh}:`, err) }
   refreshTray()
@@ -431,7 +442,7 @@ const settingsWin = new SettingsWindow({
   updates: updater,
   chatModels: () => ({ provider: store.settings.chat.provider, list: chat.models() }),
   diagnose: () => diagnose({
-    version: app.getVersion(), port: store.settings.server.port, nativeExe: nativeExe(app.getAppPath(), app.isPackaged),
+    version: app.getVersion(), port: store.settings.server.port, nativeExe: hookExe(),
     agents: agents().map(a => ({ name: a.name, available: a.available(), connected: connected(a) })),
     connectors: connectors.list(), chat: chat.state(), extensionSeen: chatApps.seen,
     cli: store.settings.chat.provider === 'claude-cli' ? ['claude'] : store.settings.chat.provider === 'codex-cli' ? ['codex'] : []
