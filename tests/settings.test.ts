@@ -78,3 +78,13 @@ test('a bug report opens a GitHub issue with the version and Windows filled in, 
   expect(u.searchParams.get('body')).toContain('**Pebble** 0.3.0 on Windows_NT 10.0.26300')
   expect(DEFAULTS.general.micShortcut).toBe('Control+Alt+M')
 })
+
+test('theme "auto" follows Windows: Default when dark, Mist when light', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pebble-auto-'))
+  const store = new Store(dir)
+  store.update({ theme: 'auto' })
+  expect(store.theme.name).toBe(new Store(fs.mkdtempSync(path.join(os.tmpdir(), 'pebble-d-'))).theme.name) // dark: Default
+  store.prefersDark = () => false
+  store.load()
+  expect(store.theme.name).toMatch(/mist/i)
+})

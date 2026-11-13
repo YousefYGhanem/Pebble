@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeImage, Notification, powerMonitor, safeStorage, screen, shell, utilityProcess } from 'electron'
+import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeImage, nativeTheme, Notification, powerMonitor, safeStorage, screen, shell, utilityProcess } from 'electron'
 import { CH, type Answer, type IslandState, type Usage } from '../shared/ipc'
 import { SCENES, type Scene } from '../shared/island'
 import { AGENT_NAMES, type Agent, type Session } from '../shared/state'
@@ -109,6 +109,10 @@ const NO_EXTRAS = emptyExtras()
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
 const store = new Store(userData)
+// theme "auto": Windows' light or dark mode, also when it changes
+store.prefersDark = () => nativeTheme.shouldUseDarkColors
+store.load()
+nativeTheme.on('updated', () => { if (store.settings.theme === 'auto') { store.load(); store.emit('change') } })
 const token = loadToken(userData)
 const chat = new Chat(userData, vault, () => ({ ...store.settings.chat, name: store.settings.pip.name }))
 const hub = new Hub(token, {

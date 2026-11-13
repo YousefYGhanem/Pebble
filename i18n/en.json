@@ -674,5 +674,6 @@
   "island.pos.left": "Left",
   "island.pos.center": "Middle",
   "island.pos.right": "Right",
-  "i.todo.add": "Add task"
+  "i.todo.add": "Add task",
+  "theme.auto": "Auto (follows Windows light or dark)"
 }

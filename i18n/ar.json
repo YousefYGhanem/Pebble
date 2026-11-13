@@ -674,5 +674,6 @@
   "island.pos.left": "يسار",
   "island.pos.center": "الوسط",
   "island.pos.right": "يمين",
-  "i.todo.add": "أضف مهمة"
+  "i.todo.add": "أضف مهمة",
+  "theme.auto": "تلقائي (يتبع الوضع الفاتح أو الداكن في ويندوز)"
 }

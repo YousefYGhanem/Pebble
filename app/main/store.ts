@@ -32,6 +32,8 @@ export class Store extends EventEmitter {
   readonly themesDir: string
   settings: Settings = DEFAULTS
   theme: Theme = BUILT_IN.default!
+  /** Windows is in dark mode (theme "auto" follows it: Default when dark, Mist when light); index.ts sets it */
+  prefersDark = () => true
   private timer?: NodeJS.Timeout
 
   constructor(dir: string) {
@@ -63,8 +65,9 @@ export class Store extends EventEmitter {
     if (!r.ok) { log.warn('settings.json has problems, keeping the last good settings:', r.problems.join('; ')); return }
     this.settings = r.value
     const themes = this.themes()
-    this.theme = themes[r.value.theme] ?? BUILT_IN.default!
-    if (!themes[r.value.theme]) log.warn(`theme "${r.value.theme}" not found, using default`)
+    const id = r.value.theme === 'auto' ? (this.prefersDark() ? 'default' : 'mist') : r.value.theme
+    this.theme = themes[id] ?? BUILT_IN.default!
+    if (!themes[id]) log.warn(`theme "${id}" not found, using default`)
   }
 
   /** Saves a partial change (only what differs from the defaults is kept on disk). */

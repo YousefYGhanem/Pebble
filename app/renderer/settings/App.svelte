@@ -283,6 +283,7 @@
         <section>
           <label class="row"><span>{t('look.theme')}</span>
             <select value={s.theme} onchange={e => set('theme', text(e))}>
+              <option value="auto">{t('theme.auto')}</option>
               {#each v.themes as th}<option value={th.id}>{tOr(`theme.${th.id}`, th.name)}</option>{/each}
             </select></label>
           {#if s.theme === 'custom'}<div class="row"><span>{t('colors.custom')}</span><button onclick={() => set('theme', 'default')}>{t('colors.revert')}</button></div>{/if}
