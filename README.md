@@ -46,8 +46,12 @@ Why only Claude Code is answered from the island: Gemini's permission hook can o
 answer as "block" and an "allow" would skip its own allowlist; OpenCode's reply API differs between versions. So those
 keep asking in their own UI and Pebble tells you they wait (with "Jump to terminal").
 
-**Usage alerts**: when Claude Code or Codex passes 80% and 95% of its session or weekly limit, a notification says
-so (with the time it resets) and Pip looks worried for a moment. Settings → General → Notifications switches it off.
+**Plan usage**: the Agents page's **Usage** tab lists every limit (Claude Code's 5-hour session, week and other weekly
+limits; Codex's; DeepSeek Harness's tokens) with when each resets. For Claude, Pebble asks Anthropic every 5 minutes
+with the sign-in Claude Code keeps on this PC (`~/.claude/.credentials.json`), so it works for the Claude app's
+sessions too; when that sign-in has expired, Pebble renews it the way Claude Code does and writes the new tokens back
+into the same file (the tokens go only to Anthropic). At 75%, 90% and when a limit is reached, a notification and a
+peek on the island say so, and Pip looks worried for a moment (Settings → General → Notifications).
 
 **DeepSeek** (and other providers): when Claude Code or OpenCode runs on a DeepSeek model, the island says so
 ("Claude Code · DeepSeek · deepseek-chat"), read from the model name.
