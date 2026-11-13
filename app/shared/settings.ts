@@ -71,6 +71,8 @@ export const settingsSchema = z.object({
   }),
   /** your last 25 copied texts, kept in memory only (never on disk); password managers' copies are skipped */
   clipboard: z.object({ enabled: z.boolean() }),
+  /** how long each app is in front today, counted on this PC only (never sent anywhere) */
+  screenTime: z.object({ enabled: z.boolean() }),
   /** Pip reminds you to drink water and to stand up, within these hours (off until you switch them on) */
   wellness: z.object({
     water: z.boolean(), waterMinutes: z.number().int().min(15).max(240),
@@ -162,6 +164,7 @@ export const DEFAULTS: Settings = {
   },
   music: { enabled: true, lyrics: true, focusSound: 'off' },
   clipboard: { enabled: true },
+  screenTime: { enabled: true },
   wellness: { water: false, waterMinutes: 60, stand: false, standMinutes: 45, from: 9, to: 21 },
   prayer: { enabled: false, city: '', lat: null, lng: null, method: 'MuslimWorldLeague', madhab: 'shafi', notify: true, pauseMusic: true },
   focusGuard: { enabled: false, sites: ['youtube', 'tiktok', 'instagram', 'reddit', 'netflix', 'twitch', 'facebook'], snoozeMinutes: 5 },

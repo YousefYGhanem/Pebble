@@ -76,6 +76,8 @@ export interface ExtrasState {
   mixer: { name: string; volume: number; muted: boolean }[] | null
   /** the next prayer (Settings → Extras → Prayer times) */
   prayer: { name: string; at: number } | null
+  /** today's screen time: the apps you spent most time in (Settings → Extras → Screen time) */
+  screen: { name: string; seconds: number }[]
   /** glasses of water today (the water reminder's Done) */
   glasses: number
   /** Windows' power mode (null: not available) */

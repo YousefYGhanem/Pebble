@@ -428,6 +428,8 @@
             </div></div>
           <label class="row"><span>{t('extras.clipboard')}<small>{t('extras.clipboardHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.clipboard.enabled} onchange={() => set('clipboard.enabled', !s.clipboard.enabled)} /></label>
+          <label class="row"><span>{t('extras.screenTime')}<small>{t('extras.screenTimeHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.screenTime.enabled} onchange={() => set('screenTime.enabled', !s.screenTime.enabled)} /></label>
         </section>
         <h2>{t('well.title', { pip })} <span class="muted">· {t('well.hint')}</span></h2>
         <section>

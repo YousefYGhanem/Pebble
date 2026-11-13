@@ -6,7 +6,7 @@ import { CH, type Answer, type IslandState, type Usage } from '../shared/ipc'
 import { SCENES, type Scene } from '../shared/island'
 import { AGENT_NAMES, type Agent, type Session } from '../shared/state'
 import { initLog, logger } from './log'
-import { Store } from './store'
+import { Store, writeJsonAtomic } from './store'
 import type { Settings } from '../shared/settings'
 import { Hub, loadToken } from './agents/hub'
 import * as claude from './agents/claude'
@@ -20,6 +20,7 @@ import { Today } from './today'
 import { restLevel, type RestLevel } from './rest'
 import { emptyDay, usageAlerts } from '../shared/today'
 import { freshWellness, wellnessAnswer, wellnessCheck } from '../shared/wellness'
+import { appName, countTime, freshScreen, topApps, type ScreenDay } from '../shared/screentime'
 import { findCity, nextPrayer } from './prayer'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
@@ -103,7 +104,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -200,6 +201,7 @@ const agentName = (s: Session) => (s.agent === 'cli' ? s.project : AGENT_NAMES[s
 
 /** Game mode: hidden while something covers the island's screen, unless you brought it back yourself. */
 let schedulePrayer = () => {}
+let applyScreen = () => {}
 let wellnessAnswerHandler: (what: 'water' | 'stand', done: boolean) => void = () => {}
 const inGame = () => store.settings.island.gameMode && fullscreen.current === islandDisplay(store.settings).id
 /** a question came during a full-screen game: the island shows as its thin line until it is answered */
@@ -717,6 +719,34 @@ app.whenReady().then(async () => {
     extras.state.glasses = wellness.glasses
     push()
   }
+  // screen time: the app in front, counted while you are here (local only; today's is kept in screentime.json)
+  const screenFile = path.join(userData, 'screentime.json')
+  let screenDay: ScreenDay = freshScreen(Date.now())
+  try { const j = JSON.parse(fs.readFileSync(screenFile, 'utf8')) as ScreenDay; if (j.day === screenDay.day && j.apps) screenDay = j } catch { /* none yet */ }
+  const front = { app: '', since: Date.now() }
+  const creditFront = () => {
+    const now = Date.now()
+    // no input for 5 minutes: you are away, and that stretch does not count
+    if (powerMonitor.getSystemIdleTime() < 300) screenDay = countTime(screenDay, front.app, (now - front.since) / 1000, now)
+    front.since = now
+  }
+  native.on('foreground', (w: { process?: string } | null) => {
+    if (!store.settings.screenTime.enabled) return
+    const app = appName(w?.process ?? '')
+    if (app !== front.app) { creditFront(); front.app = app }
+  })
+  const showScreen = () => {
+    const top = store.settings.screenTime.enabled ? topApps(screenDay) : []
+    if (JSON.stringify(top) !== JSON.stringify(extras.state.screen)) { extras.state.screen = top; push() }
+  }
+  setInterval(() => {
+    if (!store.settings.screenTime.enabled) return
+    creditFront()
+    showScreen()
+    try { writeJsonAtomic(screenFile, screenDay) } catch (err) { log.warn('screen time:', (err as Error).message) }
+  }, 60_000).unref()
+  applyScreen = () => { native.watch('foreground', store.settings.screenTime.enabled, 'screentime'); showScreen() }
+  applyScreen()
   // Claude's plan usage from Anthropic every 5 minutes (also the Claude app's sessions, which run no status line)
   const planUsage = async () => {
     if (!store.settings.agents.claude.enabled || rest === 'deep' || rest === 'off') return
@@ -773,7 +803,7 @@ app.whenReady().then(async () => {
     updateVisibility()
     applyRest()
   })
-  store.on('change', () => { applySettings(); refreshTray(); schedulePrayer(); push() })
+  store.on('change', () => { applySettings(); refreshTray(); schedulePrayer(); applyScreen(); push() })
   updater.on('change', (s: { state: string; version?: string }) => {
     refreshTray()
     if (s.state === 'ready') toast(tr('m.updateReady', { version: s.version ?? '' }), tr('m.updateReadyBody'))

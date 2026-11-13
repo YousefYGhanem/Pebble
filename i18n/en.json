@@ -677,5 +677,8 @@
   "prayer.m.Tehran": "Tehran",
   "prayer.m.Turkey": "Diyanet (Turkey)",
   "i.mixer.apps": "Apps",
-  "i.mixer.none": "No app is playing sound right now."
+  "i.mixer.none": "No app is playing sound right now.",
+  "i.screen.today": "Screen time: {apps}",
+  "extras.screenTime": "Screen time",
+  "extras.screenTimeHint": "Your top apps today on Home. Counted on this PC only, never sent anywhere."
 }
