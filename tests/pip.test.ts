@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { test, expect } from 'vitest'
+import { test, expect, vi } from 'vitest'
 import { finishTask, inSeason, moodFor, OUTFITS, outfitFor, wearable, type MoodInput } from '../app/shared/pip'
 import { PipStore } from '../app/main/pip'
 
@@ -56,6 +56,8 @@ test('achievements are earned once', () => {
 })
 
 test('PipStore keeps stats and reads your own SVG outfits', () => {
+  // midday: a task finished between midnight and 5 would also earn the night owl
+  vi.useFakeTimers({ now: new Date(2026, 5, 1, 12), toFake: ['Date'] })
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pebble-pip-'))
   const a = new PipStore(dir)
   expect(a.finish(5)).toEqual(['first', 'quick'])
@@ -65,4 +67,5 @@ test('PipStore keeps stats and reads your own SVG outfits', () => {
   expect(b.stats).toEqual({ done: 1, achievements: ['first', 'quick'] })
   expect(b.custom.map(c => c.id)).toEqual(['bow'])
   expect(b.custom[0]!.data.startsWith('data:image/svg+xml;base64,')).toBe(true)
+  vi.useRealTimers()
 })
