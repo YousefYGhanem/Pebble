@@ -46,3 +46,16 @@ publish:
   owner: YousefYGhanem
   repo: Pebble
   releaseType: draft # the release workflow publishes it once everything is uploaded
+# The Microsoft Store package (npm run dist:store → dist/*.appx). The Store signs it and keeps it updated, so Pebble's own
+# updater stays off there. Fill in the three values from Partner Center → your app → Product identity first
+# (docs/STORES.md lists what is still to do before the first upload).
+appx:
+  # identityName: 12345YousefGhanem.Pebble
+  # publisher: CN=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  # publisherDisplayName: Yousef Ghanem
+  displayName: Pebble
+  applicationId: Pebble
+  backgroundColor: transparent
+  languages: [en-US, ar]
+  # Settings → Start with Windows (a packaged app cannot add itself to the Run key)
+  addAutoLaunchExtension: true

@@ -49,6 +49,31 @@ publisher id named `pebble` (or change `publisher` in `extensions/vscode/package
 **Description:** Lets Pebble's island jump to the exact terminal tab where your AI agent (Claude Code, Codex, Gemini
 CLI…) runs. Needs the Pebble app for Windows.
 
+## Pebble (Microsoft Store)
+
+`npm run dist:store` builds `dist/Pebble <version>.appx`. Not uploaded yet: it needs a Partner Center developer account.
+
+**Before the first upload:**
+1. In Partner Center, reserve the name **Pebble** (or another if taken). Under *Product identity*, copy
+   `Package/Identity/Name`, `Package/Identity/Publisher` and `Package/Properties/PublisherDisplayName` into the three
+   commented lines under `appx:` in `electron-builder.yml`.
+2. **Files outside the package.** A Store app's writes to `%APPDATA%` are redirected to a private copy that other
+   programs cannot see. Pebble's agent hooks read `%APPDATA%\Pebble\hook-token` and its plugins, so as packaged now,
+   Claude Code, Codex and the others could not reach Pebble. Fix: a custom manifest (`appx.customManifestPath`) that
+   declares the restricted capability `unvirtualizedResources` with
+   `<desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>`. The Store asks why:
+   "Pebble writes hook settings that coding tools on the same PC read (Claude Code, Codex, Gemini CLI)."
+3. Also restricted, with the same kind of reason: `runFullTrust` (every Electron app has it).
+4. Test the package on this PC (sideloaded) before submitting: agents reaching the island, Start with Windows, the
+   native helper, uninstalling.
+
+**After that (needs the package identity):** island notifications. Windows lets an app read your other notifications
+(`UserNotificationListener`) only when it is a packaged app and you allow it once. The Store version would show them as
+peeks on the island; the regular installer keeps working without them.
+
+**Listing texts:** the README's first paragraph and feature list; screenshots from `docs/screens/`.
+**Category:** Productivity · **Languages:** English, Arabic · **Price:** free
+
 ## Privacy (for both listings)
 
 Pebble's extensions work only on your own computer. The chat extension reads, in the four chat sites, whether an

@@ -20,8 +20,9 @@ export type UpdateState =
  * Emits 'change' with the new state.
  */
 export class Updater extends EventEmitter {
-  // from source, or a local build (npm run app writes no app-update.yml: only the installer build says where updates come from)
-  status: UpdateState = { state: app.isPackaged && fs.existsSync(path.join(process.resourcesPath, 'app-update.yml')) ? 'idle' : 'off' }
+  // off from source, in a local build (npm run app writes no app-update.yml: only the installer build says where updates
+  // come from) and in the Microsoft Store (the Store updates it)
+  status: UpdateState = { state: app.isPackaged && !process.windowsStore && fs.existsSync(path.join(process.resourcesPath, 'app-update.yml')) ? 'idle' : 'off' }
   private timer?: NodeJS.Timeout
 
   constructor(private enabled: () => boolean) {
