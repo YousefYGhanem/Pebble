@@ -151,7 +151,10 @@ export class Extras extends EventEmitter {
   /** copied pictures, by clip id (memory only; the state carries a small preview) */
   private images = new Map<number, Electron.NativeImage>()
   private lastImage = ''
+  /** when you asked for a snip: the next picture copied within a minute is it */
+  private snipping = 0
   private async readClipboard() {
+    if (this.snipping && Date.now() - this.snipping < 60_000 && await this.takeSnip()) return
     if (!this.settings().clipboard.enabled) { if (this.state.clipboard.length) { this.state.clipboard = []; this.changed() } return }
     if (this.reading || this.deep()) return // away or in a game: nothing new gets copied
     this.reading = true
@@ -172,6 +175,29 @@ export class Extras extends EventEmitter {
     if (!text.trim()) return
     this.state.clipboard = trimClips([{ id: ++this.clipId, text: text.slice(0, 5000), at: Date.now() }, ...this.state.clipboard.filter(c => c.text !== text.slice(0, 5000))], MAX_CLIPS)
     this.changed()
+  }
+
+  /** Windows' snipping overlay put your snip on the clipboard: it goes to the shelf as a PNG (Pictures, Pebble folder), and the
+   * text OCR reads on it into the clipboard list. */
+  private async takeSnip(): Promise<boolean> {
+    let png: Buffer
+    try {
+      if (!await clipboard.has('image/png')) return false
+      const item = (await clipboard.read()).find(i => i.types.includes('image/png'))
+      if (!item) return false
+      png = Buffer.from(await (await item.getType('image/png')).arrayBuffer())
+    } catch { return false }
+    this.snipping = 0
+    const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ').replace(/:/g, '.')
+    const file = path.join(app.getPath('pictures'), 'Pebble', `Snip ${stamp}.png`)
+    try { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, png) } catch { return false }
+    await this.addToShelf([file])
+    const text = (await this.native.request<string>('ocr.file', { file }).catch(() => '')).trim()
+    if (text && this.settings().clipboard.enabled) {
+      this.state.clipboard = trimClips([{ id: ++this.clipId, text: text.slice(0, 5000), at: Date.now() }, ...this.state.clipboard], MAX_CLIPS)
+      this.changed()
+    }
+    return true
   }
 
   /** A copied picture: a small preview in the list, the picture itself kept here (the newest 8). */
@@ -286,6 +312,7 @@ export class Extras extends EventEmitter {
       case 'shelf.reveal': if (s.shelf.some(f => f.path === a.path)) shell.showItemInFolder(a.path); return
       case 'shelf.remove': s.shelf = s.shelf.filter(f => f.path !== a.path); return this.saveShelf()
       case 'shelf.clear': s.shelf = []; return this.saveShelf()
+      case 'snip': this.snipping = Date.now(); await shell.openExternal('ms-screenclip:'); return
       case 'clip.copy': {
         const c = s.clipboard.find(x => x.id === a.id)
         const img = c?.image ? this.images.get(c.id) : undefined
@@ -353,7 +380,7 @@ export function validAction(a: unknown): a is Action {
     case 'focus.start': return Number.isInteger(o.seconds) && (o.seconds as number) >= 1 && (o.seconds as number) <= 24 * 3600 && (o.break === undefined || typeof o.break === 'boolean')
     case 'radio': return (o.kind === 'wifi' || o.kind === 'bluetooth') && typeof o.on === 'boolean'
     case 'open': return o.what === 'wifi' || o.what === 'bluetooth'
-    case 'shelf.clear': case 'clip.clear': case 'focus.pause': case 'focus.resume': case 'focus.stop': case 'drop.start': case 'drop.stop': case 'drop.allow': case 'drop.network': case 'chat.stop': case 'chat.clear': case 'chat.signIn': case 'chat.windows': case 'chat.dictate': return true
+    case 'shelf.clear': case 'snip': case 'clip.clear': case 'focus.pause': case 'focus.resume': case 'focus.stop': case 'drop.start': case 'drop.stop': case 'drop.allow': case 'drop.network': case 'chat.stop': case 'chat.clear': case 'chat.signIn': case 'chat.windows': case 'chat.dictate': return true
     case 'chat.look': return Number.isSafeInteger(o.hwnd)
     case 'chat.say': return o.at === null || Number.isFinite(o.at)
     case 'word.check': case 'word.close': return true

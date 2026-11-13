@@ -101,6 +101,7 @@ export type Action =
   | { do: 'shelf.add'; paths: string[] }
   | { do: 'shelf.open' | 'shelf.reveal' | 'shelf.remove' | 'shelf.drag'; path: string }
   | { do: 'shelf.clear' }
+  | { do: 'snip' }
   | { do: 'clip.copy'; id: number }
   | { do: 'clip.clear' }
   | { do: 'clip.remove'; id: number }

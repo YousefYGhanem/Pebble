@@ -20,6 +20,7 @@
 <div class="page">
   <div class="page-head">
     <span class="page-title">{t('i.page.files')}</span>
+    {#if !drop}<button class="ghost" title={t('i.files.snipHint')} onclick={() => act({ do: 'snip' })}><Icon name="snip" size={14} />{t('i.files.snip')}</button>{/if}
     {#if !drop}<button class="ghost" onclick={() => act({ do: 'drop.start' })}><Icon name="phone" size={14} />{t('i.files.phone')}</button>{/if}
     {#if shelf.length && !drop}<button class="ghost" onclick={() => undo.offer(t('i.undo.shelf'), { hides: 'shelf', commit: () => act({ do: 'shelf.clear' }) })}>{t('i.files.clearAll')}</button>{/if}
     <span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span>

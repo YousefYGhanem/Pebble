@@ -680,5 +680,7 @@
   "i.mixer.none": "No app is playing sound right now.",
   "i.screen.today": "Screen time: {apps}",
   "extras.screenTime": "Screen time",
-  "extras.screenTimeHint": "Your top apps today on Home. Counted on this PC only, never sent anywhere."
+  "extras.screenTimeHint": "Your top apps today on Home. Counted on this PC only, never sent anywhere.",
+  "i.files.snip": "Snip",
+  "i.files.snipHint": "Snip part of the screen: it lands here, and its text goes to the clipboard list"
 }
