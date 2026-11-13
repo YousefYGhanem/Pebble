@@ -59,7 +59,7 @@ Product type in Partner Center: **MSIX or PWA app**. Identity: `YousefGhanem.Peb
 Windows SDK's own tool:
 
 ```
-"C:\Program Files (x86)\Windows Kitsin.0.26100.0d\makeappx.exe" pack /o /f dist\store\__appx-x64\mapping.txt /p "dist\store\Pebble <version>.appx"
+"C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\makeappx.exe" pack /o /f dist\store\__appx-x64\mapping.txt /p "dist\store\Pebble <version>.appx"
 ```
 
 Upload the `.appx` unsigned: the Store signs it.
@@ -68,8 +68,7 @@ Upload the `.appx` unsigned: the Store signs it.
 - `build/appxmanifest.xml` (electron-builder's own, plus one line) turns off file-write virtualization, so
   `%APPDATA%\Pebble` (the agents' hook token, hook scripts, settings) is the real folder that coding tools read. This
   needs the restricted capability `unvirtualizedResources`.
-- Agents' hooks and terminals run a copy of `pebble-native.exe` in `%APPDATA%\Pebble
-ative\<version>`, because
+- Agents' hooks and terminals run a copy of `pebble-native.exe` in `%APPDATA%\Pebble\native\<version>`, because
   programs outside the package cannot start an exe inside WindowsApps.
 - Pebble's own updater is off (the Store updates it). It starts with Windows through a startup task, which you
   switch in Windows Settings → Apps → Startup (Pebble's own "Start with Windows" switch does not apply there).
