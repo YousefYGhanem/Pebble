@@ -58,7 +58,7 @@ appx:
   capabilities: [runFullTrust, unvirtualizedResources]
   minVersion: 10.0.19041.0
   maxVersionTested: 10.0.26100.0
-  displayName: Pebble
+  displayName: Pebble Pet # the name reserved in Partner Center ("Pebble" was taken); the Store requires an exact match
   applicationId: Pebble
   backgroundColor: transparent
   languages: [en-US, ar]

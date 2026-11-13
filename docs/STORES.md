@@ -86,8 +86,97 @@ helper (music, volume), and uninstalling.
 (`UserNotificationListener`) only when it is a packaged app and you allow it once. The Store version would show them as
 peeks on the island; the regular installer keeps working without them.
 
-**Listing texts:** the README's first paragraph and feature list; screenshots from `docs/screens/`.
-**Category:** Productivity · **Languages:** English, Arabic · **Price:** free
+**Privacy policy URL:** https://github.com/YousefYGhanem/Pebble/blob/main/PRIVACY.md
+**Website:** https://github.com/YousefYGhanem/Pebble · **Support:** https://github.com/YousefYGhanem/Pebble/issues
+**Category:** Productivity (subcategory: none) · **Languages:** English, Arabic · **Price:** free
+**Screenshots:** `docs/store/*.png` (1920×1080; `npm run capture` then `npm run store-shots` to redraw). Logos are in
+the package (`build/appx`, drawn by `npm run icon`); for the listing's own logo use `build/appx/LargeTile.png`.
+
+### Listing, English
+
+**Product name:** Pebble Pet
+
+**Short description:**
+A notch-style island for Windows that follows your AI coding agents and answers their questions, with Pip, music,
+files, focus and your day around it.
+
+**Description:**
+Pebble Pet puts a small island at the top of your screen. It follows your AI coding agents (Claude Code, Codex, Gemini
+CLI, Cursor, OpenCode, Aider and DeepSeek Harness) and shows what each one is doing, live. When an agent needs you,
+the island grows into a card: allow or deny a command, answer its question, or review its plan, without switching
+windows. When it is done, you know.
+
+Pip, a little character who lives in the island, keeps you company: he reacts to your agents, dances to your music,
+falls asleep when you are away, and earns outfits as you work.
+
+Open the island for more:
+- Home: your day at a glance, with your agents' work, the next prayer, screen time and quick controls
+- Music: what plays in any app, with timed lyrics and each app's own volume
+- Files: a shelf for files, snips of your screen, and sending files from your phone
+- Clipboard, Notes and To-do with reminders, a Focus timer with calm sounds, and connectors (GitHub, weather, your
+  calendar with a Join button, live scores, news)
+- Pip's chat: ask about anything, or show him a window
+
+Kind to your PC and your privacy: it rests while you are away, in a game or when you tuck it away. No account, no
+analytics, no ads. English and Arabic.
+
+**Features** (one per line, up to 20):
+- Follows Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Aider and DeepSeek Harness
+- Answer permissions, questions and plans from the island
+- Claude plan usage with warnings before you hit a limit
+- Pip, a companion who reacts to your work
+- Music with timed lyrics and per-app volume
+- File shelf, screen snips and phone drop
+- Clipboard history, notes and to-dos with reminders
+- Focus timer with focus sounds
+- Water and stand-up reminders, prayer times, screen time
+- Connectors: GitHub, weather, calendar, live scores, news
+- Themes, including one that follows Windows light or dark
+- English and Arabic
+
+**Search terms** (up to 7): notch, dynamic island, AI agents, Claude Code, productivity, music widget, desktop pet
+
+### Listing, Arabic
+
+**اسم المنتج:** Pebble Pet
+
+**وصف قصير:**
+جزيرة بأسلوب النوتش لويندوز تتابع وكلاء البرمجة بالذكاء الاصطناعي وتجيب عن أسئلتهم، ومعها بيب والموسيقى والملفات
+والتركيز ويومك.
+
+**الوصف:**
+يضع Pebble Pet جزيرة صغيرة أعلى شاشتك. تتابع وكلاء البرمجة بالذكاء الاصطناعي (Claude Code وCodex وGemini CLI وCursor
+وOpenCode وAider وDeepSeek Harness) وتعرض ما يفعله كل منهم مباشرة. وحين يحتاجك وكيل، تكبر الجزيرة إلى بطاقة: اسمح
+بأمر أو ارفضه، أجب عن سؤاله، أو راجع خطته، دون أن تنتقل بين النوافذ. وحين ينتهي، تعرف.
+
+بيب، شخصية صغيرة تعيش في الجزيرة، يرافقك: يتفاعل مع وكلائك، ويرقص على موسيقاك، وينام حين تغيب، ويكسب أزياء أثناء
+عملك.
+
+افتح الجزيرة لترى المزيد:
+- الرئيسية: يومك في لمحة، مع عمل وكلائك والصلاة القادمة ووقت الشاشة وأزرار سريعة
+- الموسيقى: ما يُشغَّل في أي تطبيق، مع كلمات متزامنة ومستوى صوت كل تطبيق
+- الملفات: رف للملفات، وقص أجزاء من الشاشة، وإرسال الملفات من هاتفك
+- الحافظة والملاحظات والمهام مع التذكيرات، ومؤقت تركيز بأصوات هادئة، وموصلات (GitHub والطقس وتقويمك مع زر
+  الانضمام والنتائج المباشرة والأخبار)
+- محادثة بيب: اسأله عن أي شيء، أو أره نافذة
+
+لطيف مع جهازك وخصوصيتك: يرتاح حين تغيب أو تلعب أو تخفيه. بلا حساب، بلا تتبع، بلا إعلانات. بالعربية والإنجليزية.
+
+**الميزات:**
+- يتابع Claude Code وCodex وGemini CLI وCursor وOpenCode وAider وDeepSeek Harness
+- أجب عن الأذونات والأسئلة والخطط من الجزيرة
+- استخدام خطة Claude مع تنبيهات قبل بلوغ الحد
+- بيب، رفيق يتفاعل مع عملك
+- موسيقى بكلمات متزامنة ومستوى صوت لكل تطبيق
+- رف ملفات وقص الشاشة وإرسال من الهاتف
+- سجل الحافظة والملاحظات والمهام مع التذكيرات
+- مؤقت تركيز بأصوات تركيز
+- تذكير بشرب الماء والوقوف، ومواقيت الصلاة، ووقت الشاشة
+- موصلات: GitHub والطقس والتقويم والنتائج المباشرة والأخبار
+- سمات، منها واحدة تتبع الوضع الفاتح أو الداكن في ويندوز
+- العربية والإنجليزية
+
+**كلمات البحث:** نوتش، جزيرة، وكلاء الذكاء الاصطناعي، Claude Code، إنتاجية، موسيقى، رفيق سطح المكتب
 
 ## Privacy (for both listings)
 

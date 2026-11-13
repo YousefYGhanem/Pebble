@@ -17,6 +17,7 @@
     "capture": "electron-vite build && electron . --capture=docs/screens",
     "hooks:remove": "electron-vite build && electron . --remove-hooks",
     "icon": "electron scripts/make-icon.cjs",
+    "store-shots": "electron scripts/store-shots.cjs",
     "dist": "npm run build:native && electron-vite build && electron-builder --win --publish never",
     "dist:store": "npm run build:native && electron-vite build && electron-builder --win appx --publish never -c.directories.output=dist/store",
     "release": "npm run build:native && electron-vite build && electron-builder --win --publish always",
