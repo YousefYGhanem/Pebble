@@ -4,7 +4,7 @@
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t, tOr } from '../i18n.svelte'
   import { accelerator, THEME_COLORS, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
-  import { CHIPS, DEFAULTS } from '../../shared/settings'
+  import { CHIPS, DEFAULTS, PRAYER_METHODS } from '../../shared/settings'
   import { WORDS } from '../../shared/i18n'
   import { SCENES, type Scene } from '../../shared/island'
   import { OUTFITS, PIP_LOOKS, pipColors, type PipLookId } from '../../shared/pip'
@@ -450,16 +450,16 @@
         </section>
         <h2>{t('prayer.title')} <span class="muted">· {t('prayer.hint')}</span></h2>
         <section>
+          <form class="row" onsubmit={e => { e.preventDefault(); const c = (e.currentTarget.elements.namedItem('city') as HTMLInputElement).value; if (c.trim()) act({ do: 'prayer.find', city: c }) }}>
+            <span>{t('prayer.city')}<small>{s.prayer.lat !== null ? `${s.prayer.city} · ${s.prayer.lat.toFixed(2)}, ${s.prayer.lng?.toFixed(2)}` : t('prayer.cityHint')}</small></span>
+            <span class="inline"><input type="text" name="city" placeholder={s.prayer.city || t('prayer.cityPlaceholder')} /><button type="submit">{t('prayer.find')}</button></span>
+          </form>
           <label class="row"><span>{t('prayer.enabled')}</span>
             <input type="checkbox" class="switch" checked={s.prayer.enabled} onchange={() => set('prayer.enabled', !s.prayer.enabled)} /></label>
           {#if s.prayer.enabled}
-            <form class="row" onsubmit={e => { e.preventDefault(); const c = (e.currentTarget.elements.namedItem('city') as HTMLInputElement).value; if (c.trim()) act({ do: 'prayer.find', city: c }) }}>
-              <span>{t('prayer.city')}<small>{s.prayer.lat !== null ? `${s.prayer.city} · ${s.prayer.lat.toFixed(2)}, ${s.prayer.lng?.toFixed(2)}` : t('prayer.cityHint')}</small></span>
-              <span class="inline"><input type="text" name="city" placeholder={s.prayer.city || t('prayer.cityPlaceholder')} /><button type="submit">{t('prayer.find')}</button></span>
-            </form>
             <label class="row"><span>{t('prayer.method')}</span>
               <select value={s.prayer.method} onchange={e => set('prayer.method', text(e))}>
-                {#each ['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey'] as m}<option value={m}>{t(`prayer.m.${m}`)}</option>{/each}
+                {#each PRAYER_METHODS as m}<option value={m}>{t(`prayer.m.${m}`)}</option>{/each}
               </select></label>
             <div class="row"><span>{t('prayer.asr')}</span>
               <div class="seg">

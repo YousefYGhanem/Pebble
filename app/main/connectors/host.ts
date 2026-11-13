@@ -50,6 +50,8 @@ export class ConnectorHost extends EventEmitter {
     /** asked for a plugin you added: may it run with these permissions? */
     approve: (m: Manifest) => Promise<boolean>
     windows: () => Promise<{ title: string; process: string }[]>
+    /** your city (Settings → Extras): a connector's own "city" setting left blank means this one */
+    city?: () => string
   }) {
     super()
     this.configFile = path.join(o.dataDir, 'connectors.json')
@@ -128,7 +130,7 @@ export class ConnectorHost extends EventEmitter {
     const f = this.found.get(id)
     if (!f) return 'not found'
     const s = this.config[id]?.settings ?? {}
-    const need = f.manifest.settings.filter(x => x.required && (x.key in (this.secrets[id] ?? {}) ? false : s[x.key] === undefined || s[x.key] === '' || s[x.key] === SECRET_SAVED || (Array.isArray(s[x.key]) && !(s[x.key] as unknown[]).length)))
+    const need = f.manifest.settings.filter(x => x.required && !(x.key === 'city' && this.o.city?.()) && (x.key in (this.secrets[id] ?? {}) ? false : s[x.key] === undefined || s[x.key] === '' || s[x.key] === SECRET_SAVED || (Array.isArray(s[x.key]) && !(s[x.key] as unknown[]).length)))
     return need.length ? `Fill in ${need.map(n => `"${n.key}" (${n.label})`).join(', ')} in connectors.json` : null
   }
 
@@ -176,7 +178,7 @@ export class ConnectorHost extends EventEmitter {
     const child = this.o.spawn(id, f.builtIn)
     this.running.set(id, child)
     const settings: Record<string, unknown> = {}
-    for (const s of f.manifest.settings) if (!f.manifest.permissions.secrets.includes(s.key)) settings[s.key] = entry.settings?.[s.key] ?? s.default
+    for (const s of f.manifest.settings) if (!f.manifest.permissions.secrets.includes(s.key)) settings[s.key] = entry.settings?.[s.key] || (s.key === 'city' && this.o.city?.()) || s.default
     let store = {}
     try { store = JSON.parse(fs.readFileSync(path.join(this.storeDir, id + '.json'), 'utf8')) } catch {}
     child.on('message', m => this.onMessage(id, m))

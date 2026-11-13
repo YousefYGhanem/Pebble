@@ -5,7 +5,7 @@ import path from 'node:path'
 import { EventEmitter } from 'node:events'
 import { app, clipboard, ClipboardItem, nativeImage, shell } from 'electron'
 import type { RestLevel } from '../rest'
-import { focusFinished, nextDue, noticesFor, toggleTodo, trimClips, type PcState, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
+import { emptyExtras, focusFinished, nextDue, noticesFor, toggleTodo, trimClips, type PcState, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
 import type { Native } from '../native'
 import { Lyrics } from './lyrics'
@@ -23,7 +23,7 @@ const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipbo
  * 'peak' (0–1, ~30 a second while music plays) and 'focus-done'.
  */
 export class Extras extends EventEmitter {
-  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+  state: ExtrasState = emptyExtras()
   private lyrics: Lyrics
   private songKey = ''
   private lastClip = ''
@@ -372,7 +372,7 @@ export function validAction(a: unknown): a is Action {
     case 'mixer.set': return typeof o.name === 'string' && o.name.length <= 100
       && (o.volume === undefined || (typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100)) && (o.muted === undefined || typeof o.muted === 'boolean')
     case 'wellness': return (o.what === 'water' || o.what === 'stand') && typeof o.done === 'boolean'
-    case 'update.install': case 'mic.toggle': case 'pebble.sounds': return true
+    case 'update.install': case 'mic.toggle': return true
     case 'power': return ['efficiency', 'balanced', 'performance'].includes(o.mode as string)
     case 'focus.sound': return ['off', 'rain', 'deep', 'waves'].includes(o.sound as string)
     case 'tip.seen': return o.id === 'ask' || o.id === 'tuck' || o.id === 'drop'

@@ -5,8 +5,8 @@ import { CalculationMethod, Coordinates, Madhab, PolarCircleResolution, PrayerTi
 
 export const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const
 export type Prayer = (typeof PRAYERS)[number]
-export const METHODS = ['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey'] as const
-export type Method = (typeof METHODS)[number]
+import { PRAYER_METHODS } from '../shared/settings'
+export type Method = (typeof PRAYER_METHODS)[number]
 
 /** A day's five prayers, in order, as times (ms). */
 export function prayerDay(lat: number, lng: number, method: Method, madhab: 'shafi' | 'hanafi', day: Date): { name: Prayer; at: number }[] {

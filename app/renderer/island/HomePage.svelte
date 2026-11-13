@@ -101,9 +101,14 @@
     </button>
   {/if}
 
-  {#if extras.prayer}<span class="todoline muted"><Icon name="moon" size={13} />{t('i.prayer.next', { name: t(`prayer.${extras.prayer.name}`), time: hhmm(extras.prayer.at) })}</span>{/if}
-  {#if extras.screen.length}<span class="todoline muted"><Icon name="history" size={13} />{t('i.screen.today', { apps: extras.screen.map(a => `${a.name} ${span(a.seconds)}`).join(' · ') })}</span>{/if}
-  {#if extras.glasses}<span class="todoline muted"><Icon name="water" size={13} />{t('i.well.today', { n: extras.glasses })}</span>{/if}
+  <!-- the day at a glance: one quiet line (prayer, screen time, water), each part only when there is one -->
+  {#if extras.prayer || extras.screen.length || extras.glasses}
+    <span class="todoline muted today">
+      {#if extras.prayer}<span><Icon name="moon" size={13} />{t('i.prayer.next', { name: t(`prayer.${extras.prayer.name}`), time: hhmm(extras.prayer.at) })}</span>{/if}
+      {#if extras.screen.length}<span title={extras.screen.map(a => `${a.name} ${span(a.seconds)}`).join(' · ')}><Icon name="history" size={13} />{t('i.screen.today', { apps: `${extras.screen[0]!.name} ${span(extras.screen[0]!.seconds)}` })}</span>{/if}
+      {#if extras.glasses}<span><Icon name="water" size={13} />{t('i.well.today', { n: extras.glasses })}</span>{/if}
+    </span>
+  {/if}
   {#if todos.total}
     <button class="todoline" onclick={() => go('notes')}><Icon name="check" size={13} />{t('i.todo.today', { done: todos.done, total: todos.total })}
       {#if next}<span class="muted">· {t('i.todo.next', { text: next.text, time: hhmm(next.due!) })}</span>{/if}</button>
@@ -158,4 +163,6 @@
   .day { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; padding: 10px 12px; border-radius: 16px; background: var(--surface1); }
   .day:hover { background: var(--surface2); }
   .facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9em; }
+  .today { gap: 14px; flex-wrap: wrap; }
+  .today > span { display: inline-flex; align-items: center; gap: 6px; }
 </style>

@@ -30,7 +30,7 @@ import { Extras, validAction } from './extras'
 import { DropServer } from './extras/drop'
 import { allowInFirewall, checkReach } from './extras/reach'
 import { FocusGuard, guardPage, guardPreload } from './extras/guard'
-import type { ExtrasState } from '../shared/extras'
+import { emptyExtras, type ExtrasState } from '../shared/extras'
 import { sharedSpawner, type Child } from './connectors/shared'
 import { ConnectorHost } from './connectors/host'
 import { describePermissions } from '../shared/connectors'
@@ -104,7 +104,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS = emptyExtras()
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -130,7 +130,8 @@ const connectors = new ConnectorHost({
     })
     return r.response === 0
   },
-  windows: () => native.request('windows.list')
+  windows: () => native.request('windows.list'),
+  city: () => store.settings.prayer.city
 })
 const history = new History(userData)
 const today = new Today(userData)
@@ -541,7 +542,6 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'update.install') { updater.install(); return }
   if (a.do === 'wellness') { wellnessAnswerHandler(a.what, a.done); return }
   if (a.do === 'mic.toggle') { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)); return }
-  if (a.do === 'pebble.sounds') { store.update({ features: { sound: !store.settings.features.sound } }); return }
   if (a.do === 'power') { native.request('power.set', { mode: a.mode }).then(() => extras.readPower()).catch(err => log.warn('power:', err.message)); return }
   if (a.do === 'focus.sound') { store.update({ music: { focusSound: a.sound } }); return }
   if (a.do === 'tip.seen') { const seen = store.settings.general.tipsSeen; if (!seen.includes(a.id)) store.update({ general: { tipsSeen: [...seen, a.id] } }); return }

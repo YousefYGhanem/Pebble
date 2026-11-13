@@ -4,6 +4,9 @@ import { PIP_LOOKS } from './pip'
 
 // Everything the user can change. settings.json in userData holds only what differs from DEFAULTS;
 // it is merged over DEFAULTS and then checked against this schema.
+/** how prayer times are worked out (adhan's calculation methods) */
+export const PRAYER_METHODS = ['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey'] as const
+
 export const CHIPS = ['none', 'time', 'battery', 'cpu', 'ram', 'prayer'] as const
 
 /** a built-in chip, or a connector's chip widget: "widget:<connector>/<widget>" */
@@ -85,7 +88,7 @@ export const settingsSchema = z.object({
   prayer: z.object({
     enabled: z.boolean(),
     city: z.string().max(120), lat: z.number().min(-90).max(90).nullable(), lng: z.number().min(-180).max(180).nullable(),
-    method: z.enum(['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey']),
+    method: z.enum(PRAYER_METHODS),
     madhab: z.enum(['shafi', 'hanafi']),
     /** a Windows notification at each prayer (the island always shows it) */
     notify: z.boolean(),

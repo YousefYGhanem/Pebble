@@ -94,6 +94,9 @@ export interface ExtrasState {
   volume: { level: number; muted: boolean } | null
 }
 
+/** nothing yet (a fresh start; a copy for each user) */
+export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null })
+
 /** Everything the island can ask main to do with the extras (validated in main). */
 export type Action =
   | { do: 'media'; action: 'toggle' | 'next' | 'previous' | 'seek'; positionMs?: number }
@@ -113,7 +116,6 @@ export type Action =
   | { do: 'mixer.set'; name: string; volume?: number; muted?: boolean }
   | { do: 'wellness'; what: 'water' | 'stand'; done: boolean }
   | { do: 'power'; mode: 'efficiency' | 'balanced' | 'performance' }
-  | { do: 'pebble.sounds' }
   | { do: 'todo.add'; text: string; due?: number; daily?: boolean }
   | { do: 'todo.toggle' | 'todo.remove'; id: string }
   | { do: 'todo.snooze'; id: string; minutes: number }
