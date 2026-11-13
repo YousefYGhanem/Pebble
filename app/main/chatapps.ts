@@ -36,6 +36,8 @@ export class ChatApps {
   seen = 0
 
   constructor(private hub: Hub, private key: string, private o: {
+    /** away, in a game or tucked: nobody reads the chats then */
+    resting?: () => boolean
     native: { available: boolean; request<T>(cmd: string, args?: Record<string, unknown>): Promise<T> }
     /** process names of the desktop apps to follow (settings) */
     followed(): string[]
@@ -85,7 +87,7 @@ export class ChatApps {
 
   private polling = false
   private async poll() {
-    if (this.polling) return
+    if (this.polling || this.o.resting?.()) return
     this.polling = true
     try {
       const wanted = new Set(this.o.followed().map(p => p.toLowerCase()))

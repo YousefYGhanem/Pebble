@@ -5,6 +5,7 @@ import type { Scene } from '../shared/island'
 const api: IslandApi = {
   ready: () => ipcRenderer.send(CH.ready),
   onState: fn => { ipcRenderer.on(CH.state, (_e, s: IslandState) => fn(s)) },
+  onChat: fn => { ipcRenderer.on(CH.chat, (_e, c) => fn(c)) },
   onExpand: fn => { ipcRenderer.on(CH.expand, (_e, id?: string) => fn(id)) },
   onToggle: fn => { ipcRenderer.on(CH.toggle, () => fn()) },
   onTuck: fn => { ipcRenderer.on(CH.tuck, () => fn()) },

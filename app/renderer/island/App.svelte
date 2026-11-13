@@ -188,6 +188,7 @@
     lastStatus = Object.fromEntries(list.map(x => [x.id, x.status]))
   }
 
+  window.pebble.onChat(c => { if (view) view = { ...view, chat: c } })
   window.pebble.onState(s => {
     applyTheme(s.theme)
     setLanguage(s.settings.general.language, false)
@@ -313,7 +314,7 @@
   window.pebble.ready()
   matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', e => (systemReduced = e.matches))
   addEventListener('resize', wake) // another screen or scale
-  setInterval(() => { now = Date.now(); if (extras?.focus?.endsAt) wake() }, 1000) // the focus ring moves on each second
+  setInterval(() => { if (mode === 'tucked') return; now = Date.now(); if (extras?.focus?.endsAt) wake() }, 1000) // the focus ring moves on each second
 
   // ---------- hello, goodbye, jelly ----------
   // Hello: a dot comes out of the top edge, springs open into the resting pill, the eyes grow from a line, a wobble.
@@ -553,7 +554,8 @@
   document.addEventListener('mouseleave', () => { setHover(false); lookX.target = lookY.target = 0; wake() })
   // poking Pip (a click right on him) never opens or closes the island
   addEventListener('pointerdown', e => { if (e.button === 0 && pipAt.r && Math.hypot(e.clientX - pipAt.x, e.clientY - pipAt.y) < pipAt.r) poke() }, true)
-  setInterval(() => window.pebble.catchMouse(catching()), 1000) // never stuck catching clicks
+  let caught: boolean | undefined
+  setInterval(() => { const c = catching(); if (c !== caught) { caught = c; window.pebble.catchMouse(c) } }, 1000) // never stuck catching clicks
 
   function onClick() {
     if (Date.now() - pokedAt < 400) return

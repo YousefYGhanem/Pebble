@@ -69,8 +69,9 @@ export class Hub extends EventEmitter {
     // a closed terminal sends no SessionEnd: forget sessions that went quiet for 30 min
     setInterval(() => {
       const old = Date.now() - 30 * 60e3
-      for (const [id, s] of this.sessions) if (s.at < old && !this.held.has(id) && !this.waits.has(id)) this.sessions.delete(id)
-      this.emit('change')
+      let gone = false
+      for (const [id, s] of this.sessions) if (s.at < old && !this.held.has(id) && !this.waits.has(id)) { this.sessions.delete(id); gone = true }
+      if (gone) this.emit('change')
     }, 60e3).unref()
   }
 

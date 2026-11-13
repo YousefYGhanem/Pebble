@@ -31,7 +31,8 @@ export const CH = {
   release: 'island:release',
   opened: 'island:opened',
   peek: 'island:peek',
-  notice: 'island:notice'
+  notice: 'island:notice',
+  chat: 'island:chat'
 } as const
 
 /** Your decision on what a session asks. */
@@ -103,6 +104,7 @@ export interface IslandState {
 export interface IslandApi {
   /** the page (re)loaded: send the current state now */
   ready(): void
+  onChat(fn: (c: IslandState['chat']) => void): void
   onState(fn: (s: IslandState) => void): void
   /** open the island, optionally on one session (a toast was clicked) */
   onExpand(fn: (sessionId?: string) => void): void

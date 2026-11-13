@@ -144,7 +144,7 @@ const tr = (key: string, vars?: Record<string, string | number>) => translate(st
 const extensionDir = app.isPackaged ? path.join(process.resourcesPath, 'extensions', 'chat') : path.join(app.getAppPath(), 'extensions', 'chat')
 // DeepSeek Harness: followed through its session logs (switched on and off like the other agents)
 useDsh(new DshWatch({ event: e => hub.ingest(e, 'dsh'), usage: u => hub.setUsage('dsh', u) }))
-const chatApps = new ChatApps(hub, extensionKey, { native, followed: () => store.settings.chatApps.desktop, problem: (title, body) => toast(title, body) })
+const chatApps = new ChatApps(hub, extensionKey, { native, followed: () => store.settings.chatApps.desktop, resting: () => rest === 'deep' || rest === 'off', problem: (title, body) => toast(title, body) })
 const drop = new DropServer(() => extras.state.shelf, app.getPath('downloads'))
 const guard = new FocusGuard(native, () => store.settings, () => !!extras.state.focus && extras.state.focus.left === undefined && !extras.state.focus.break, guardPreload(), guardPage)
 const fullscreen = new FullscreenWatch(native)
@@ -165,7 +165,7 @@ function push(force = false) {
 function sendState() {
   pushTimer = undefined
   const state: IslandState = { sessions: hub.list(), settings: store.settings, theme: store.theme, usage: hub.usage, history: history.items,
-    pip: { done: pip.stats.done, achievements: pip.stats.achievements, custom: pip.custom, sleepy, playing: !!extras.state.media?.playing },
+    pip: { done: pip.stats.done, achievements: pip.stats.achievements, custom: pip.custom, sleepy, playing: !!extras.state.media?.playing && rest !== 'off' },
     extras: { ...extras.state, drop: drop.state },
     widgets: [...connectors.widgets.values()], connectors: connectors.list(), chat: chat.state(), day: today.view(),
     update: updater.status.state === 'ready' ? updater.status.version : null }
@@ -354,6 +354,8 @@ function applyRest() {
   log.info(`tools ${level === 'awake' ? 'awake' : `resting (${level})`}`)
   extras.setRest(level)
   connectors.pause(level !== 'awake')
+  native.watch('drag', level !== 'deep' && level !== 'off', 'drop-target') // nobody drags files onto it while away, in a game or tucked
+  applyScreen()
 }
 
 // ---------- usage alerts: 80% and 95% of a CLI's session or week ----------
@@ -469,7 +471,7 @@ ipcMain.on(CH.opened, (e, on: unknown) => {
   settingsWin.islandDid(islandOpen ? 'open' : 'close')
 })
 ipcMain.on(CH.catchMouse, (e, on: unknown) => {
-  if (fromIsland(e)) island!.setIgnoreMouseEvents(on !== true, { forward: true })
+  if (fromIsland(e) && !catchingDrag) island!.setIgnoreMouseEvents(on !== true, { forward: true }) // a file drag over it keeps the catch
 })
 /** Only well-formed answers from the island reach an agent. */
 function validAnswer(a: unknown): a is Answer {
@@ -643,7 +645,7 @@ app.whenReady().then(async () => {
   native.start()
   // Pip dances while music plays, and falls asleep when you are away
   extras.start()
-  native.watch('drag', true, 'drop-target')
+  native.watch('drag', true, 'drop-target') // applyRest switches it off while resting
   extras.on('change', () => { push(); guard.apply() }) // the focus timer started, paused or ended
   extras.on('peak', (p: number) => send(CH.peak, p))
   extras.on('notice', (n: { kind: string; text?: string }) => {
@@ -655,7 +657,13 @@ app.whenReady().then(async () => {
   drop.on('change', push)
   // an answer streams in many small pieces: show them at most ~20 times a second
   chat.on('answered', (text: string) => { if (store.settings.chat.readAloud) void say(text) })
-  chat.on('change', () => { settingsWin.push(); push() })
+  // while an answer streams in, only the chat goes over (paced): the whole state follows once it is done
+  let chatTimer: NodeJS.Timeout | undefined
+  chat.on('change', () => {
+    settingsWin.push()
+    if (!chat.state().busy) { clearTimeout(chatTimer); chatTimer = undefined; push(); return }
+    chatTimer ??= setTimeout(() => { chatTimer = undefined; send(CH.chat, chat.state()) }, 50)
+  })
   connectors.discover()
   connectors.loadConfig()
   void connectors.startAll()
@@ -668,8 +676,8 @@ app.whenReady().then(async () => {
   drop.on('received', (paths: string[]) => { void extras.shelve(paths); toast(tr('m.fromPhone'), paths.map(p => path.basename(p)).join(', '), undefined, undefined, { kind: 'extras' }) })
   setInterval(() => {
     const now = powerMonitor.getSystemIdleTime() >= store.settings.pip.sleepAfterMinutes * 60
-    if (now !== sleepy) { sleepy = now; push(); applyRest() }
-  }, 20_000).unref()
+    if (now !== sleepy) { sleepy = now; push(); applyRest(); if (!now) void planUsage() }
+  }, 3_000).unref() // cheap: the tools wake within a few seconds of your return
   // your own outfits: dropping an SVG in the folder shows it right away
   try { fs.watch(pip.outfitsDir, () => { pip.loadOutfits(); refreshTray(); push() }) } catch {}
   log.info(`Pebble ${app.getVersion()} starting, data in ${userData}`)
@@ -732,6 +740,7 @@ app.whenReady().then(async () => {
   let screenDay: ScreenDay = freshScreen(Date.now())
   try { const j = JSON.parse(fs.readFileSync(screenFile, 'utf8')) as ScreenDay; if (j.day === screenDay.day && j.apps) screenDay = j } catch { /* none yet */ }
   const front = { app: '', since: Date.now() }
+  let savedScreen = ''
   const creditFront = () => {
     const now = Date.now()
     // no input for 5 minutes: you are away; and a gap longer than the minute's look (sleep, switched off) is not app time
@@ -752,9 +761,12 @@ app.whenReady().then(async () => {
     if (!store.settings.screenTime.enabled) return
     creditFront()
     showScreen()
+    const json = JSON.stringify(screenDay)
+    if (json === savedScreen) return
+    savedScreen = json
     try { writeJsonAtomic(screenFile, screenDay) } catch (err) { log.warn('screen time:', (err as Error).message) }
   }, 60_000).unref()
-  applyScreen = () => { front.since = Date.now(); native.watch('foreground', store.settings.screenTime.enabled, 'screentime'); showScreen() }
+  applyScreen = () => { front.since = Date.now(); native.watch('foreground', store.settings.screenTime.enabled && rest !== 'off' && !sleepy, 'screentime'); showScreen() }
   applyScreen()
   // Claude's plan usage from Anthropic every 5 minutes (also the Claude app's sessions, which run no status line)
   const planUsage = async () => {
@@ -767,7 +779,7 @@ app.whenReady().then(async () => {
   setInterval(() => void planUsage(), 5 * 60_000).unref()
   let codexUsage = ''
   setInterval(() => {
-    if (!store.settings.agents.codex.enabled) return
+    if (!store.settings.agents.codex.enabled || rest === 'deep' || rest === 'off') return
     const u = readCodexUsage(), key = JSON.stringify(u)
     if (u && key !== codexUsage) { codexUsage = key; hub.setUsage('codex', u) }
   }, 30_000).unref()

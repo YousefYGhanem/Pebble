@@ -13,9 +13,15 @@ static class Windows
         return new JsonObject { ["x"] = r.Left, ["y"] = r.Top, ["w"] = r.Right - r.Left, ["h"] = r.Bottom - r.Top };
     }
 
+    static readonly Dictionary<uint, string> names = [];
     static string ProcessName(uint pid)
     {
-        try { using var p = System.Diagnostics.Process.GetProcessById((int)pid); return p.ProcessName; } catch { return ""; }
+        lock (names)
+        {
+            if (names.TryGetValue(pid, out var known)) return known;
+            if (names.Count > 256) names.Clear(); // shortcut: a reused pid can show the old name until this clears; key on the process start time if that ever shows
+            try { using var p = System.Diagnostics.Process.GetProcessById((int)pid); return names[pid] = p.ProcessName; } catch { return ""; }
+        }
     }
 
     public static JsonObject Describe(nint hwnd) => new()
