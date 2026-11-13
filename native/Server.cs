@@ -72,6 +72,8 @@ static class Server
         "media.control" => await Media.Control(Str(a, "action"), Long(a, "positionMs")),
         "audio.get" => AudioState(),
         "audio.set" => AudioSet(a),
+        "mixer.list" => Mixer.List(),
+        "mixer.set" => Mixer.Set(Str(a, "name"), a["volume"]?.GetValue<int>(), a["muted"]?.GetValue<bool>()),
         "power.get" => Win32.PowerMode(),
         "power.set" => Win32.SetPowerMode(Str(a, "mode")),
         "mic.mute" => Audio.MicSetMute(a["on"]?.GetValue<bool>() ?? !(Audio.MicMuted() ?? false)),

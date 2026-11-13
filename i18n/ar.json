@@ -675,5 +675,7 @@
   "prayer.m.Qatar": "قطر",
   "prayer.m.Singapore": "سنغافورة",
   "prayer.m.Tehran": "طهران",
-  "prayer.m.Turkey": "ديانت (تركيا)"
+  "prayer.m.Turkey": "ديانت (تركيا)",
+  "i.mixer.apps": "التطبيقات",
+  "i.mixer.none": "لا يوجد تطبيق يشغّل صوتًا الآن."
 }

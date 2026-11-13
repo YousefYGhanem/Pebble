@@ -103,7 +103,7 @@ const vault = {
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
 
-const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], prayer: null, glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+const NO_EXTRAS: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null

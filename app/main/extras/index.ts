@@ -23,7 +23,7 @@ const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipbo
  * 'peak' (0–1, ~30 a second while music plays) and 'focus-done'.
  */
 export class Extras extends EventEmitter {
-  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], prayer: null, glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
+  state: ExtrasState = { media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null }
   private lyrics: Lyrics
   private songKey = ''
   private lastClip = ''
@@ -274,6 +274,12 @@ export class Extras extends EventEmitter {
     const s = this.state
     switch (a.do) {
       case 'media': return this.native.request('media.control', { action: a.action, positionMs: a.positionMs ?? 0 })
+      case 'mixer.refresh': case 'mixer.set': {
+        const list = await this.native.request<ExtrasState['mixer']>(a.do === 'mixer.refresh' ? 'mixer.list' : 'mixer.set',
+          a.do === 'mixer.set' ? { name: a.name, ...(a.volume !== undefined ? { volume: Math.round(a.volume) } : {}), ...(a.muted !== undefined ? { muted: a.muted } : {}) } : {}).catch(() => null)
+        if (JSON.stringify(list) !== JSON.stringify(s.mixer)) { s.mixer = list; this.changed() }
+        return
+      }
       case 'volume': return this.native.request('audio.set', { ...(a.volume !== undefined ? { volume: Math.round(a.volume) } : {}), ...(a.muted !== undefined ? { muted: a.muted } : {}) })
       case 'shelf.add': return this.addToShelf(a.paths)
       case 'shelf.open': if (s.shelf.some(f => f.path === a.path)) await shell.openPath(a.path); return
@@ -329,6 +335,9 @@ export function validAction(a: unknown): a is Action {
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
+    case 'mixer.refresh': return true
+    case 'mixer.set': return typeof o.name === 'string' && o.name.length <= 100
+      && (o.volume === undefined || (typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100)) && (o.muted === undefined || typeof o.muted === 'boolean')
     case 'wellness': return (o.what === 'water' || o.what === 'stand') && typeof o.done === 'boolean'
     case 'update.install': case 'mic.toggle': case 'pebble.sounds': return true
     case 'power': return ['efficiency', 'balanced', 'performance'].includes(o.mode as string)

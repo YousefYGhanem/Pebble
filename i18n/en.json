@@ -675,5 +675,7 @@
   "prayer.m.Qatar": "Qatar",
   "prayer.m.Singapore": "Singapore",
   "prayer.m.Tehran": "Tehran",
-  "prayer.m.Turkey": "Diyanet (Turkey)"
+  "prayer.m.Turkey": "Diyanet (Turkey)",
+  "i.mixer.apps": "Apps",
+  "i.mixer.none": "No app is playing sound right now."
 }

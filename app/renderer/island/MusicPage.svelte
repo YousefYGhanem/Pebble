@@ -15,6 +15,14 @@
   let lyricList = $state<HTMLDivElement>()
   // Player (both side by side) or Lyrics (the words alone, wide and big)
   let view = $state<'player' | 'lyrics'>('player')
+  // each app's own volume (Windows' volume mixer): read while it is open
+  let mixer = $state(false)
+  $effect(() => {
+    if (!mixer) return
+    act({ do: 'mixer.refresh' })
+    const timer = setInterval(() => act({ do: 'mixer.refresh' }), 3000)
+    return () => clearInterval(timer)
+  })
   // the line sung now, in the middle of the column (the list scrolls itself)
   $effect(() => {
     const el = lyricList?.children[line] as HTMLElement | undefined
@@ -47,13 +55,27 @@
 
 <div class="page music" style:--album={color ?? '255, 255, 255'}>
   <div class="page-head"><span class="page-title">{t('i.page.music')}</span>
+    <button class="ghost" class:on={mixer} aria-pressed={mixer} onclick={() => (mixer = !mixer)}><Icon name="volume" size={13} />{t('i.mixer.apps')}</button>
     {#if m && extras.lyrics}
       <div class="seg" role="group" aria-label={t('i.music.view')}>
         <button class:on={view === 'player'} aria-pressed={view === 'player'} onclick={() => (view = 'player')}>{t('i.music.player')}</button>
         <button class:on={view === 'lyrics'} aria-pressed={view === 'lyrics'} onclick={() => (view = 'lyrics')}>{t('i.music.lyrics')}</button>
       </div>
     {/if}<span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
-  {#if !m}
+  {#if mixer}
+    <div class="mixer">
+      {#each extras.mixer ?? [] as app (app.name)}
+        <div class="app">
+          <button class="icon ghost" aria-label={t(app.muted ? 'i.quick.unmute' : 'i.quick.mute')} aria-pressed={app.muted} onclick={() => act({ do: 'mixer.set', name: app.name, muted: !app.muted })}><Icon name={app.muted ? 'mute' : 'volume'} size={14} /></button>
+          <span class="aname">{app.name}</span>
+          <input type="range" min="0" max="100" value={app.volume} aria-label={app.name} onchange={e => act({ do: 'mixer.set', name: app.name, volume: Number((e.currentTarget as HTMLInputElement).value) })} />
+          <span class="aval">{app.volume}%</span>
+        </div>
+      {:else}
+        <div class="empty">{t('i.mixer.none')}</div>
+      {/each}
+    </div>
+  {:else if !m}
     <div class="empty">{t('i.music.nothing')}</div>
   {:else}
     <div class="body" class:withLyrics={!!extras.lyrics} class:lyricsOnly={!!extras.lyrics && view === 'lyrics'}>
@@ -95,6 +117,12 @@
 
 <style>
   .music { background: linear-gradient(to top, rgba(var(--album), 0.22), transparent 70%); border-radius: 0 0 26px 26px; }
+  .mixer { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow: auto; padding-bottom: 8px; }
+  .app { display: flex; align-items: center; gap: 10px; }
+  .aname { width: 140px; flex: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .app input { flex: 1; }
+  .aval { width: 40px; text-align: end; font-variant-numeric: tabular-nums; color: var(--muted); font-size: 0.85em; }
+  .page-head .ghost.on { color: var(--text); background: var(--surface2); }
   .body { display: flex; flex-direction: column; gap: 10px; }
   .body.withLyrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
   .body.lyricsOnly { grid-template-columns: 1fr; }

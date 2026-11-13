@@ -72,6 +72,8 @@ export interface ExtrasState {
   focus: FocusTimer | null
   focusDone: FocusDone | null
   todos: Todo[]
+  /** each app's own volume (the Music page's Apps), read when asked */
+  mixer: { name: string; volume: number; muted: boolean }[] | null
   /** the next prayer (Settings → Extras → Prayer times) */
   prayer: { name: string; at: number } | null
   /** glasses of water today (the water reminder's Done) */
@@ -104,6 +106,8 @@ export type Action =
   | { do: 'update.install' }
   | { do: 'focus.sound'; sound: 'off' | 'rain' | 'deep' | 'waves' }
   | { do: 'mic.toggle' }
+  | { do: 'mixer.refresh' }
+  | { do: 'mixer.set'; name: string; volume?: number; muted?: boolean }
   | { do: 'wellness'; what: 'water' | 'stand'; done: boolean }
   | { do: 'power'; mode: 'efficiency' | 'balanced' | 'performance' }
   | { do: 'pebble.sounds' }

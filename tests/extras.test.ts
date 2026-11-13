@@ -192,3 +192,11 @@ test('actions: tasks, the focus sound, quick controls and volume with mute are c
   expect(validAction({ do: 'volume' })).toBe(false)
   expect(validAction({ do: 'mic.toggle' })).toBe(true)
 })
+
+test('actions: the mixer and the wellness answers are checked', () => {
+  expect(validAction({ do: 'mixer.refresh' })).toBe(true)
+  expect(validAction({ do: 'mixer.set', name: 'Discord', volume: 40 })).toBe(true)
+  expect(validAction({ do: 'mixer.set', name: 'Discord', volume: 140 })).toBe(false)
+  expect(validAction({ do: 'wellness', what: 'water', done: true })).toBe(true)
+  expect(validAction({ do: 'wellness', what: 'nap', done: true })).toBe(false)
+})
