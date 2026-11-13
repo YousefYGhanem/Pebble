@@ -51,7 +51,7 @@
     paint(o)
     return { update: paint }
   }
-  const TABS = ['general', 'island', 'look', 'pip', 'agents', 'chat', 'extras', 'connectors', 'advanced'] as const
+  const TABS = ['general', 'island', 'look', 'pip', 'agents', 'chat', 'extras', 'day', 'connectors', 'advanced'] as const
   type Tab = (typeof TABS)[number]
 
   // ---------- search (about 70 settings in 9 tabs: people search before they guess a tab) ----------
@@ -61,7 +61,7 @@
   const HOME: Record<string, Tab> = {
     general: 'general', update: 'general', notify: 'general', rest: 'general', island: 'island', size: 'island', chip: 'island',
     look: 'look', colors: 'look', motion: 'look', icon: 'look', pipLook: 'pip', pip: 'pip', agents: 'agents', terminals: 'agents',
-    chat: 'chat', apps: 'chat', extras: 'extras', guard: 'extras', connectors: 'connectors', advanced: 'advanced', diag: 'advanced'
+    chat: 'chat', apps: 'chat', extras: 'extras', guard: 'extras', well: 'day', prayer: 'day', connectors: 'connectors', advanced: 'advanced', diag: 'advanced'
   }
   /** words that are states, not settings (shown only sometimes: nothing to go to) */
   const NOT_FOUND = new Set(['colors.custom', 'colors.revert', 'connectors.on', 'connectors.off', 'connectors.attention', 'connectors.starting', 'general.taken', 'general.reset', 'size.reset', 'advanced.restartNow', 'advanced.historyCleared'])
@@ -438,6 +438,17 @@
           <label class="row"><span>{t('extras.screenTime')}<small>{t('extras.screenTimeHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.screenTime.enabled} onchange={() => set('screenTime.enabled', !s.screenTime.enabled)} /></label>
         </section>
+        <h2>{t('guard.title')}</h2>
+        <section>
+          <label class="row"><span>{t('guard.enabled')}</span>
+            <input type="checkbox" class="switch" checked={s.focusGuard.enabled} onchange={() => set('focusGuard.enabled', !s.focusGuard.enabled)} /></label>
+          <label class="col"><span>{t('guard.sites')}<small>{t('guard.sitesHint')}</small></span>
+            <textarea rows="5" value={s.focusGuard.sites.join('\n')}
+              onchange={e => set('focusGuard.sites', text(e).split('\n').map(x => x.trim()).filter(Boolean))}></textarea></label>
+          <label class="row"><span>{t('guard.snooze')}<small>{t('unit.minutes')}</small></span>
+            <input type="number" min="1" max="120" value={s.focusGuard.snoozeMinutes} onchange={e => set('focusGuard.snoozeMinutes', num(e))} /></label>
+        </section>
+      {:else if tab === 'day'}
         <h2>{t('well.title', { pip })} <span class="muted">· {t('well.hint')}</span></h2>
         <section>
           <label class="row"><span>{t('well.water')}<small>{t('well.every')}</small></span>
@@ -471,16 +482,6 @@
             <label class="row"><span>{t('prayer.pauseMusic')}</span>
               <input type="checkbox" class="switch" checked={s.prayer.pauseMusic} onchange={() => set('prayer.pauseMusic', !s.prayer.pauseMusic)} /></label>
           {/if}
-        </section>
-        <h2>{t('guard.title')}</h2>
-        <section>
-          <label class="row"><span>{t('guard.enabled')}</span>
-            <input type="checkbox" class="switch" checked={s.focusGuard.enabled} onchange={() => set('focusGuard.enabled', !s.focusGuard.enabled)} /></label>
-          <label class="col"><span>{t('guard.sites')}<small>{t('guard.sitesHint')}</small></span>
-            <textarea rows="5" value={s.focusGuard.sites.join('\n')}
-              onchange={e => set('focusGuard.sites', text(e).split('\n').map(x => x.trim()).filter(Boolean))}></textarea></label>
-          <label class="row"><span>{t('guard.snooze')}<small>{t('unit.minutes')}</small></span>
-            <input type="number" min="1" max="120" value={s.focusGuard.snoozeMinutes} onchange={e => set('focusGuard.snoozeMinutes', num(e))} /></label>
         </section>
 
       {:else if tab === 'connectors'}
