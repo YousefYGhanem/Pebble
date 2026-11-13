@@ -849,4 +849,13 @@ app.whenReady().then(async () => {
   applySettings()
   refreshTray()
   if (!store.settings.general.welcomed) settingsWin.openWelcome()
+  // just updated: Settings opens on What's new (a fresh install has the welcome tour instead). Before 0.4.0 no
+  // version was kept, so a Pebble that already said hello counts as updated.
+  const versionFile = path.join(userData, 'version.txt')
+  let before = ''
+  try { before = fs.readFileSync(versionFile, 'utf8').trim() } catch { before = store.settings.general.welcomed ? 'older' : '' }
+  if (before !== app.getVersion()) {
+    try { fs.writeFileSync(versionFile, app.getVersion()) } catch (err) { log.warn('version:', (err as Error).message) }
+    if (before && store.settings.general.welcomed) setTimeout(() => settingsWin.open(false, 'whatsnew'), 3000).unref()
+  }
 })

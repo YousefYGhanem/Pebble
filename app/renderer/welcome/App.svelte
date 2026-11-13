@@ -12,7 +12,7 @@
   let step = $state(0)
   let name = $state('')
   let canvas = $state<HTMLCanvasElement>()
-  const STEPS = 5
+  const STEPS = 6
   // C:\Users\you\Documents\… → ~\Documents\… (and it wraps instead of widening the window)
   const shortPath = (p: string) => p.replace(/^[A-Za-z]:\\Users\\[^\\]+/, '~')
   // what you tried on the real island during the demo step (main tells): open, close, tuck, back
@@ -100,6 +100,20 @@
         {:else if step === 3}
           <h1 tabindex="-1" use:focusOnShow>{t('welcome.how')}</h1>
           <IslandDemo openOn={s.island.openOn} {tried} toggle={s.general.toggleShortcut.replace('Control', 'Ctrl')} tuck={s.general.tuckShortcut.replace('Control', 'Ctrl')} />
+        {:else if step === 4}
+          <!-- the rest of the day, not only agents: each one a switch, all of it in Settings later -->
+          <h1 tabindex="-1" use:focusOnShow>{t('welcome.more')}</h1>
+          <p>{t('welcome.moreHint')}</p>
+          <div class="list">
+            <label class="row"><span>{t('look.theme')}</span>
+              <select value={s.theme} onchange={e => act({ do: 'update', patch: { theme: (e.currentTarget as HTMLSelectElement).value } })}>
+                {#each ['auto', 'default', 'mist'] as th}<option value={th}>{t(`theme.${th}`)}</option>{/each}
+              </select></label>
+            <label class="row"><span>{t('well.water')}</span><input type="checkbox" class="switch" checked={s.wellness.water} onchange={() => act({ do: 'update', patch: { wellness: { water: !s.wellness.water } } })} /></label>
+            <label class="row"><span>{t('well.stand')}</span><input type="checkbox" class="switch" checked={s.wellness.stand} onchange={() => act({ do: 'update', patch: { wellness: { stand: !s.wellness.stand } } })} /></label>
+            <label class="row"><span>{t('extras.screenTime')}</span><input type="checkbox" class="switch" checked={s.screenTime.enabled} onchange={() => act({ do: 'update', patch: { screenTime: { enabled: !s.screenTime.enabled } } })} /></label>
+            <label class="row"><span>{t('prayer.enabled')}<small>{t('welcome.prayerCity')}</small></span><input type="checkbox" class="switch" checked={s.prayer.enabled} onchange={() => act({ do: 'update', patch: { prayer: { enabled: !s.prayer.enabled } } })} /></label>
+          </div>
         {:else}
           <h1 tabindex="-1" use:focusOnShow>{t('welcome.ready', { name: name.trim() || 'Pip' })}</h1>
           <p>{t('welcome.readyHint', { toggle: s.general.toggleShortcut.replace('Control', 'Ctrl'), buddy: s.general.buddyShortcut.replace('Control', 'Ctrl') })}</p>
@@ -134,6 +148,7 @@
   .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; }
   .row > span { min-width: 0; }
   .row + .row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+  .row small { display: block; color: var(--muted); font-size: 0.85em; margin-top: 2px; }
   select, .name { font: inherit; color: inherit; background: color-mix(in srgb, var(--text) 7%, var(--background)); border: 1px solid color-mix(in srgb, var(--text) 12%, transparent); border-radius: 10px; padding: 8px 12px; min-width: 220px; }
   .name { font-size: 16px; text-align: center; }
   .file { display: block; font-size: 11px; color: var(--muted); direction: ltr; text-align: start; overflow-wrap: anywhere; }

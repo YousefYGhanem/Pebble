@@ -10,6 +10,7 @@
   "tab.day": "التذكيرات",
   "tab.connectors": "الموصلات",
   "tab.advanced": "متقدم",
+  "tab.whatsnew": "ما الجديد",
   "nav.label": "أقسام الإعدادات",
   "notSaved": "لم يُحفظ: {error}",
   "general.language": "اللغة",
@@ -676,5 +677,9 @@
   "island.pos.center": "الوسط",
   "island.pos.right": "يمين",
   "i.todo.add": "أضف مهمة",
-  "theme.auto": "تلقائي (يتبع الوضع الفاتح أو الداكن في ويندوز)"
+  "theme.auto": "تلقائي (يتبع الوضع الفاتح أو الداكن في ويندوز)",
+  "whatsnew.latest": "الأحدث",
+  "welcome.more": "أشياء أخرى أستطيع فعلها",
+  "welcome.moreHint": "شغّل ما يعجبك. كل ذلك وأكثر في الإعدادات.",
+  "welcome.prayerCity": "أدخل مدينتك في الإعدادات ← التذكيرات"
 }

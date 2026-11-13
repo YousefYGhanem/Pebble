@@ -125,25 +125,40 @@ sent twice by itself.
 | --- | --- | --- |
 | ![](docs/screens/page-home.png) | ![](docs/screens/page-music.png) | ![](docs/screens/page-files.png) |
 
-The open island has a page row at the bottom: **Home, Agents, Music, Files, Clipboard, Notes, Focus** (arrow keys too).
+The open island has its page tabs on top: **Home, Agents, Chat, Music, Files, Clipboard, Notes, Focus, Widgets** (arrow keys too; Settings → Island → Pages leaves out the ones you don't use).
 
 | Page | What it does |
 | --- | --- |
-| Home | Time and date, Wi-Fi and Bluetooth switches (right-click: Windows' own lists), a tile per page, **today with your agents** (tasks done, time worked, files changed, how much of each CLI's week went today; kept in `%APPDATA%\Pebble\today.json`), CPU and memory |
-| Music | Whatever plays on this PC (Spotify, a browser, any player) from Windows' media controls: cover, seekable progress, controls, volume, timed lyrics (LRCLIB). The island shows the cover, the line being sung and a real sound wave; an agent then moves to the split pill |
-| Files | Drop files on the island to keep them on a shelf; drag them out into any app. **Phone**: a QR code for your phone's camera (same Wi-Fi): save what is on the shelf, or "Send to PC" into Downloads |
-| Clipboard | Your last 25 copied texts, in memory only (never on disk); copies marked private by password managers are skipped |
-| Notes | Quick notes, saved as you type (`%APPDATA%\Pebble\notes.json`) |
-| Focus | A timer; the island shows it as a ring around Pip and chimes at the end |
+| Home | Time and date, Wi-Fi and Bluetooth switches (right-click: Windows' own lists), a tile per page, connector cards, **today with your agents** (tasks done, time worked, files changed, how much of each CLI's week went today; kept in `%APPDATA%\Pebble\today.json`), one line with the next prayer, your top app today and glasses of water, today's to-dos, and quick controls (volume, mute, microphone, power mode, CPU and memory) |
+| Music | Whatever plays on this PC (Spotify, a browser, any player) from Windows' media controls: cover, a wavy seekable progress bar, controls, volume, **Player \| Lyrics** (timed lyrics from LRCLIB). **Apps**: each app's own volume and mute, like Windows' volume mixer. The island shows the cover, the line being sung and a real sound wave; an agent then moves to the split pill |
+| Files | Drop files on the island to keep them on a shelf; drag them out into any app. **Snip**: Windows' snipping overlay; the snip lands on the shelf (Pictures\Pebble) and the text OCR reads on it goes to the clipboard list. **Phone**: a QR code for your phone's camera (same Wi-Fi): save what is on the shelf, or "Send to PC" into Downloads |
+| Clipboard | Your last 25 copied texts and pictures, in memory only (never on disk); pin the ones to keep; copies marked private by password managers are skipped, and keys show only their ends |
+| Notes | **Notes**: saved as you type (`%APPDATA%\Pebble\notes.json`). **To-do**: tasks, with a time for a reminder on the island (Done / In 10 min) and Windows, and daily repeats |
+| Focus | A timer; the island shows it as a ring around Pip and chimes at the end. Focus sounds (rain, deep, waves) while it runs |
 
 **Focus guard** (Settings → Extras, off by default): while a focus timer runs, when you open a site or app from `focusGuard.sites` (a word in a browser tab's title, or a program
 name), a calm screen asks you to breathe once, then: go back (the window is
 minimised) or open it anyway (left alone for `focusGuard.snoozeMinutes`).
 
-**Resting island chips** (Settings → Island): time, battery, CPU or memory left and right of Pip.
+**Resting island chips** (Settings → Island): time, battery, CPU, memory or the next prayer left and right of Pip.
 
-Privacy: lyrics lookups send only the song's title, artist, album and length to lrclib.net. The phone drop runs only
-while its page is open (at most an hour), on your own network, behind a random key in the QR code; Windows asks once
+**Reminders** (Settings → Reminders, off until you switch them on): drink water and stand up, every so many minutes
+within the hours you choose; time away from the PC counts as a break. **Prayer times** are worked out on this PC
+(adhan) from your city: the next one on Home and as a chip, a reminder at each, and music can pause. Your city is asked
+once (Settings → Reminders) and the Weather connector uses it too when its own city is blank.
+
+**Screen time** (Settings → Extras, on): how long each app is in front today, counted on this PC only and only while
+you are there; the top app shows on Home (`%APPDATA%\Pebble\screentime.json`, today only).
+
+**Calendar Join**: two minutes before an online meeting from your calendar connector (Teams, Zoom, Meet, Webex), the
+island shows its Join button until ten minutes in.
+
+**Peeks**: short notices on the island when something changes: sound device, Caps Lock, keyboard language,
+microphone, charger, usage (Settings → General → Notifications).
+
+Privacy: lyrics lookups send only the song's title, artist, album and length to lrclib.net; finding your city sends
+only its name to Open-Meteo. The phone drop runs only while its page is open (at most an hour), on your own Wi-Fi or
+cable address, behind a random key in the QR code, and marks files it receives as from the internet; Windows asks once
 whether Pebble may accept connections there. Nothing else leaves the PC.
 
 ## Connectors
@@ -211,7 +226,7 @@ If the exe is missing, Pebble still runs; game mode and jump to terminal are off
 "Done" stays on the island until you have looked at it, then fades. The clock icon on the Agents page shows the last
 40 finished turns (kept in `%APPDATA%\Pebble\history.json`; Settings → Advanced → Clear history).
 
-Settings → **Island** switches notch/floating, hover/click, game mode, screen, and which pages show. Settings has a search (Ctrl+F); Windows notifications switch on or off by source (Settings → General). Settings → Appearance → **Motion** follows Windows'
+Settings → **Island** switches notch/floating, hover/click, where along the top (left, middle, right), detailed or minimal, game mode and the game strip, screen, and which pages show. Pointing at a reminder, a notice or a meeting's Join leaves it in place, so its buttons are easy to hit. Settings has a search (Ctrl+F); Windows notifications switch on or off by source (Settings → General). Settings → Appearance → **Motion** follows Windows'
 animation setting, or forces full/reduced. Settings → Advanced → **Test mode** plays every state without a real session; from a
 terminal, `electron . --scene=plan` does the same (`--scene=off` to stop) and `electron . --quit` quits Pebble.
 
@@ -225,8 +240,8 @@ core, and about 0.1% while tucked away.
 
 | When | What pauses |
 | --- | --- |
-| The island is tucked away (always) | everything: music, volume, sound wave, clipboard, PC readings, Wi-Fi/Bluetooth, connectors. Agents still reach Pebble; a question brings the island back |
-| You are away (as long as Pip takes to fall asleep), or a game runs full screen (with game mode on) | the same, except music |
+| The island is tucked away (always) | everything: music, volume, sound wave, clipboard, PC readings, Wi-Fi/Bluetooth, connectors, screen time, file drops, desktop chat apps. Agents still reach Pebble; a question brings the island back |
+| You are away (as long as Pip takes to fall asleep), or a game runs full screen (with game mode on) | the same, except music (a game still counts as screen time). Coming back wakes everything within a few seconds |
 | On battery | connectors and PC readings |
 
 ## Make it yours
@@ -236,16 +251,18 @@ Everything lives in `%APPDATA%\Pebble` and applies the moment you save:
 | File | What |
 | --- | --- |
 | `settings.json` | Only what differs from the defaults in [app/shared/settings.ts](app/shared/settings.ts). A broken edit is logged and ignored |
-| `themes/*.json` | Your themes. `custom.json` starts as a copy of the default; select it with `"theme": "custom"` or from Settings → Appearance, where **Customize colours** edits it with a live preview (a change starts from the theme in use) |
+| `themes/*.json` | Your themes. `custom.json` starts as a copy of the default; select it with `"theme": "custom"` or from Settings → Appearance, where **Customize colours** edits it with a live preview (a change starts from the theme in use). `"theme": "auto"` follows Windows: Default when dark, Mist when light |
 | `logs/pebble.log` | The log (tokens and keys are masked) |
 
 Theme tokens become CSS variables (`fontSize` → `--font-size`; numbers are px). Built-in themes are in [themes/](themes).
 
 **First start** shows a short welcome tour (language, which AIs, terminals, then you try opening, closing and tucking
-away the real island, with a small demo and a tick for each; Pip's name at the end). Tips appear once, in the moment
+away the real island, with a small demo and a tick for each; then the theme, reminders, screen time and prayer times;
+Pip's name at the end). **After an update**, Settings opens on **What's new** with the release notes; every earlier
+release is there too, any time. Tips appear once, in the moment
 they help (the first question, the first open island, the first file on the shelf). Settings → General shows the tour
 again, or `Pebble --welcome`. **Languages**: English and Arabic, everywhere: the island, Settings, the tour, the tray
-and notifications (Arabic lays Settings and the tour out right to left). The words are in [i18n/](i18n); a language
+and notifications (Arabic lays Settings, the tour and the open island's pages out right to left). The words are in [i18n/](i18n); a language
 is its file there plus a line in [app/shared/i18n.ts](app/shared/i18n.ts), and a missing word falls back to English.
 
 **App icon** (Settings → Appearance): Pip as a lavender, cream or graphite pebble, for the tray and Pebble's
@@ -266,7 +283,8 @@ Automation), each agent, connector, the chat's provider and the browser extensio
 Pebble runs on your PC and has no server of its own: no account, no analytics, no tracking. It talks to the outside
 only for features you switch on, and only to that feature's service: the AI provider you pick for the chat (with your
 key or your own Claude Code / Codex login), LRCLIB for lyrics (title, artist, album, length), Open-Meteo for the
-weather, ESPN for live scores, GitHub for its connector and for updates. API keys and connector secrets are
+weather and to find your city, ESPN for live scores, GitHub for its connector and for updates, Anthropic for Claude's
+plan usage (with the sign-in Claude Code keeps on this PC). API keys and connector secrets are
 encrypted for your Windows account. Clipboard history and the chat stay in memory; screenshots for the screen buddy
 stay in `%APPDATA%\Pebble\chat` until you clear the chat.
 

@@ -10,6 +10,7 @@
   "tab.day": "Reminders",
   "tab.connectors": "Connectors",
   "tab.advanced": "Advanced",
+  "tab.whatsnew": "What's new",
   "nav.label": "Settings sections",
   "notSaved": "Not saved: {error}",
   "general.language": "Language",
@@ -527,7 +528,7 @@
   "i.tip.drop": "Tip: drag a file from the shelf into any app; a click opens it.",
   "i.tip.ok": "Got it",
   "island.pages": "Pages",
-  "island.pagesHint": "the ones in the island's page row (Home and Agents always stay)",
+  "island.pagesHint": "the tabs at the top of the open island (Home and Agents always stay)",
   "general.tipsAgain": "Show the tips again",
   "i.peek.micOff": "Microphone muted (every app)",
   "i.home.update": "Update to {version}",
@@ -676,5 +677,9 @@
   "island.pos.center": "Middle",
   "island.pos.right": "Right",
   "i.todo.add": "Add task",
-  "theme.auto": "Auto (follows Windows light or dark)"
+  "theme.auto": "Auto (follows Windows light or dark)",
+  "whatsnew.latest": "latest",
+  "welcome.more": "A few more things I can do",
+  "welcome.moreHint": "Switch on what you like. Settings has all of it, and more.",
+  "welcome.prayerCity": "your city goes in Settings → Reminders"
 }

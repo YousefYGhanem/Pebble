@@ -10,6 +10,7 @@
   import { OUTFITS, PIP_LOOKS, pipColors, type PipLookId } from '../../shared/pip'
   import { drawPip } from '../island/pip'
   import { PROVIDERS } from '../../shared/chat'
+  import { markdown } from '../island/md'
 
   let v = $state<SettingsView>()
   let tab = $state('general')
@@ -37,6 +38,15 @@
   const num = (e: Event) => Number((e.currentTarget as HTMLInputElement).value)
   const text = (e: Event) => (e.currentTarget as HTMLInputElement).value
 
+  // ---------- what's new: the release notes that come with Pebble (docs/releases), up to this version ----------
+  const newer = (a: string, b: string) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) - (y[i] ?? 0); return 0 }
+  const NOTES = Object.entries(import.meta.glob<string>('../../../docs/releases/*.md', { query: '?raw', import: 'default', eager: true }))
+    .map(([file, text]) => ({ version: /v([\d.]+)\.md$/.exec(file)?.[1] ?? '0', text }))
+    .sort((a, b) => newer(b.version, a.version))
+  const releases = $derived(v ? NOTES.filter(r => newer(r.version, v!.version.replace(/^v/, '')) <= 0) : [])
+  let release = $state('')
+  const shown = $derived(releases.find(r => r.version === release) ?? releases[0])
+
   // the icons you can choose, shown as they look (build/icons)
   const ICONS = Object.fromEntries(Object.entries(import.meta.glob<string>('../../../build/icons/*.svg', { query: '?url', import: 'default', eager: true }))
     .flatMap(([p, url]) => { const m = /\/(\w+)\.svg$/.exec(p); return m ? [[m[1]!, url]] : [] }))
@@ -51,7 +61,7 @@
     paint(o)
     return { update: paint }
   }
-  const TABS = ['general', 'island', 'look', 'pip', 'agents', 'chat', 'extras', 'day', 'connectors', 'advanced'] as const
+  const TABS = ['general', 'island', 'look', 'pip', 'agents', 'chat', 'extras', 'day', 'connectors', 'advanced', 'whatsnew'] as const
   type Tab = (typeof TABS)[number]
 
   // ---------- search (about 70 settings in 9 tabs: people search before they guess a tab) ----------
@@ -539,6 +549,20 @@
           <button onclick={() => act({ do: 'open', what: 'connectors' })}>{t('connectors.edit')}</button>
         </section>
 
+      {:else if tab === 'whatsnew'}
+        <div class="notes">
+          <div class="versions" role="tablist" aria-label={t('tab.whatsnew')}>
+            {#each releases as r, i}
+              <button role="tab" aria-selected={r === shown} class:active={r === shown} onclick={() => (release = r.version)}>{r.version}{#if i === 0} <small>{t('whatsnew.latest')}</small>{/if}</button>
+            {/each}
+          </div>
+          {#if shown}
+            <article dir="ltr" lang="en">
+              <h2>Pebble {shown.version}</h2>
+              {@html markdown(shown.text)}
+            </article>
+          {/if}
+        </div>
       {:else}
         <h1>{t('tab.advanced')}</h1>
         <section>
@@ -580,6 +604,16 @@
 {/if}
 
 <style>
+  .notes { display: flex; gap: 18px; align-items: flex-start; }
+  .versions { display: flex; flex-direction: column; gap: 2px; flex: none; width: 120px; position: sticky; top: 0; }
+  .versions button { text-align: start; background: none; padding: 6px 10px; border-radius: var(--r-m); color: var(--muted); }
+  .versions button.active { background: var(--surface2); color: var(--text); font-weight: 600; }
+  .versions small { color: var(--accent-text); font-weight: 500; margin-inline-start: 6px; }
+  .notes article { flex: 1; min-width: 0; line-height: 1.5; }
+  .notes article :global(h2), .notes article :global(h3) { margin: 14px 0 6px; }
+  .notes article :global(ul) { padding-inline-start: 20px; margin: 4px 0; }
+  .notes article :global(li) { margin: 3px 0; }
+  .notes article :global(code) { background: var(--surface2); padding: 1px 5px; border-radius: 4px; }
   :global(html), :global(body) { margin: 0; height: 100%; background: var(--background); color: var(--text); font: 14px var(--font); }
   :global(*) { box-sizing: border-box; }
   .shell { display: grid; grid-template-columns: 200px 1fr; height: 100vh; }

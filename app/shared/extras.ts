@@ -74,7 +74,7 @@ export interface ExtrasState {
   todos: Todo[]
   /** each app's own volume (the Music page's Apps), read when asked */
   mixer: { name: string; volume: number; muted: boolean }[] | null
-  /** the next prayer (Settings → Extras → Prayer times) */
+  /** the next prayer (Settings → Reminders → Prayer times) */
   prayer: { name: string; at: number } | null
   /** today's screen time: the apps you spent most time in (Settings → Extras → Screen time) */
   screen: { name: string; seconds: number }[]

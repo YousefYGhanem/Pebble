@@ -50,7 +50,7 @@ export class ConnectorHost extends EventEmitter {
     /** asked for a plugin you added: may it run with these permissions? */
     approve: (m: Manifest) => Promise<boolean>
     windows: () => Promise<{ title: string; process: string }[]>
-    /** your city (Settings → Extras): a connector's own "city" setting left blank means this one */
+    /** your city (Settings → Reminders): a connector's own "city" setting left blank means this one */
     city?: () => string
   }) {
     super()
