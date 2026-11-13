@@ -515,7 +515,8 @@
     if (on) {
       clearTimeout(leaveTimer)
       if (mode === 'tucked') hoverTimer = setTimeout(() => (tucked = false), 500)
-      else if (view?.settings.island.openOn === 'hover' && (mode === 'resting' || mode === 'medium')) hoverTimer = setTimeout(openIfResting, 350)
+      // a reminder's buttons need the pointer: it stays put while you reach for them
+      else if (view?.settings.island.openOn === 'hover' && (mode === 'resting' || (mode === 'medium' && medium !== 'reminder'))) hoverTimer = setTimeout(openIfResting, 350)
     } else if (open) {
       leaveTimer = setTimeout(() => { if (!hovering && !shown.some(x => x.ask) && !typing()) open = false }, 700)
     }
