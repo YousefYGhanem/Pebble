@@ -18,7 +18,7 @@
   import Wave from './Wave.svelte'
   import { fly } from 'svelte/transition'
   import { emitPeak } from './peak'
-  import { PAGES, albumColor, clock, type Page } from './pages'
+  import { PAGES, albumColor, clock, hhmm, type Page } from './pages'
   import { focusLeft, lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
   import type { Widget } from '../../shared/connectors'
   import { chirp, type Chirp } from './sound'
@@ -461,8 +461,10 @@
         ctx.save()
         ctx.lineWidth = 2.2
         ctx.lineCap = 'round'
-        ctx.strokeStyle = 'var(--surface3)'
+        ctx.strokeStyle = tok.text
+        ctx.globalAlpha = 0.18
         ctx.beginPath(); ctx.arc(x, y, size * 0.86, 0, Math.PI * 2); ctx.stroke()
+        ctx.globalAlpha = 1
         ctx.strokeStyle = tok.accent
         ctx.beginPath(); ctx.arc(x, y, size * 0.86, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * left); ctx.stroke()
         ctx.restore()
@@ -628,11 +630,11 @@
         <div class="chips" style:height="{view.settings.island.restingHeight}px">
           {#each chips as c, i (i)}
             <span class="chip" class:right={i === 1}>
-              {#if c === 'time'}{new Date(now).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s?[AP]M$/i, '')}
+              {#if c === 'time'}{new Date(now).toLocaleTimeString(locale(), { hour: 'numeric', minute: '2-digit' }).replace(/\s?([AP]M|ص|م)$/i, '')}
               {:else if c === 'battery' && battery}<span class:low={battery.level <= 15 && !battery.charging} class:charging={battery.charging}>{battery.level}%</span>
               {:else if c === 'cpu'}{extras?.system.cpu ?? 0}%<small>{t('i.home.cpuChip')}</small>
               {:else if c === 'ram'}{extras?.system.ram ?? 0}%<small>{t('i.home.ramChip')}</small>
-              {:else if c === 'prayer' && extras?.prayer}{t(`prayer.${extras.prayer.name}`)} <small>{new Date(extras.prayer.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+              {:else if c === 'prayer' && extras?.prayer}{t(`prayer.${extras.prayer.name}`)} <small>{hhmm(extras.prayer.at)}</small>
               {:else if c.startsWith('widget:')}<span class="wchip">{chipText(c)}</span>{/if}
             </span>
           {/each}
@@ -640,8 +642,8 @@
       {:else if mode === 'medium' && medium === 'strip' && extras}
         <!-- in a full-screen game: the time and the PC's load, small, clicks go to the game -->
         <div class="strip" style:height="24px">
-          <span>{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-          <span>CPU {extras.system.cpu}%</span><span>RAM {extras.system.ram}%</span>
+          <span>{hhmm(now)}</span>
+          <span>{t('i.home.cpuChip')} {extras.system.cpu}%</span><span>{t('i.home.ramChip')} {extras.system.ram}%</span>
         </div>
       {:else if mode === 'medium' && medium === 'reminder' && reminder}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -682,7 +684,7 @@
       {:else if mode === 'medium' && top}
         <div class="line" style:height="{view.settings.island.height}px">
           <StatusMark status={top.status} />
-          <span class="title">{top.project} · {top.detail || top.status}</span>
+          <span class="title">{top.project} · {top.detail || t(`i.status.${top.status}`)}</span>
           {#if shown.length > 1}<span class="count">+{shown.length - 1}</span>{/if}
         </div>
       {:else if mode === 'ask' && asking?.ask}

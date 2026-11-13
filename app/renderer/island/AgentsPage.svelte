@@ -4,9 +4,9 @@
   // permissions take the full width. Bottom: plan usage and context, and "jump to terminal".
   import type { Answer, HistoryItem, Usage } from '../../shared/ipc'
   import { AGENT_NAMES, type Agent, type Session } from '../../shared/state'
-  import { ago as agoAt, detailText, stepsSummary } from './pages'
+  import { ago as agoAt, detailText, hhmm, stepsSummary } from './pages'
   import StatusMark from './StatusMark.svelte'
-  import { t } from '../i18n.svelte'
+  import { locale, t } from '../i18n.svelte'
   import AskView from './AskView.svelte'
   import DiffView from './DiffView.svelte'
   import Icon from './Icon.svelte'
@@ -20,7 +20,7 @@
   let showHistory = $state(false)
   let draft = $state('')
   const s = $derived(sessions.find(x => x.id === selected) ?? sessions[0])
-  const time = $derived(new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+  const time = $derived(hhmm(now))
 
   // done and error count as seen once you look at them here
   $effect(() => { if (s && !showHistory && (s.status === 'done' || s.status === 'error') && !s.seenAt) onseen([s.id]) })
@@ -55,7 +55,7 @@
   const nearest = $derived(Math.max(0, ...Object.values(usage).flatMap(x => (x ? limitsOf(x).map(l => l.used) : []))))
   const resetText = (at: number) => {
     const d = new Date(at), soon = at - now < 20 * 3600_000
-    return soon ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })
+    return soon ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleString(locale(), { weekday: 'short', hour: '2-digit', minute: '2-digit' })
   }
 </script>
 

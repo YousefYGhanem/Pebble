@@ -154,7 +154,7 @@
         <h1>{t('search.results', { q: query.trim() })}</h1>
         <section>
           {#each results as r (r.tab + r.label)}
-            <button class="result" onclick={() => go(r)}><span>{r.label}<small>{t(`tab.${r.tab}`)}{#if r.hint} · {r.hint}{/if}</small></span><span aria-hidden="true">›</span></button>
+            <button class="result" onclick={() => go(r)}><span>{r.label}<small>{t(`tab.${r.tab}`)}{#if r.hint} · {r.hint}{/if}</small></span><span class="chev" aria-hidden="true">›</span></button>
           {:else}
             <div class="row"><span class="muted">{t('search.none')}</span></div>
           {/each}
@@ -587,6 +587,7 @@
   .result { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: start; background: none; padding: 10px 4px; border-radius: 8px; }
   .result > span:first-child { display: flex; flex-direction: column; gap: 2px; }
   .result + .result { border-top: 1px solid var(--stroke); border-radius: 0; }
+  :global([dir='rtl']) .chev { transform: scaleX(-1); }
   :global(.found) { animation: found 1.8s ease-out; border-radius: 8px; }
   @keyframes found { 0%, 40% { background: color-mix(in srgb, var(--accent) 26%, transparent); } }
   details.more { margin-top: 22px; }

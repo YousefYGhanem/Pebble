@@ -5,7 +5,7 @@
   import { focusLeft, nextDue, todayProgress } from '../../shared/extras'
   import type { Session } from '../../shared/state'
   import Icon from './Icon.svelte'
-  import { clock, type Page } from './pages'
+  import { clock, hhmm, type Page } from './pages'
   import type { Widget } from '../../shared/connectors'
   import WidgetCard from './WidgetCard.svelte'
   import { locale, t } from '../i18n.svelte'
@@ -30,7 +30,7 @@
 <div class="page">
   <div class="page-head">
     <div class="when">
-      <span class="big">{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      <span class="big">{hhmm(date.getTime())}</span>
       <span class="muted">{date.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })}</span>
     </div>
     <span class="page-time"></span>
@@ -101,12 +101,12 @@
     </button>
   {/if}
 
-  {#if extras.prayer}<span class="todoline muted"><Icon name="moon" size={13} />{t('i.prayer.next', { name: t(`prayer.${extras.prayer.name}`), time: new Date(extras.prayer.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}</span>{/if}
+  {#if extras.prayer}<span class="todoline muted"><Icon name="moon" size={13} />{t('i.prayer.next', { name: t(`prayer.${extras.prayer.name}`), time: hhmm(extras.prayer.at) })}</span>{/if}
   {#if extras.screen.length}<span class="todoline muted"><Icon name="history" size={13} />{t('i.screen.today', { apps: extras.screen.map(a => `${a.name} ${span(a.seconds)}`).join(' · ') })}</span>{/if}
   {#if extras.glasses}<span class="todoline muted"><Icon name="water" size={13} />{t('i.well.today', { n: extras.glasses })}</span>{/if}
   {#if todos.total}
     <button class="todoline" onclick={() => go('notes')}><Icon name="check" size={13} />{t('i.todo.today', { done: todos.done, total: todos.total })}
-      {#if next}<span class="muted">· {t('i.todo.next', { text: next.text, time: new Date(next.due!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}</span>{/if}</button>
+      {#if next}<span class="muted">· {t('i.todo.next', { text: next.text, time: hhmm(next.due!) })}</span>{/if}</button>
   {/if}
 
   <!-- quick controls: what you change often, one click away -->
@@ -125,7 +125,7 @@
         {#each ['efficiency', 'balanced', 'performance'] as const as p}<button class:on={extras.power === p} aria-pressed={extras.power === p} onclick={() => act({ do: 'power', mode: p })}>{t(`i.quick.${p}`)}</button>{/each}
       </div>
     {/if}
-    <span class="load muted">CPU {extras.system.cpu}% · RAM {extras.system.ram}%</span>
+    <span class="load muted">{t('i.home.cpuChip')} {extras.system.cpu}% · {t('i.home.ramChip')} {extras.system.ram}%</span>
   </div>
 </div>
 

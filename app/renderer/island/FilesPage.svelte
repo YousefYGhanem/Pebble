@@ -6,6 +6,7 @@
   import type { Action, ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import { t } from '../i18n.svelte'
+  import { hhmm } from './pages'
   import { undo } from './undo.svelte'
 
   let { extras, now, act, reduced }: { extras: ExtrasState; now: number; act: (a: Action) => void; reduced: boolean } = $props()
@@ -23,7 +24,7 @@
     {#if !drop}<button class="ghost" title={t('i.files.snipHint')} onclick={() => act({ do: 'snip' })}><Icon name="snip" size={14} />{t('i.files.snip')}</button>{/if}
     {#if !drop}<button class="ghost" onclick={() => act({ do: 'drop.start' })}><Icon name="phone" size={14} />{t('i.files.phone')}</button>{/if}
     {#if shelf.length && !drop}<button class="ghost" onclick={() => undo.offer(t('i.undo.shelf'), { hides: 'shelf', commit: () => act({ do: 'shelf.clear' }) })}>{t('i.files.clearAll')}</button>{/if}
-    <span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span>
+    <span class="page-time">{hhmm(now)}</span><span class="pip-room"></span>
   </div>
 
   {#if drop}

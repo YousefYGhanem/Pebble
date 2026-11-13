@@ -1,4 +1,4 @@
-import { t } from '../i18n.svelte'
+import { locale, t } from '../i18n.svelte'
 import type { Step } from '../../shared/state'
 
 // The island's pages, in order (the dots at the bottom and ‹ › follow this order).
@@ -15,6 +15,9 @@ export const PAGES = [
 ] as const
 
 export type Page = (typeof PAGES)[number]['id']
+
+/** a clock time, "14:05", in the app's language */
+export const hhmm = (ms: number) => new Date(ms).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
 
 /** "3:07" / "1:02:07" */
 export function clock(ms: number): string {

@@ -686,5 +686,6 @@
   "island.position": "Where along the top",
   "island.pos.left": "Left",
   "island.pos.center": "Middle",
-  "island.pos.right": "Right"
+  "island.pos.right": "Right",
+  "i.todo.add": "Add task"
 }

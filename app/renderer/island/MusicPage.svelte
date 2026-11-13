@@ -5,7 +5,7 @@
   import { lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
   import Wave from './Wave.svelte'
-  import { clock } from './pages'
+  import { clock, hhmm } from './pages'
   import { t } from '../i18n.svelte'
 
   // the player the music comes from, in words ("SpotifyAB.SpotifyMusic_…!Spotify" → "Spotify")
@@ -61,7 +61,7 @@
         <button class:on={view === 'player'} aria-pressed={view === 'player'} onclick={() => (view = 'player')}>{t('i.music.player')}</button>
         <button class:on={view === 'lyrics'} aria-pressed={view === 'lyrics'} onclick={() => (view = 'lyrics')}>{t('i.music.lyrics')}</button>
       </div>
-    {/if}<span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
+    {/if}<span class="page-time">{hhmm(now)}</span><span class="pip-room"></span></div>
   {#if mixer}
     <div class="mixer">
       {#each extras.mixer ?? [] as app (app.name)}

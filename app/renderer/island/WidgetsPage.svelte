@@ -4,6 +4,7 @@
   import type { Action } from '../../shared/extras'
   import WidgetCard from './WidgetCard.svelte'
   import { t, tOr } from '../i18n.svelte'
+  import { hhmm } from './pages'
 
   let { widgets, connectors, now, act }: { widgets: Widget[]; connectors: ConnectorInfo[]; now: number; act: (a: Action) => void } = $props()
   const cards = $derived(widgets.filter(w => w.kind !== 'chip'))
@@ -11,7 +12,7 @@
 </script>
 
 <div class="page">
-  <div class="page-head"><span class="page-title">{t('i.page.widgets')}</span><span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span></div>
+  <div class="page-head"><span class="page-title">{t('i.page.widgets')}</span><span class="page-time">{hhmm(now)}</span><span class="pip-room"></span></div>
   {#if !cards.length && !trouble.length}
     <div class="empty">{t('i.widgets.none')}</div>
   {/if}

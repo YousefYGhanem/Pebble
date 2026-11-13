@@ -2,7 +2,7 @@
   // Clipboard: your last copied texts (kept in memory only, never on disk). Click one to copy it again.
   import { looksSecret, maskSecret, type Action, type ExtrasState } from '../../shared/extras'
   import Icon from './Icon.svelte'
-  import { ago } from './pages'
+  import { ago, hhmm } from './pages'
   import { t } from '../i18n.svelte'
   import { undo } from './undo.svelte'
 
@@ -22,7 +22,7 @@
   <div class="page-head">
     <span class="page-title">{t('i.page.clipboard')}</span>
     {#if extras.clipboard.length && !undo.hides('clipboard')}<button class="ghost" onclick={() => undo.offer(t('i.undo.clipboard'), { hides: 'clipboard', commit: () => act({ do: 'clip.clear' }) })}><Icon name="trash" size={13} />{t('i.common.clear')}</button>{/if}
-    <span class="page-time">{new Date(now).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span><span class="pip-room"></span>
+    <span class="page-time">{hhmm(now)}</span><span class="pip-room"></span>
   
     {#if hasPictures}
       <div class="kinds" role="group" aria-label={t('i.clip.kinds')}>

@@ -5,7 +5,7 @@
   import Icon from './Icon.svelte'
   import { t } from '../i18n.svelte'
   import { undo } from './undo.svelte'
-  import { ago } from './pages'
+  import { ago, hhmm } from './pages'
 
   let { notes, todos = [], now, act }: { notes: Note[]; todos?: Todo[]; now: number; act: (a: Action) => void } = $props()
   let tab = $state<'notes' | 'todo'>('notes')
@@ -22,7 +22,7 @@
     act({ do: 'todo.add', text: task.trim(), due, daily: daily || undefined })
     task = ''; time = ''; daily = false
   }
-  const at = (ms: number) => new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const at = (ms: number) => hhmm(ms)
   const progress = $derived(todayProgress(todos, now))
   let selected = $state<string>()
   let draft = $state<Note[]>([])
@@ -70,7 +70,7 @@
       <input type="text" bind:value={task} maxlength="300" placeholder={t('i.todo.new')} aria-label={t('i.todo.new')} />
       <input type="time" bind:value={time} aria-label={t('i.todo.time')} title={t('i.todo.time')} />
       <label class="daily"><input type="checkbox" bind:checked={daily} />{t('i.todo.daily')}</label>
-      <button type="submit" class="likely" disabled={!task.trim()}><Icon name="plus" size={13} /></button>
+      <button type="submit" class="likely" disabled={!task.trim()} aria-label={t('i.todo.add')}><Icon name="plus" size={13} /></button>
     </form>
     <div class="tasks">
       {#each todos.filter(x => !undo.hides(`todo:${x.id}`)) as x (x.id)}
@@ -95,7 +95,7 @@
       </div>
       {#if current}
         <div class="editor">
-          <textarea bind:value={current.text} oninput={() => { current.at = Date.now(); save() }} placeholder={t('i.notes.write')}></textarea>
+          <textarea bind:value={current.text} oninput={() => { current.at = Date.now(); save() }} placeholder={t('i.notes.write')} aria-label={t('i.notes.write')}></textarea>
         </div>
       {/if}
     </div>
@@ -108,7 +108,7 @@
   .kinds button.on { background: var(--surface3); color: var(--text); }
   .addtask { display: flex; gap: 8px; align-items: center; }
   .addtask input[type='text'] { flex: 1; min-width: 0; font: inherit; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: var(--r-m); padding: 6px 10px; }
-  .addtask input[type='time'] { font: inherit; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: var(--r-m); padding: 5px 8px; color-scheme: dark; }
+  .addtask input[type='time'] { font: inherit; color: var(--text); background: var(--surface1); border: 1px solid var(--stroke); border-radius: var(--r-m); padding: 5px 8px; }
   .daily { display: inline-flex; align-items: center; gap: 4px; font-size: 0.85em; color: var(--muted); white-space: nowrap; }
   .tasks { display: flex; flex-direction: column; gap: 2px; max-height: 200px; overflow: auto; margin-bottom: 8px; }
   .task { display: flex; align-items: center; gap: 10px; padding: 5px 6px; border-radius: var(--r-m); }
