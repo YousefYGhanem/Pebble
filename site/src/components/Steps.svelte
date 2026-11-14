@@ -1,9 +1,8 @@
 <script lang="ts">
   import { site } from '../lib/i18n.svelte'
-  import { inView, reveal } from '../lib/motion'
+  import { reveal, glow } from '../lib/motion'
 
   const how = $derived(site.c.how)
-  let drawn = $state(false)
 </script>
 
 <section class="how" id="get-started" aria-labelledby="how-title">
@@ -12,42 +11,39 @@
       <p class="kicker">{how.kicker}</p>
       <h2 id="how-title">{how.title}</h2>
     </header>
-    <div class="wrap" use:inView={{ onchange: v => { if (v) drawn = true }, margin: '0px 0px -30% 0px' }}>
-      <span class="line" class:drawn aria-hidden="true"></span>
-      <ol class="steps">
-        {#each how.steps as s, i (i)}
-          <li use:reveal={i * 140}>
-            <span class="n">{i + 1}</span>
+    <ol class="steps">
+      {#each how.steps as s, i (i)}
+        <li class="bezel" use:reveal={i * 120} use:glow>
+          <div class="bezel-in card">
+            <div class="top">
+              <span class="n" dir="ltr">0{i + 1}</span>
+              <span class="rule" aria-hidden="true"></span>
+            </div>
             <h3>{s.title}</h3>
             <p>{s.text}</p>
-          </li>
-        {/each}
-      </ol>
-    </div>
+          </div>
+        </li>
+      {/each}
+    </ol>
   </div>
 </section>
 
 <style>
   .how { padding-block: var(--section-pad); scroll-margin-top: var(--nav-h); }
   .head { text-align: center; margin-block-end: 3.5rem; }
-  .wrap { position: relative; }
-  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; list-style: none; margin: 0; padding: 0; }
-  .line {
-    position: absolute; inset-block-start: 1.6rem; inset-inline: 16%; block-size: 1px;
-    background: linear-gradient(90deg, transparent, rgb(185 168 255 / 0.6), transparent);
-    transform: scaleX(0); transition: transform 1.4s var(--ease-out) 0.2s;
-  }
-  .line.drawn { transform: scaleX(1); }
-  li { position: relative; text-align: center; padding: 0 1rem; }
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; list-style: none; margin: 0; padding: 0; }
+  .card { padding: 1.5rem 1.5rem 1.75rem; }
+  .top { display: flex; align-items: center; gap: 0.9rem; margin-block-end: 2.25rem; }
   .n {
-    display: grid; place-items: center; margin: 0 auto 1.25rem; inline-size: 3.2rem; block-size: 3.2rem; border-radius: 50%;
-    font-weight: 700; font-size: 1.2rem; color: #fff;
-    background: radial-gradient(circle at 35% 30%, #a08bff, #5b3fd9 70%); box-shadow: 0 0 40px rgb(124 92 255 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.35);
+    display: grid; place-items: center; inline-size: 2.5rem; block-size: 2.5rem; border-radius: 0.7rem;
+    font-family: var(--mono); font-size: 0.85rem; color: #e6e0ff;
+    background: linear-gradient(180deg, rgb(124 92 255 / 0.25), rgb(124 92 255 / 0.08));
+    border: 1px solid rgb(185 168 255 / 0.25); box-shadow: var(--highlight);
   }
-  h3 { margin: 0 0 0.5rem; font-size: 1.25rem; }
-  p { margin: 0 auto; max-inline-size: 22rem; color: var(--muted); line-height: 1.6; }
-  @media (max-width: 760px) {
-    .steps { grid-template-columns: 1fr; gap: 2.5rem; }
-    .line { display: none; }
-  }
+  .rule { flex: 1; block-size: 1px; background: linear-gradient(90deg, var(--stroke-strong), transparent); }
+  :global([dir='rtl']) .rule { background: linear-gradient(-90deg, var(--stroke-strong), transparent); }
+  h3 { margin: 0 0 0.6rem; font-size: 1.2rem; font-weight: 600; letter-spacing: -0.02em; }
+  :global(:lang(ar)) h3 { letter-spacing: 0; }
+  p { margin: 0; color: var(--muted); line-height: 1.65; font-size: 0.95rem; }
+  @media (max-width: 860px) { .steps { grid-template-columns: 1fr; } .top { margin-block-end: 1.25rem; } }
 </style>

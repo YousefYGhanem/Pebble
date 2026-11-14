@@ -16,7 +16,7 @@
 </script>
 
 <a class="skip" href="#main">{c.nav.skip}</a>
-<div class="backdrop" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+<div class="backdrop" aria-hidden="true"></div>
 <div class="progress" aria-hidden="true"></div>
 <Nav />
 
@@ -44,5 +44,5 @@
 
 <style>
   .features { padding-block-start: var(--section-pad); scroll-margin-top: var(--nav-h); }
-  .head { text-align: center; max-inline-size: 46rem; }
+  .head { text-align: center; max-inline-size: 46rem; margin-block-end: 1rem; }
 </style>

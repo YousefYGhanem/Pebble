@@ -31,7 +31,10 @@
 </div>
 
 <style>
-  .island { --island-size: clamp(10px, 1.5vw, 14px); margin-block-end: -1.5rem; }
+  /* the island box (IslandDemo) is already as tall as the open "needs you" card, so the chips sit below it in every
+     state; a negative margin here used to pull them up under the card */
+  .status { display: grid; gap: 1rem; }
+  .island { --island-size: clamp(10px, 1.5vw, 14px); }
   .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; list-style: none; margin: 0; padding: 0; }
   button {
     display: inline-flex; align-items: center; gap: 0.45rem;

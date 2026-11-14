@@ -8,6 +8,7 @@
   import Keys from './Keys.svelte'
   import Chat from './Chat.svelte'
   import Lang from './Lang.svelte'
+  import { glow } from '../lib/motion'
 
   // Which live demo a feature shows (its `live` field in the content files).
   let { f }: { f: Feature } = $props()
@@ -15,16 +16,13 @@
   const Demo = $derived(f.live ? DEMOS[f.live] : null)
 </script>
 
-{#if Demo}<div class="live"><Demo {f} /></div>{/if}
+{#if Demo}<div class="bezel" use:glow><div class="bezel-in live"><Demo {f} /></div></div>{/if}
 
 <style>
   .live {
-    position: relative;
     padding: clamp(1.25rem, 3vw, 2rem);
-    border-radius: 1.5rem;
-    background: linear-gradient(180deg, rgb(255 255 255 / 0.055), rgb(255 255 255 / 0.02));
-    border: 1px solid var(--stroke);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 30px 60px -30px rgb(0 0 0 / 0.7);
-    overflow: hidden;
+    background:
+      radial-gradient(80% 60% at 50% 0%, rgb(124 92 255 / 0.08), transparent 70%),
+      linear-gradient(180deg, var(--surface-2), var(--surface));
   }
 </style>

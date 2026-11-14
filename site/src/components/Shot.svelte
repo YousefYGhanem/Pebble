@@ -19,9 +19,9 @@
 <style>
   .shot {
     margin: 0;
-    transform: perspective(1000px) rotateX(calc(var(--ry, 0) * -4deg)) rotateY(calc(var(--rx, 0) * 5deg));
+    transform: perspective(1000px) rotateX(calc(var(--ry, 0) * -3deg)) rotateY(calc(var(--rx, 0) * 4deg));
     transition: transform 0.6s var(--ease-out);
-    filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.55));
+    filter: drop-shadow(0 24px 32px rgb(0 0 0 / 0.6));
   }
   img { display: block; inline-size: 100%; block-size: auto; border-radius: 1rem; }
   /* the island fills the middle 85% of a capture's width: trim the transparent sides */
@@ -29,7 +29,7 @@
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
       img { animation: drift linear both; animation-timeline: view(); }
-      @keyframes drift { from { translate: 0 2.5rem; } to { translate: 0 -2.5rem; } }
+      @keyframes drift { from { translate: 0 1rem; } to { translate: 0 -1rem; } }
     }
   }
 </style>
