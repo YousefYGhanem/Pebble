@@ -12,5 +12,6 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true
   },
-  "include": ["app/**/*.ts", "app/**/*.svelte", "tests/**/*.ts", "electron.vite.config.ts"]
+  "include": ["app/**/*.ts", "app/**/*.svelte", "tests/**/*.ts", "electron.vite.config.ts", "site/**/*.ts", "site/**/*.svelte"],
+  "exclude": ["site/dist"]
 }

@@ -21,7 +21,9 @@
     "dist": "npm run build:native && electron-vite build && electron-builder --win --publish never",
     "dist:store": "npm run build:native && electron-vite build && electron-builder --win appx --publish never -c.directories.output=dist/store",
     "release": "npm run build:native && electron-vite build && electron-builder --win --publish always",
-    "pack:extensions": "node scripts/pack-extensions.mjs"
+    "pack:extensions": "node scripts/pack-extensions.mjs",
+    "site:dev": "vite --config site/vite.config.ts",
+    "site:build": "vite build --config site/vite.config.ts"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
