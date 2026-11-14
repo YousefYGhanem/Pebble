@@ -1,7 +1,7 @@
 # Pebble
 
 A notch-style island for Windows that follows your AI coding agents and answers their questions from the top of your
-screen. Free and open source (MIT).
+screen. Free and open source (MIT). **Website:** [yousefyghanem.github.io/Pebble](https://yousefyghanem.github.io/Pebble/)
 
 | Working | Needs you | Plan review | Done, reply |
 | --- | --- | --- | --- |
