@@ -373,7 +373,8 @@ const ar: Content = {
     ],
     license: 'Pebble برنامج مجاني ومفتوح المصدر بترخيص MIT.',
     notAffiliated: 'لا علاقة له بـ Anthropic أو OpenAI أو Google أو Microsoft. أسماء المنتجات علامات تجارية لأصحابها، وتُذكر فقط لبيان ما يعمل معه Pebble.',
-    pip: 'انقر Pip'
+    pip: 'انقر Pip',
+    developer: { madeBy: 'من صنع', name: 'يوسف غانم', cta: 'تعرّف على المطوّر', href: 'https://yousefyghanem.github.io/' }
   }
 }
 

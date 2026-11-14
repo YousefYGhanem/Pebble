@@ -373,7 +373,8 @@ const en: Content = {
     ],
     license: 'Pebble is free and open-source software under the MIT license.',
     notAffiliated: 'Not affiliated with Anthropic, OpenAI, Google or Microsoft. Product names are trademarks of their owners and are used only to say what Pebble works with.',
-    pip: 'Poke Pip'
+    pip: 'Poke Pip',
+    developer: { madeBy: 'Made by', name: 'Yousef Ghanem', cta: 'Check out the developer', href: 'https://yousefyghanem.github.io/' }
   }
 }
 

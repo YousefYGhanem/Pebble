@@ -94,5 +94,7 @@ export interface Content {
   how: { kicker: string; title: string; steps: { title: string; text: string }[] }
   faq: { kicker: string; title: string; items: { q: string; a: string }[] }
   cta: { title: string; lead: string }
-  footer: { tagline: string; links: Link[]; license: string; notAffiliated: string; pip: string }
+  footer: { tagline: string; links: Link[]; license: string; notAffiliated: string; pip: string
+    /** who made Pebble: a button to their page */
+    developer: { madeBy: string; name: string; cta: string; href: string } }
 }

@@ -10,6 +10,10 @@
     <div class="brand">
       <span class="name"><img src={logo} alt="" width="24" height="24" />Pebble</span>
       <p>{f.tagline}</p>
+      <a class="dev" href={f.developer.href} rel="noopener">
+        <span class="by">{f.developer.madeBy} <b>{f.developer.name}</b></span>
+        <span class="cta">{f.developer.cta} <span class="arrow" aria-hidden="true">→</span></span>
+      </a>
     </div>
     <nav aria-label="Pebble">
       <ul>
@@ -33,6 +37,16 @@
   ul { display: flex; flex-wrap: wrap; gap: 0.25rem 0.25rem; list-style: none; margin: 0; padding: 0; }
   a { display: inline-block; padding: 0.35rem 0.7rem; border-radius: 999px; color: #c9c7d6; text-decoration: none; font-size: 0.9rem; transition: color 0.2s, background 0.2s; }
   a:hover { color: #fff; background: rgb(255 255 255 / 0.05); }
+  /* who made it: a quiet pill with the way to their page */
+  .dev { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.75rem; margin-block-start: 1.25rem; padding: 0.55rem 0.6rem 0.55rem 1rem; border: 1px solid var(--stroke-strong); background: rgb(255 255 255 / 0.03); box-shadow: var(--highlight); }
+  .dev .by { color: var(--muted); font-size: 0.88rem; }
+  .dev .by b { color: var(--text, #fff); font-weight: 600; }
+  .dev .cta { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem; border-radius: 999px; background: rgb(155 135 255 / 0.14); color: #d9d2ff; font-size: 0.85rem; font-weight: 550; }
+  .dev .arrow { display: inline-block; transition: translate 0.25s var(--ease-out, ease); }
+  :global([dir='rtl']) .dev .arrow { scale: -1 1; }
+  .dev:hover { background: rgb(255 255 255 / 0.06); border-color: rgb(155 135 255 / 0.45); }
+  .dev:hover .arrow { translate: 0.2rem 0; }
+  :global([dir='rtl']) .dev:hover .arrow { translate: -0.2rem 0; }
   .legal::before { content: ''; display: block; border-block-start: 1px solid var(--stroke); margin-block-end: 1.5rem; }
   .legal { margin-block-start: 2.5rem; color: var(--faint); font-size: 0.8rem; line-height: 1.6; }
   .legal p { margin: 0.25rem 0; }
