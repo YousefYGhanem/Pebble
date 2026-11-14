@@ -5,10 +5,22 @@
   import IslandDemo, { type IslandState } from './IslandDemo.svelte'
   import DownloadButton from './DownloadButton.svelte'
   import StoreButton from './StoreButton.svelte'
+  import PipCanvas from './PipCanvas.svelte'
+  import type { PipMood } from '../../content/types'
 
   const h = $derived(site.c.hero)
   const d = $derived(site.c.demo)
-  const words = $derived(h.title.split(' '))
+
+  // Pip takes the headline's place: he waves hello, then goes through a few moods; pointing at him, he loves it.
+  // (The headline stays for screen readers and search engines.)
+  const MOODS: PipMood[] = ['idle', 'curious', 'happy', 'focused', 'love', 'dancing', 'happy']
+  let moodAt = $state(0), petted = $state(false), heroSeen = true
+  $effect(() => {
+    if (reducedMotion()) return
+    const id = setInterval(() => { if (heroSeen && !document.hidden) moodAt = (moodAt + 1) % MOODS.length }, 2600)
+    return () => clearInterval(id)
+  })
+  const pipMood = $derived<PipMood>(petted ? 'love' : MOODS[moodAt]!)
 
   // The demo plays an agent's turn on a loop and waits for you at the question (it answers itself after a while).
   let phase = $state<IslandState>('resting')
@@ -47,7 +59,7 @@
   })
 </script>
 
-<section class="hero" id="top" aria-labelledby="hero-title" use:inView={{ onchange: v => (buddy.show = !v), margin: '0px 0px -35% 0px' }}>
+<section class="hero" id="top" aria-labelledby="hero-title" use:inView={{ onchange: v => { buddy.show = !v; heroSeen = v }, margin: '0px 0px -35% 0px' }}>
   <div class="lamp" aria-hidden="true">
     <span class="grid"></span>
     <span class="cone l"></span><span class="cone r"></span>
@@ -55,15 +67,16 @@
   </div>
   <div class="container copy">
     <p class="eyebrow intro" style="--i: 0"><span class="live-dot"></span>{h.eyebrow}</p>
-    <h1 id="hero-title">
-      {#each words as w, i (i + w)}<span class="word" style="--i: {i + 1}">{w}</span>{' '}{/each}
-    </h1>
-    <p class="lead intro" style="--i: {words.length + 1}">{h.lead}</p>
-    <div class="ctas intro" style="--i: {words.length + 2}">
+    <h1 id="hero-title" class="sr-only">{h.title}</h1>
+    <div class="pip intro" style="--i: 1" aria-hidden="true" onpointerenter={() => (petted = true)} onpointerleave={() => (petted = false)}>
+      <PipCanvas mood={pipMood} scale={0.82} hello={!reducedMotion()} />
+    </div>
+    <p class="lead intro" style="--i: 2">{h.lead}</p>
+    <div class="ctas intro" style="--i: 3">
       <DownloadButton />
       <StoreButton />
     </div>
-    <p class="small intro" style="--i: {words.length + 3}">{h.small}</p>
+    <p class="small intro" style="--i: 4">{h.small}</p>
   </div>
 
   <div class="container">
@@ -144,25 +157,10 @@
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
   .live-dot { inline-size: 0.4rem; block-size: 0.4rem; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgb(74 222 128 / 0.18); }
-  h1 {
-    margin: 0;
-    max-inline-size: 14ch;
-    font-size: clamp(2.6rem, 7vw, 5.25rem);
-    line-height: 1;
-    letter-spacing: -0.045em;
-    font-weight: 650;
-  }
-  :global(:lang(ar)) h1 { letter-spacing: 0; line-height: 1.25; max-inline-size: 16ch; }
-  /* one neutral fade, top to bottom, instead of a coloured gradient */
-  .word {
-    display: inline-block;
-    padding-block: 0.06em 0.14em;
-    margin-block: -0.06em -0.14em;
-    background: linear-gradient(180deg, #fff 35%, #b4b1c4);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    animation: rise 0.9s var(--ease-out) both;
-    animation-delay: calc(0.35s + var(--i) * 0.06s);
-  }
+  /* the headline, for screen readers and search engines only */
+  .sr-only { position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* Pip, where the headline was */
+  .pip { inline-size: min(26rem, 80vw); block-size: clamp(13rem, 30vw, 20rem); margin-block: -0.5rem 0.25rem; cursor: pointer; }
   .intro { animation: rise 0.9s var(--ease-out) both; animation-delay: calc(0.35s + var(--i) * 0.06s); }
   @keyframes rise { from { opacity: 0; translate: 0 0.5em; filter: blur(8px); } }
   .lead { max-inline-size: 36rem; margin: 1.5rem 0 2.25rem; font-size: clamp(1.05rem, 1.9vw, 1.2rem); color: var(--muted); line-height: 1.6; }
