@@ -102,3 +102,14 @@ export function accelerator(e: { ctrlKey: boolean; altKey: boolean; shiftKey: bo
   if (!mods.length && !/^F\d/.test(key)) return null // a shortcut needs a modifier (an F-key may stand alone)
   return [...mods, key].join('+')
 }
+
+/** Release notes as Settings → What's new shows them: no "Install" section (Pebble is installed already), links as
+ *  their words (the notes are written for GitHub's release page). */
+export function inAppNotes(md: string): string {
+  let skip = false
+  const lines = md.replace(/\r\n/g, '\n').split('\n').filter(line => {
+    if (line.startsWith('## ')) skip = /^## Install\b/i.test(line)
+    return !skip
+  })
+  return lines.join('\n').replace(/\[([^\]]+)\]\([^)\s]+\)/g, '$1')
+}

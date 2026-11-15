@@ -4,7 +4,7 @@ import path from 'node:path'
 import { test, expect } from 'vitest'
 import { DEFAULTS, parseSettings } from '../app/shared/settings'
 import { Store } from '../app/main/store'
-import { accelerator, validSettingsAction } from '../app/shared/settings-ui'
+import { accelerator, inAppNotes, validSettingsAction } from '../app/shared/settings-ui'
 
 test('partial user settings are merged over the defaults', () => {
   const r = parseSettings({ island: { width: 400 } })
@@ -87,4 +87,10 @@ test('theme "auto" follows Windows: Default when dark, Mist when light', () => {
   store.prefersDark = () => false
   store.load()
   expect(store.theme.name).toMatch(/mist/i)
+})
+
+test("What's new leaves out the Install section and shows links as their words", () => {
+  const md = 'Intro.\n\n## Install\n\nDownload it [here](https://x.test/a).\n\n## New\n\n- See [the README](https://x.test/r#a).\n'
+  expect(inAppNotes(md)).toBe('Intro.\n\n## New\n\n- See the README.\n')
+  for (const f of fs.readdirSync('docs/releases')) expect(inAppNotes(fs.readFileSync(path.join('docs/releases', f), 'utf8'))).not.toMatch(/## Install|\]\(http/)
 })

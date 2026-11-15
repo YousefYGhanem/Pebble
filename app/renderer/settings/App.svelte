@@ -3,7 +3,7 @@
   // sends the whole view back after each change, so what you see is always what is saved.
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t, tOr } from '../i18n.svelte'
-  import { accelerator, THEME_COLORS, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
+  import { accelerator, inAppNotes, THEME_COLORS, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
   import { CHIPS, DEFAULTS, PRAYER_METHODS } from '../../shared/settings'
   import { WORDS } from '../../shared/i18n'
   import { SCENES, type Scene } from '../../shared/island'
@@ -561,7 +561,7 @@
           {#if shown}
             <article dir="ltr" lang="en">
               <h2>Pebble {shown.version}</h2>
-              {@html markdown(shown.text)}
+              {@html markdown(inAppNotes(shown.text))}
             </article>
           {/if}
         </div>
