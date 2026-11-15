@@ -28,13 +28,16 @@ const isOurs = (h: Hook) => (typeof h?.url === 'string' && /^http:\/\/127\.0\.0\
   || (typeof h?.command === 'string' && COMMANDS.test(h.command))
 const isOurStatus = (s: ClaudeSettings['statusLine']) => typeof s?.command === 'string'
   && ((s.command.includes('X-Pebble-Token') && s.command.includes('/status')) || / hook status --port \d+ --token /.test(s.command))
-const statusCommand = (o: Install) => `"${fwd(o.nativeExe)}" hook status --port ${o.port} --token ${o.token}`
+// Claude Code runs hooks and the status line in Git Bash: when Pebble's helper is gone (removed by hand, quarantined),
+// they quietly do nothing instead of failing on every prompt
+const guard = (o: Install) => `[ -f "${fwd(o.nativeExe)}" ] || exit 0; `
+const statusCommand = (o: Install) => `${guard(o)}"${fwd(o.nativeExe)}" hook status --port ${o.port} --token ${o.token}`
 /** Your own status line command, kept inside Pebble's (undefined when there was none). */
 const ownStatus = (s: ClaudeSettings['statusLine']) => {
   const b64 = / --then-b64 (\S+)/.exec(s?.command ?? '')?.[1]
   return b64 ? Buffer.from(b64, 'base64').toString('utf8') : undefined
 }
-const hook = (o: Install, kind: 'window' | 'reply') => `"${fwd(o.nativeExe)}" hook ${kind} --port ${o.port} --token ${o.token}`
+const hook = (o: Install, kind: 'window' | 'reply') => `${guard(o)}"${fwd(o.nativeExe)}" hook ${kind} --port ${o.port} --token ${o.token}`
 
 function strip(settings: ClaudeSettings): ClaudeSettings {
   settings.hooks = stripGroups(settings.hooks, isOurs) as ClaudeSettings['hooks']

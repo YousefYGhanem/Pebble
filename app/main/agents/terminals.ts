@@ -70,7 +70,7 @@ export function snippet(shell: Shell, o: Install): string {
     '        $c = $h.CommandLine -replace \'"\', "\'"',
     "        if ($c.Length -gt 80) { $c = $c.Substring(0, 77) + '...' }",
     "        $k = if ($ok) { 'done' } else { 'error' }",
-    `        & '${exe}' cli notify "$c - $t" --title Terminal --kind $k *> $null`,
+    `        if (Test-Path -LiteralPath '${exe}') { & '${exe}' cli notify "$c - $t" --title Terminal --kind $k *> $null }`,
     '      }',
     '    }',
     '    & $global:__pebblePrompt',

@@ -121,7 +121,8 @@ export const settingsSchema = z.object({
     speed: z.number().min(0.5).max(2)
   }),
   agents: z.object({
-    claude: z.object({ enabled: z.boolean(), answerPermissions: z.boolean() }),
+    /** planUsage: read (and renew) the Claude sign-in Claude Code keeps on this PC, for its plan limits; off until you say so */
+    claude: z.object({ enabled: z.boolean(), answerPermissions: z.boolean(), planUsage: z.boolean() }),
     /** connected automatically when found on this PC */
     codex: z.object({ enabled: z.boolean() }),
     gemini: z.object({ enabled: z.boolean() }),
@@ -176,7 +177,7 @@ export const DEFAULTS: Settings = {
   pip: { name: 'Pip', outfit: 'auto', followMouse: true, look: 'theme', body: '#ece9f6', visor: '#15151c', sleepAfterMinutes: 10 },
   motion: { mode: 'system', speed: 1 },
   agents: {
-    claude: { enabled: true, answerPermissions: true }, codex: { enabled: true }, gemini: { enabled: true },
+    claude: { enabled: true, answerPermissions: true, planUsage: false }, codex: { enabled: true }, gemini: { enabled: true },
     cursor: { enabled: true }, opencode: { enabled: true }, aider: { enabled: true }, dsh: { enabled: true }
   },
   terminals: { minSeconds: 10 },

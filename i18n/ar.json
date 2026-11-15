@@ -681,5 +681,7 @@
   "whatsnew.latest": "الأحدث",
   "welcome.more": "أشياء أخرى أستطيع فعلها",
   "welcome.moreHint": "شغّل ما يعجبك. كل ذلك وأكثر في الإعدادات.",
-  "welcome.prayerCity": "أدخل مدينتك في الإعدادات ← التذكيرات"
+  "welcome.prayerCity": "أدخل مدينتك في الإعدادات ← التذكيرات",
+  "agents.planUsage": "حدود خطة Claude من تسجيل دخولك",
+  "agents.planUsageHint": "يقرأ تسجيل الدخول الذي يحفظه Claude Code على هذا الجهاز (~/.claude/.credentials.json) ويجدّده عند انتهائه، ليعرض حدود الجلسة والأسبوع، وكذلك لتطبيق Claude. لا يُرسل إلا إلى Anthropic. عند الإيقاف: تأتي الحدود من سطر حالة Claude Code فقط."
 }

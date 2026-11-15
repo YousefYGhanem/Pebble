@@ -681,5 +681,7 @@
   "whatsnew.latest": "latest",
   "welcome.more": "A few more things I can do",
   "welcome.moreHint": "Switch on what you like. Settings has all of it, and more.",
-  "welcome.prayerCity": "your city goes in Settings → Reminders"
+  "welcome.prayerCity": "your city goes in Settings → Reminders",
+  "agents.planUsage": "Claude's plan limits from your sign-in",
+  "agents.planUsageHint": "Reads the sign-in Claude Code keeps on this PC (~/.claude/.credentials.json) and renews it when it expires, to show your session and weekly limits, also for the Claude app. It is sent only to Anthropic. Off: limits come only from Claude Code's status line."
 }

@@ -28,13 +28,16 @@ function run(file: string, args: string[], stdin: string, env: NodeJS.ProcessEnv
   })
 }
 
+/** Without the "is the helper still there" check in front (Git Bash runs it; here the helper is called directly). */
+const unguard = (cmd: string) => cmd.replace(/^\[ -f "[^"]*" \] \|\| exit 0; /, '')
+
 /** The installed hook command, split into program + arguments (as a shell would). */
 function hookCommand(kind: string): [string, string[]] {
   const s = JSON.parse(fs.readFileSync(settings, 'utf8'))
   for (const groups of Object.values(s.hooks) as { hooks: { command?: string }[] }[][]) {
     for (const g of groups) for (const h of g.hooks) {
       if (!h.command?.includes(` hook ${kind} `)) continue
-      const parts = h.command.match(/"[^"]*"|\S+/g)!.map(p => p.replace(/^"|"$/g, ''))
+      const parts = unguard(h.command).match(/"[^"]*"|\S+/g)!.map(p => p.replace(/^"|"$/g, ''))
       return [parts[0]!, parts.slice(1)]
     }
   }
@@ -87,7 +90,7 @@ describe.skipIf(process.platform !== 'win32' || !fs.existsSync(EXE))('native hoo
 
   test('the status line command prints the line and feeds the usage ring', async () => {
     const cmd = JSON.parse(fs.readFileSync(settings, 'utf8')).statusLine.command as string
-    const args = cmd.match(/"[^"]*"|\S+/g)!.slice(1).map(a => a.replace(/^"|"$/g, ''))
+    const args = unguard(cmd).match(/"[^"]*"|\S+/g)!.slice(1).map(a => a.replace(/^"|"$/g, ''))
     const { out } = await run(EXE, args, JSON.stringify({ model: { display_name: 'Opus' }, rate_limits: { five_hour: { used_percentage: 12, resets_at: 1 } } }))
     expect(out).toBe('Opus · 5h 12%')
     expect(hub.usage.claude?.fiveHour?.used).toBe(12)

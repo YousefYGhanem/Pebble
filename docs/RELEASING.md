@@ -43,6 +43,13 @@ as soon as its secrets exist:
 The next tag is then signed. SignPath may ask for its own GitHub Action instead of the PowerShell submission used here;
 build/sign.cjs is the one place to change.
 
+## After each release: antivirus false positives
+
+Until the installer is signed, some antivirus programs flag new builds. After a release, upload
+`Pebble-Setup-<version>.exe` and `pebble-native.exe` (from `%LOCALAPPDATA%\Programs\Pebble\resources\native`) at
+https://www.microsoft.com/wdsi/filesubmission as "incorrectly detected" (software developer). Microsoft usually clears
+them within a few days, which also helps SmartScreen. Signing (above) is the lasting fix.
+
 ## Release notes
 
 Write them in `docs/releases/v<version>.md` before tagging; the workflow uses that file (else GitHub's list of changes).

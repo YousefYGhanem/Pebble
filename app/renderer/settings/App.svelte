@@ -372,6 +372,8 @@
           {/each}
           <label class="row"><span>{t('agents.permissions')}</span>
             <input type="checkbox" class="switch" checked={s.agents.claude.answerPermissions} onchange={() => set('agents.claude.answerPermissions', !s.agents.claude.answerPermissions)} /></label>
+          <label class="row"><span>{t('agents.planUsage')}<small>{t('agents.planUsageHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.agents.claude.planUsage} onchange={() => set('agents.claude.planUsage', !s.agents.claude.planUsage)} /></label>
         </section>
         <h2>{t('terminals.title')} <span class="muted">· {t('terminals.hint')}</span></h2>
         <section>

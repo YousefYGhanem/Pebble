@@ -35,10 +35,10 @@ test('install and remove keep the user\'s own settings, hooks and status line ex
   expect(Object.keys(after.hooks)).toEqual(expect.arrayContaining([...EVENTS]))
   expect(after.hooks.PermissionRequest[0].hooks[0].timeout).toBe(305)
   // your status line runs inside Pebble's (which reads the usage), kept exactly in base64
-  expect(after.statusLine.command).toBe('"C:/Pebble/pebble-native.exe" hook status --port 47901 --token ' + TOKEN + ' --then-b64 ' + Buffer.from('~/.claude/my-status.sh').toString('base64'))
+  expect(after.statusLine.command).toBe('[ -f "C:/Pebble/pebble-native.exe" ] || exit 0; "C:/Pebble/pebble-native.exe" hook status --port 47901 --token ' + TOKEN + ' --then-b64 ' + Buffer.from('~/.claude/my-status.sh').toString('base64'))
   const reply = after.hooks.Stop.flatMap((g: { hooks: { command?: string; asyncRewake?: boolean }[] }) => g.hooks).find((h: { command?: string }) => h.command?.includes(' hook reply '))
   expect(reply.asyncRewake).toBe(true)
-  expect(reply.command).toBe('"C:/Pebble/pebble-native.exe" hook reply --port 47901 --token ' + TOKEN)
+  expect(reply.command).toBe('[ -f "C:/Pebble/pebble-native.exe" ] || exit 0; "C:/Pebble/pebble-native.exe" hook reply --port 47901 --token ' + TOKEN)
 
   install(opts(dir), file) // twice: no duplicates, and yours is not wrapped twice
   expect(JSON.parse(fs.readFileSync(file, 'utf8')).hooks.Stop).toHaveLength(3) // yours, http, reply
@@ -52,7 +52,7 @@ test('install and remove keep the user\'s own settings, hooks and status line ex
 test('without a status line of your own, Pebble adds one and removes it again', () => {
   const dir = tmp(), file = path.join(dir, 'settings.json')
   install(opts(dir), file)
-  expect(JSON.parse(fs.readFileSync(file, 'utf8')).statusLine.command).toBe('"C:/Pebble/pebble-native.exe" hook status --port 47901 --token ' + TOKEN)
+  expect(JSON.parse(fs.readFileSync(file, 'utf8')).statusLine.command).toBe('[ -f "C:/Pebble/pebble-native.exe" ] || exit 0; "C:/Pebble/pebble-native.exe" hook status --port 47901 --token ' + TOKEN)
   remove(file)
   expect(JSON.parse(fs.readFileSync(file, 'utf8'))).toEqual({})
 })

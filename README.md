@@ -278,6 +278,20 @@ proposes fixes, and the ones you tick go in as tracked changes, so you accept or
 **Diagnostics** (Settings → Advanced): checks the agent server, every native helper capability (with OCR and UI
 Automation), each agent, connector, the chat's provider and the browser extension, with a report you can copy.
 
+## If an antivirus flags Pebble
+
+Pebble is not code-signed yet, and its helper does things security tools watch for in unknown apps: it reads other
+apps' windows, watches the mouse and the window in front, and adds hooks to your coding agents' settings. Some
+antivirus programs (or an AI agent asked to investigate) can mistake that for malware and quarantine or delete it. The
+source is all here; each release is built by GitHub Actions from it.
+
+**If Pebble was removed without its uninstaller**, its hooks stay in your agents' settings. Pebble's Claude Code hooks
+and its PowerShell prompt line check that Pebble is still there and quietly do nothing when it is gone (from 0.4.1 on).
+To take them out completely, either reinstall Pebble and uninstall it from Windows Settings, or remove the entries that
+mention `X-Pebble-Token` or `pebble-native` from `~/.claude/settings.json` (and the other agents' files listed under
+[Agents](#agents)). Your own status line is kept inside Pebble's, base64-encoded after `--then-b64`: decode it to get
+it back.
+
 ## Privacy
 
 Pebble runs on your PC and has no server of its own: no account, no analytics, no tracking. It talks to the outside

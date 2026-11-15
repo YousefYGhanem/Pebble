@@ -796,7 +796,7 @@ app.whenReady().then(async () => {
   applyScreen()
   // Claude's plan usage from Anthropic every 5 minutes (also the Claude app's sessions, which run no status line)
   const planUsage = async () => {
-    if (!store.settings.agents.claude.enabled || rest === 'deep' || rest === 'off') return
+    if (!store.settings.agents.claude.enabled || !store.settings.agents.claude.planUsage || rest === 'deep' || rest === 'off') return
     const r = await fetchPlanUsage()
     if ('usage' in r) hub.setUsage('claude', { ...r.usage, note: undefined })
     else if (r.problem === 'expired' && !hub.usage.claude?.fiveHour) hub.setUsage('claude', { note: 'expired' })
