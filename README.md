@@ -172,7 +172,8 @@ there moves into encrypted storage (Windows DPAPI) when you save, and the file t
 
 | Connector | Needs | Shows |
 | --- | --- | --- |
-| GitHub | a token | reviews waiting for you, unread notifications, CI failing on your open PRs |
+| GitHub | a token | reviews waiting for you, unread notifications, and your open PRs' CI: live in the island while it runs (checks done of all, a look every 30 s), then passed or failed |
+| Local servers | – | which of your dev servers answer on this PC (3000, 5173, 8080, 4200, 8000 or your own ports) as a chip and a card you click to open, a notification when one stops (nothing leaves the PC) |
 | Weather | your city | temperature chip (Open-Meteo, no account), rain in the next hour |
 | Live scores | your team (+ league) | your match live in the island, a notification per goal (ESPN's unofficial scoreboard endpoint: not a documented or licensed API, so it may stop working) |
 | Calendar | your calendar's secret iCal link | the next event, a reminder a few minutes before |

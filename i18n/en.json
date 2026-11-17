@@ -340,7 +340,7 @@
   "c.deepseek.apiKey": "Your DeepSeek API key (stored encrypted)",
   "c.deepseek.lowBelow": "Warn when the balance is below",
   "c.github.name": "GitHub",
-  "c.github.desc": "Reviews waiting for you, your notifications, and a heads-up when CI fails on one of your open pull requests.",
+  "c.github.desc": "Reviews waiting for you, your notifications, and your pull requests' CI: live on the island while it runs, then passed or failed.",
   "c.github.token": "A GitHub token (read access to notifications and pull requests; stored encrypted)",
   "c.rss.name": "News feeds (RSS)",
   "c.rss.desc": "The newest items of RSS or Atom feeds you choose, with a notification for each new one.",
@@ -694,5 +694,9 @@
   "i.quick.clip": "Copy some text first, then type the tool’s name.",
   "i.quick.pick": "Pick a colour on screen",
   "i.quick.pickIn": "Point at a colour… {n}",
-  "i.quick.hashing": "Working it out…"
+  "i.quick.hashing": "Working it out…",
+  "c.localhost.name": "Local servers",
+  "c.localhost.desc": "Your dev servers on this PC (localhost:3000, 5173…): which are up, as a chip and a card you click to open, and a notification when one stops.",
+  "c.localhost.ports": "Ports to watch",
+  "c.localhost.stopped": "Tell me when one stops"
 }

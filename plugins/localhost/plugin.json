@@ -1,0 +1,10 @@
+{
+  "id": "localhost",
+  "name": "Local servers",
+  "description": "Your dev servers on this PC (localhost:3000, 5173…): which are up, as a chip and a card you click to open, and a notification when one stops.",
+  "permissions": { "net": ["localhost", "127.0.0.1"], "notify": true },
+  "settings": [
+    { "key": "ports", "label": "Ports to watch", "type": "list", "default": ["3000", "5173", "8080", "4200", "8000"] },
+    { "key": "stopped", "label": "Tell me when one stops", "type": "boolean", "default": true }
+  ]
+}

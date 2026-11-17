@@ -212,7 +212,7 @@ const en: Content = {
       kicker: 'Connectors',
       title: 'Your world, in the island',
       text: 'Connectors bring apps and web services in: a chip next to Pip, cards on Home and Widgets, live activities and notifications. Write your own in a few lines.',
-      points: ['GitHub: reviews waiting, notifications, failing CI', 'Weather, news feeds, live scores', 'Calendar, with a Join button two minutes before an online meeting', 'Webhook inbox, watch a value, DeepSeek balance', 'Each one runs with only what it declares'],
+      points: ['GitHub: reviews waiting, notifications, your CI live while it runs', 'Local servers: which dev servers are up, one click to open', 'Weather, news feeds, live scores', 'Calendar, with a Join button two minutes before an online meeting', 'Webhook inbox, watch a value, DeepSeek balance', 'Each one runs with only what it declares'],
       shots: [{ src: 'page-widgets', alt: 'The Widgets page with connector cards', h: 334 }],
       mood: 'curious'
     },
