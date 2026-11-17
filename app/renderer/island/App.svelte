@@ -62,7 +62,16 @@
   let sceneWidgets = $state<Widget[] | null>(null)
 
   const sessions = $derived(scene ? sceneSessions : (view?.sessions ?? []))
-  const shown = $derived(view ? rank(sessions, view.settings.features.doneSeconds, now) : [])
+  // when each session stopped (an error, a usage limit), as the island first saw it: a stop goes quiet after a while
+  // even if nobody opens it (its "last activity" time moves with every hook event, so it cannot tell)
+  const stoppedSince = new Map<string, number>()
+  const withStops = $derived(sessions.map(s => {
+    if (s.status !== 'error') { stoppedSince.delete(s.id); return s }
+    if (!stoppedSince.has(s.id)) stoppedSince.set(s.id, Date.now())
+    return { ...s, stoppedAt: stoppedSince.get(s.id) }
+  }))
+  $effect(() => { for (const id of stoppedSince.keys()) if (!sessions.some(s => s.id === id)) stoppedSince.delete(id) }) // ended sessions
+  const shown = $derived(view ? rank(withStops, view.settings.features.doneSeconds, now) : [])
   const top = $derived<Session | undefined>(shown[0])
   const extras = $derived<ExtrasState | undefined>(view ? { ...view.extras, ...(scene ? sceneExtras : {}) } : undefined)
   const music = $derived(!!view?.settings.music.enabled && !!extras?.media?.playing)
@@ -317,7 +326,7 @@
   window.pebble.ready()
   matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', e => (systemReduced = e.matches))
   addEventListener('resize', wake) // another screen or scale
-  setInterval(() => { if (mode === 'tucked') return; now = Date.now(); if (extras?.focus?.endsAt) wake() }, 1000) // the focus ring moves on each second
+  setInterval(() => { if (mode === 'tucked' && !shown.some(x => x.status === 'error')) return; now = Date.now(); if (extras?.focus?.endsAt) wake() }, 1000) // the focus ring moves on each second
 
   // ---------- hello, goodbye, jelly ----------
   // Hello: a dot comes out of the top edge, springs open into the resting pill, the eyes grow from a line, a wobble.

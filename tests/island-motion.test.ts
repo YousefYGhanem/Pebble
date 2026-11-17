@@ -76,6 +76,16 @@ test('rank: busiest first; done stays until seen, then fades to ready', () => {
   expect(r.map(s => s.id + ':' + s.status)).toEqual(['q:question', 'r:running', 'u:done', 'd:ready'])
 })
 
+test('rank: a stop (a usage limit) goes quiet by itself after a while, or once seen; its activity does not keep it red', () => {
+  const now = 100_000
+  const r = rank([
+    S('fresh', 'error', { at: now, stoppedAt: now - 5_000 }),
+    S('old', 'error', { at: now, stoppedAt: now - 20_000 }), // still getting events: stoppedAt counts, not at
+    S('seen', 'error', { at: now, stoppedAt: now - 3_000, seenAt: now - 9_000 })
+  ], 8, now)
+  expect(r.map(s => s.id + ':' + s.status)).toEqual(['fresh:error', 'old:ready', 'seen:ready'])
+})
+
 test('sizes come from the settings; pages grow with their content', () => {
   expect(sizeFor('resting', DEFAULTS.island, 0)).toEqual({ w: 180, h: 32, r: 16 })
   expect(sizeFor('open', DEFAULTS.island, 260).h).toBe(260)

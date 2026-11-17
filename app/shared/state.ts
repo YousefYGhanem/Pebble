@@ -35,6 +35,8 @@ export interface Session {
   detail: string
   prompt?: string
   at: number
+  /** when it stopped (error, usage limit): set by the island, which lets a stop go quiet after a while */
+  stoppedAt?: number
   /** when the current turn started (the live timer) */
   startedAt?: number
   /** this turn's steps, newest last (at most 40) */

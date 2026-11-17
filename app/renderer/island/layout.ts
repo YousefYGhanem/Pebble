@@ -12,10 +12,16 @@ export type Mode = 'tucked' | 'resting' | 'medium' | 'ask' | 'open'
 
 const RANK: Record<Status, number> = { question: 4, error: 3, running: 2, done: 1, ready: 0 }
 
-/** Busiest first. "done" stays until you have seen it, then counts as ready after doneSeconds. */
+/** a stop (an error, a usage limit) shows this long by itself, seen or not: then the island goes quiet again */
+export const STOPPED_SHOWS_MS = 15_000
+
+/** Busiest first. "done" stays until you have seen it, then counts as ready after doneSeconds; "stopped" the same, or
+ *  after STOPPED_SHOWS_MS anyway (the Agents page and History still have it). */
 export function rank(sessions: Session[], doneSeconds: number, now: number): Session[] {
+  const quiet = (s: Session) => (s.status === 'done' || s.status === 'error') && !!s.seenAt && now - s.seenAt > doneSeconds * 1000
+    || (s.status === 'error' && now - (s.stoppedAt ?? s.at) > STOPPED_SHOWS_MS)
   return sessions
-    .map(s => (s.status === 'done' && s.seenAt && now - s.seenAt > doneSeconds * 1000 ? { ...s, status: 'ready' as Status } : s))
+    .map(s => (quiet(s) ? { ...s, status: 'ready' as Status } : s))
     .sort((a, b) => RANK[b.status] - RANK[a.status] || b.at - a.at)
 }
 
