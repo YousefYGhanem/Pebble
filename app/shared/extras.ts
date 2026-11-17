@@ -74,6 +74,10 @@ export interface ExtrasState {
   todos: Todo[]
   /** each app's own volume (the Music page's Apps), read when asked */
   mixer: { name: string; volume: number; muted: boolean }[] | null
+  /** the quick bar: today's currency rates (units per 1 EUR), fetched when a currency question is typed */
+  rates: Record<string, number> | null
+  /** the quick bar's last translation (key: "<to>|<text>") */
+  translated: { key: string; text?: string; error?: string } | null
   /** the next prayer (Settings → Reminders → Prayer times) */
   prayer: { name: string; at: number } | null
   /** today's screen time: the apps you spent most time in (Settings → Extras → Screen time) */
@@ -95,7 +99,7 @@ export interface ExtrasState {
 }
 
 /** nothing yet (a fresh start; a copy for each user) */
-export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null })
+export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, rates: null, translated: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null })
 
 /** Everything the island can ask main to do with the extras (validated in main). */
 export type Action =
@@ -113,6 +117,9 @@ export type Action =
   | { do: 'focus.sound'; sound: 'off' | 'rain' | 'deep' | 'waves' }
   | { do: 'mic.toggle' }
   | { do: 'mixer.refresh' }
+  | { do: 'quick.rates' }
+  | { do: 'quick.copy'; text: string }
+  | { do: 'quick.translate'; text: string; to: string }
   | { do: 'mixer.set'; name: string; volume?: number; muted?: boolean }
   | { do: 'wellness'; what: 'water' | 'stand'; done: boolean }
   | { do: 'power'; mode: 'efficiency' | 'balanced' | 'performance' }

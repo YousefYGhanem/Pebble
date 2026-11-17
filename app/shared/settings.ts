@@ -33,6 +33,8 @@ export const settingsSchema = z.object({
     buddyShortcut: z.string(),
     /** opens the chat and starts Windows voice typing */
     voiceShortcut: z.string(),
+    /** the quick bar: calculate, convert, translate */
+    quickShortcut: z.string(),
     /** mutes the microphone for every app (and unmutes it) */
     micShortcut: z.string()
   }),
@@ -162,7 +164,7 @@ export type Settings = z.infer<typeof settingsSchema>
 export const DEFAULTS: Settings = {
   version: 1,
   theme: 'default',
-  general: { language: 'en', welcomed: false, tipsSeen: [], startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space', micShortcut: 'Control+Alt+M' },
+  general: { language: 'en', welcomed: false, tipsSeen: [], startWithWindows: false, icon: 'lavender', updates: true, toggleShortcut: 'Control+Alt+P', tuckShortcut: 'Control+Alt+H', buddyShortcut: 'Control+Alt+B', voiceShortcut: 'Control+Alt+Space', quickShortcut: 'Control+Alt+K', micShortcut: 'Control+Alt+M' },
   island: {
     style: 'notch', openOn: 'hover', display: 'main', position: 'center',
     restingWidth: 180, restingHeight: 32, width: 340, height: 36, askWidth: 460, openWidth: 680,

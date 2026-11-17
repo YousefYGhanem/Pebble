@@ -219,6 +219,7 @@ If the exe is missing, Pebble still runs; game mode and jump to terminal are off
 | Point at it (or click, with "Open when I point at it" off) | Opens the Agents page; it closes when the mouse leaves (not while you type) |
 | Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line (dashed: stopped, dotted: needs you); clicks pass through, and every service rests (below). Point at the line to bring it back |
 | A question during a full-screen game | Only the thin line shows; point at it to answer, and it is gone again after |
+| **Ctrl+Alt+K** | The **quick bar**: type a sum (`15% of 80`), a conversion (`5 km in miles`, `100 usd in eur`), a time (`time in tokyo`, `9am london in new york`) or `tr fr good morning` to translate (with Pip's chat provider). The answer shows as you type; Enter copies it |
 | **Ctrl+Alt+P** | Opens or closes it, with the keyboard in it: Tab and Enter answer a question, arrows go between pages, **Esc** closes it and gives the keyboard back |
 | An agent needs you | It grows into a card (Allow/Deny, or the answer buttons), even when tucked, plus a Windows notification |
 | Something runs full screen on its screen | It hides (game mode) and comes back after |
@@ -297,7 +298,7 @@ it back.
 Pebble runs on your PC and has no server of its own: no account, no analytics, no tracking. It talks to the outside
 only for features you switch on, and only to that feature's service: the AI provider you pick for the chat (with your
 key or your own Claude Code / Codex login), LRCLIB for lyrics (title, artist, album, length), Open-Meteo for the
-weather and to find your city, ESPN for live scores, GitHub for its connector and for updates, Anthropic for Claude's
+weather and to find your city, Frankfurter for the quick bar's exchange rates, ESPN for live scores, GitHub for its connector and for updates, Anthropic for Claude's
 plan usage (with the sign-in Claude Code keeps on this PC). API keys and connector secrets are
 encrypted for your Windows account. Clipboard history and the chat stay in memory; screenshots for the screen buddy
 stay in `%APPDATA%\Pebble\chat` until you clear the chat.

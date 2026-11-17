@@ -318,6 +318,7 @@ const en: Content = {
     title: 'Small touches, all over',
     lead: 'The details that make it feel finished.',
     items: [
+      { icon: 'search', title: 'Quick bar', text: 'Ctrl+Alt+K: sums, units, currencies, the time in any city, or tr to translate. Enter copies the answer.' },
       { icon: 'terminal', title: 'Long commands', text: 'PowerShell or Git Bash tell you when a command of 10 s or more finishes, red when it failed.' },
       { icon: 'code', title: 'VS Code and Cursor', text: 'The extension shows the exact terminal tab when you jump to it.' },
       { icon: 'prompt', title: 'The pebble command', text: 'pebble notify and pebble ask from any script or CI step.' },

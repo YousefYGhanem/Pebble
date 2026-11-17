@@ -153,6 +153,7 @@ export class Extras extends EventEmitter {
   private lastImage = ''
   /** when you asked for a snip: the next picture copied within a minute is it */
   private snipping = 0
+  private ratesDay = ''
   private snipSeq = -1
   private async readClipboard() {
     if (this.snipping && Date.now() - this.snipping < 60_000 && (this.clipSeq !== this.snipSeq || !this.native.available)) {
@@ -306,6 +307,16 @@ export class Extras extends EventEmitter {
     const s = this.state
     switch (a.do) {
       case 'media': return this.native.request('media.control', { action: a.action, positionMs: a.positionMs ?? 0 })
+      case 'quick.copy': this.lastClip = a.text; clipboard.writeText(a.text); return
+      case 'quick.rates': {
+        // the European Central Bank's daily rates (Frankfurter: free, no key), once a day
+        if (s.rates && this.ratesDay === new Date().toDateString()) return
+        const r = await fetch('https://api.frankfurter.app/latest', { signal: AbortSignal.timeout(10_000) }).then(x => x.json() as Promise<{ rates?: Record<string, number> }>).catch(() => null)
+        if (!r?.rates) return
+        s.rates = { EUR: 1, ...r.rates }
+        this.ratesDay = new Date().toDateString()
+        return this.changed()
+      }
       case 'mixer.refresh': case 'mixer.set': {
         const list = await this.native.request<ExtrasState['mixer']>(a.do === 'mixer.refresh' ? 'mixer.list' : 'mixer.set',
           a.do === 'mixer.set' ? { name: a.name, ...(a.volume !== undefined ? { volume: Math.round(a.volume) } : {}), ...(a.muted !== undefined ? { muted: a.muted } : {}) } : {}).catch(() => null)
@@ -368,7 +379,9 @@ export function validAction(a: unknown): a is Action {
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
-    case 'mixer.refresh': return true
+    case 'mixer.refresh': case 'quick.rates': return true
+    case 'quick.copy': return typeof o.text === 'string' && o.text.length <= 10_000
+    case 'quick.translate': return typeof o.text === 'string' && !!o.text.trim() && o.text.length <= 2000 && typeof o.to === 'string' && /^[a-z]{2}$/.test(o.to)
     case 'mixer.set': return typeof o.name === 'string' && o.name.length <= 100
       && (o.volume === undefined || (typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100)) && (o.muted === undefined || typeof o.muted === 'boolean')
     case 'wellness': return (o.what === 'water' || o.what === 'stand') && typeof o.done === 'boolean'

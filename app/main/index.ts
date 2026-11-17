@@ -21,6 +21,7 @@ import { restLevel, type RestLevel } from './rest'
 import { emptyDay, usageAlerts } from '../shared/today'
 import { freshWellness, wellnessAnswer, wellnessCheck } from '../shared/wellness'
 import { appName, countTime, freshScreen, topApps, type ScreenDay } from '../shared/screentime'
+import { LANG_NAMES } from '../shared/quick'
 import { findCity, nextPrayer } from './prayer'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
@@ -350,6 +351,7 @@ function applySettings() {
   bindShortcut('buddy', s.general.buddyShortcut, () => void buddy())
   bindShortcut('voice', s.general.voiceShortcut, () => showPage('chat', true))
   // the microphone for every app at once; the island shows a muted mic until it is back on
+  bindShortcut('quick', s.general.quickShortcut, () => { bringBack(); island?.focus(); send(CH.quick) })
   bindShortcut('mic', s.general.micShortcut, () => { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)) })
   chatApps.apply()
   updater.apply()
@@ -556,6 +558,17 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'drop.network') { void shell.openExternal('ms-settings:network-status'); return }
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
+  if (a.do === 'quick.translate') {
+    // Pip's chat provider, as one question; only the latest one is shown
+    const key = `${a.to}|${a.text}`
+    if (extras.state.translated?.key === key && extras.state.translated.text) return
+    extras.state.translated = { key }
+    push()
+    chat.complete(`Translate the user's text into ${LANG_NAMES[a.to] ?? a.to}. Reply with the translation only: no quotes, notes or explanations.`, a.text)
+      .then(text => ({ key, text: text.trim() }), (err: Error) => ({ key, error: err.message }))
+      .then(r => { if (extras.state.translated?.key === key) { extras.state.translated = r; push() } })
+    return
+  }
   if (a.do === 'update.install') { updater.install(); return }
   if (a.do === 'wellness') { wellnessAnswerHandler(a.what, a.done); return }
   if (a.do === 'mic.toggle') { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)); return }

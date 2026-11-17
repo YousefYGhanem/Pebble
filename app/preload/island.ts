@@ -8,6 +8,7 @@ const api: IslandApi = {
   onChat: fn => { ipcRenderer.on(CH.chat, (_e, c) => fn(c)) },
   onExpand: fn => { ipcRenderer.on(CH.expand, (_e, id?: string) => fn(id)) },
   onToggle: fn => { ipcRenderer.on(CH.toggle, () => fn()) },
+  onQuick: fn => { ipcRenderer.on(CH.quick, () => fn()) },
   onTuck: fn => { ipcRenderer.on(CH.tuck, () => fn()) },
   onScene: fn => { ipcRenderer.on(CH.scene, (_e, s: Scene | null) => fn(s)) },
   onBye: fn => { ipcRenderer.on(CH.bye, () => fn()) },

@@ -32,6 +32,7 @@ export const CH = {
   opened: 'island:opened',
   peek: 'island:peek',
   notice: 'island:notice',
+  quick: 'island:quick',
   chat: 'island:chat'
 } as const
 
@@ -110,6 +111,8 @@ export interface IslandApi {
   onExpand(fn: (sessionId?: string) => void): void
   /** open ↔ closed */
   onToggle(fn: () => void): void
+  /** the quick bar's shortcut: open the island on it, with the keyboard */
+  onQuick(fn: () => void): void
   /** tucked ↔ back */
   onTuck(fn: () => void): void
   /** test mode: play a demo scene, or null to go back to the real sessions */

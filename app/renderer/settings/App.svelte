@@ -123,7 +123,7 @@
   /** the port typed this session: Pebble listens on it after a restart */
   let portEdited = $state(false)
   const SHELLS: Record<string, string> = { powershell: 'Windows PowerShell', pwsh: 'PowerShell 7', bash: 'Git Bash' }
-  const SHORTCUTS = ['toggleShortcut', 'tuckShortcut', 'buddyShortcut', 'voiceShortcut', 'micShortcut'] as const
+  const SHORTCUTS = ['toggleShortcut', 'quickShortcut', 'tuckShortcut', 'buddyShortcut', 'voiceShortcut', 'micShortcut'] as const
   const SIZES = [['restingWidth', 60, 600], ['restingHeight', 20, 60], ['width', 120, 1200], ['height', 24, 80], ['askWidth', 200, 1200], ['openWidth', 300, 1400], ['offsetTop', 0, 200]] as const
 
   function record(e: KeyboardEvent) {
