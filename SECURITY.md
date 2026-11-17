@@ -6,7 +6,7 @@ Only the latest release gets security fixes. Pebble updates itself, so staying o
 
 | Version | Supported |
 | --- | --- |
-| 0.4.x (latest) | Yes |
+| 0.5.x (latest) | Yes |
 | older | No |
 
 ## Reporting a vulnerability
