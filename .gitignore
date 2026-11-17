@@ -9,3 +9,7 @@ native/publish/
 # the design notes stay on the developer's PC
 PLAN.md
 site/dist/
+
+# Piper, fetched at build time (scripts/fetch-piper.mjs)
+build/piper/
+build/piper-*

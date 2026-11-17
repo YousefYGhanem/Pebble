@@ -16,6 +16,9 @@ extraResources:
     to: native/pebble.cmd
   - from: plugins
     to: plugins
+  # Piper, the offline speech engine (MIT): scripts/fetch-piper.mjs puts it in build/piper
+  - from: build/piper
+    to: piper
   - from: extensions/chat
     to: extensions/chat
   # the icons you can choose in Settings (tray and windows)

@@ -23,6 +23,7 @@ import { freshWellness, wellnessAnswer, wellnessCheck } from '../shared/wellness
 import { appName, countTime, freshScreen, topApps, type ScreenDay } from '../shared/screentime'
 import { LANG_NAMES } from '../shared/quick'
 import { speechLanguage } from '../shared/speech'
+import { Voices } from './voices'
 import { findCity, nextPrayer } from './prayer'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
@@ -299,12 +300,21 @@ async function buddy() {
 }
 
 /** Reads text aloud with Windows' voices (the island plays it). */
+// natural voices (Piper, offline): the engine ships in resources/piper; a build from source has it in build/piper
+const voices = new Voices(path.join(userData, 'voices'), app.isPackaged ? path.join(process.resourcesPath, 'piper') : path.join(app.getAppPath(), 'build', 'piper'))
 async function say(text: string) {
   const file = path.join(chat.folder, 'say.wav')
   const plain = text.replace(/```[\s\S]*?```/g, ' (code) ').replace(/[`*_#>|]/g, '').slice(0, 5000)
+  const language = speechLanguage(plain)
   try {
-    // a voice of the message's own language (Windows' default voice reads other languages' words badly)
-    await native.request('speech.say', { text: plain, file, language: speechLanguage(plain) })
+    // a natural voice of the message's own language; the first time for a language it downloads (about 60 MB)
+    if (store.settings.chat.voice === 'natural' && voices.available) {
+      if (!voices.has(language)) toast(tr('m.voiceDownloading'), tr('m.voiceDownloadingBody'), undefined, undefined, { kind: 'extras' })
+      const ok = await voices.speak(plain, language, file).catch(err => { log.warn('natural voice:', (err as Error).message); return false })
+      if (ok) { send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`); return }
+    }
+    // Windows' own voice of that language (its default voice reads other languages' words badly)
+    await native.request('speech.say', { text: plain, file, language })
     send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`)
   } catch (err) {
     log.warn('say:', (err as Error).message)

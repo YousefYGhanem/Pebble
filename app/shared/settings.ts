@@ -156,7 +156,7 @@ export const settingsSchema = z.object({
    *  tools: the clipboard tools; copyToAi: explain and summarize, which send what you copied to the chat's provider) */
   quick: z.object({ translateTo: z.string().max(5), tools: z.boolean(), copyToAi: z.boolean() }),
   /** Pip's chat: who answers (API keys are kept encrypted, outside this file); model '' = the provider's default */
-  chat: z.object({ provider: z.enum(PROVIDER_IDS), model: z.string().max(100).regex(/^[\w.:/@-]*$/), readAloud: z.boolean() }),
+  chat: z.object({ provider: z.enum(PROVIDER_IDS), model: z.string().max(100).regex(/^[\w.:/@-]*$/), readAloud: z.boolean(), voice: z.enum(['natural', 'windows']) }),
   /** chat apps followed as sessions: desktop apps by process name (UI Automation, beta); the browser goes through the extension */
   chatApps: z.object({ desktop: z.array(z.enum(['claude', 'chatgpt'])) }),
   server: z.object({ port: z.number().int().min(1024).max(65535) })
@@ -188,7 +188,7 @@ export const DEFAULTS: Settings = {
   terminals: { minSeconds: 10 },
   features: { sound: true, toasts: true, peeks: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
   quick: { translateTo: 'auto', tools: true, copyToAi: true },
-  chat: { provider: 'free', model: '', readAloud: false },
+  chat: { provider: 'free', model: '', readAloud: false, voice: 'natural' },
   chatApps: { desktop: [] },
   server: { port: 47901 }
 }

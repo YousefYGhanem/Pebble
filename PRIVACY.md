@@ -34,6 +34,7 @@ your data too.
 | Prayer times, Weather | Open-Meteo | the name of your city when you look it up; for weather, its coordinates |
 | Live scores | ESPN | the leagues you follow |
 | Other connectors you switch on (GitHub, calendar, news feeds, a value to watch…) | the service you point them at | what that connector needs, with the key you give it |
+| Natural voices (reading aloud) | Hugging Face | a download of a language's voice, once, the first time an answer in it is read; what is read stays on your PC |
 | Updates (GitHub version only) | GitHub | a check for a new version |
 
 Prayer times are worked out on your PC. Screen time is counted on your PC and never sent anywhere.

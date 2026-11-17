@@ -403,6 +403,12 @@
             </select></label>
           <label class="row"><span>{t('chat.readAloud')}<small>{t('chat.readAloudHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.chat.readAloud} onchange={() => set('chat.readAloud', !s.chat.readAloud)} /></label>
+          <div class="row"><span>{t('chat.voice')}<small>{t(s.chat.voice === 'natural' ? 'chat.voiceNaturalHint' : 'chat.voiceWindowsHint')}</small></span>
+            <div class="seg">
+              {#each ['natural', 'windows'] as const as v}
+                <button class:on={s.chat.voice === v} aria-pressed={s.chat.voice === v} onclick={() => set('chat.voice', v)}>{t(`chat.voice.${v}`)}</button>
+              {/each}
+            </div></div>
         </section>
         <h2>{t('chat.keys')} <span class="muted">· {t('chat.keysHint')}</span></h2>
         <section>

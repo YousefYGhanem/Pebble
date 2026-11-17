@@ -730,5 +730,12 @@
   "quick.toolsHint": "json, base64, camelCase, hashes… on what you copied, on this PC",
   "quick.copyToAi": "Explain and summarize what you copied",
   "quick.copyToAiHint": "they send what you copied to the chat's AI, only when you press Enter",
-  "chat.freeHint": "Free and without a key: your messages go to Pollinations (pollinations.ai), a free open-source AI service. For anything private, pick your own Claude, ChatGPT or an API key."
+  "chat.freeHint": "Free and without a key: your messages go to Pollinations (pollinations.ai), a free open-source AI service. For anything private, pick your own Claude, ChatGPT or an API key.",
+  "chat.voice": "Voice",
+  "chat.voice.natural": "Natural",
+  "chat.voice.windows": "Windows",
+  "chat.voiceNaturalHint": "Natural voices in 50+ languages that run on this PC (Piper). Each language downloads once, about 60 MB, the first time a message in it is read.",
+  "chat.voiceWindowsHint": "The voices installed in Windows: nothing to download, but they sound robotic and cover few languages.",
+  "m.voiceDownloading": "Getting a natural voice",
+  "m.voiceDownloadingBody": "The first message in this language: its voice downloads once (about 60 MB), then reading starts."
 }
