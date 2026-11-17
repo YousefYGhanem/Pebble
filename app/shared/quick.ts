@@ -9,6 +9,9 @@ export type Answer =
   | { kind: 'hash'; algo: 'SHA-1' | 'SHA-256' | 'SHA-512'; text: string } // worked out by the bar (Web Crypto is async)
   | { kind: 'pick' } // the colour under the mouse: main reads it
   | { kind: 'clip' } // a clipboard tool, with nothing copied yet
+  | { kind: 'ai'; how: 'ask' | 'explain' | 'summarize'; text: string } // Pip's chat provider, on Enter (explain/summarize: what you copied)
+  | { kind: 'timer'; seconds: number; name: string } // started on Enter
+  | { kind: 'timers' } // the running ones, to stop
 
 export interface Ctx {
   /** units per 1 EUR (ECB rates), once fetched */
@@ -231,6 +234,17 @@ function tool(s: string, c: Ctx): Answer | null {
   if (name === 'uuid') return { kind: 'tool', text: crypto.randomUUID(), sub: 'uuid' }
   if (name === 'now' || name === 'timestamp') return { kind: 'tool', text: String(Math.floor(c.now / 1000)), sub: new Date(c.now).toLocaleString(c.locale) }
   if (['pick', 'color', 'colour', 'لون'].includes(name)) return { kind: 'pick' }
+  const ask = /^(?:ask|اسأل)\s+(.+)$/is.exec(s)
+  if (ask) return { kind: 'ai', how: 'ask', text: ask[1]!.trim() }
+  const work = name === 'explain' || name === 'اشرح' ? 'explain' : ['summarize', 'summarise', 'summary', 'لخص', 'لخّص'].includes(name) ? 'summarize' : null
+  if (work) return c.clip ? { kind: 'ai', how: work, text: '' } : { kind: 'clip' }
+  if (name === 'timer' || name === 'timers' || name === 'مؤقت') return { kind: 'timers' }
+  const timer = /^(?:timer|مؤقت)\s+(\d+(?:\.\d+)?)\s*(s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)?\b\s*(.*)$/i.exec(s)
+  if (timer) {
+    const unit = (timer[2] ?? 'm').toLowerCase()[0]
+    const seconds = Math.round(Number(timer[1]) * (unit === 's' ? 1 : unit === 'h' ? 3600 : 60))
+    if (seconds >= 1 && seconds <= 7 * 86400) return { kind: 'timer', seconds, name: timer[3]!.trim().slice(0, 60) }
+  }
   const run = TOOLS[name], hash = HASHES[name as keyof typeof HASHES]
   if (!run && !hash) return null
   if (!c.clip) return { kind: 'clip' }

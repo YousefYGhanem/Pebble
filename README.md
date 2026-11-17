@@ -150,6 +150,8 @@ once (Settings → Reminders) and the Weather connector uses it too when its own
 **Screen time** (Settings → Extras, on): how long each app is in front today, counted on this PC only and only while
 you are there; the top app shows on Home (`%APPDATA%\Pebble\screentime.json`, today only).
 
+**Disk space**: when the Windows drive gets almost full (under 8% or 5 GB free), a peek and a notification, at most once a day.
+
 **Calendar Join**: two minutes before an online meeting from your calendar connector (Teams, Zoom, Meet, Webex), the
 island shows its Join button until ten minutes in.
 
@@ -178,7 +180,8 @@ there moves into encrypted storage (Windows DPAPI) when you save, and the file t
 | Live scores | your team (+ league) | your match live in the island, a notification per goal (ESPN's unofficial scoreboard endpoint: not a documented or licensed API, so it may stop working) |
 | Calendar | your calendar's secret iCal link | the next event, a reminder a few minutes before |
 | News feeds | RSS/Atom addresses | the newest items, a notification for new ones |
-| Watch a value | an address, then **Find values** and pick one from the list | the value, a notification when it changes |
+| Watch a value | an address, then **Find values** and pick one from the list | the value, a notification when it changes, or only when it goes above or below limits you set (a price alert) |
+| Countdowns | your dates, one per line (`Eid: 2027-03-10`) | the nearest as a chip, all of them on a card, a notification when one arrives (nothing leaves the PC) |
 | Webhook inbox | – | anything that POSTs `{"title","text","progress"}` to its local address (Settings → Connectors → *Copy its webhook address*) |
 | DeepSeek balance | your API key | your balance, a warning when it runs low |
 | Windows apps | – | a meeting in Teams or Zoom, OBS recording… (window titles, nothing leaves the PC) |
@@ -220,7 +223,7 @@ If the exe is missing, Pebble still runs; game mode and jump to terminal are off
 | Point at it (or click, with "Open when I point at it" off) | Opens the Agents page; it closes when the mouse leaves (not while you type) |
 | Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line (dashed: stopped, dotted: needs you); clicks pass through, and every service rests (below). Point at the line to bring it back |
 | A question during a full-screen game | Only the thin line shows; point at it to answer, and it is gone again after |
-| **Ctrl+Alt+K** | The **quick bar**: type a sum (`15% of 80`), a conversion (`5 km in miles`, `100 usd in eur`), a time (`time in tokyo`, `9am london in new york`) or `tr fr good morning` to translate (with Pip's chat provider). A colour (`#53e4ff`, `rgb(…)`, `hsl(…)`) shows its other forms, and `pick` reads the colour under the mouse. A tool's name works on what you copied: `json`, `minify`, `upper`, `lower`, `title`, `camel`, `snake`, `kebab`, `base64`, `unbase64`, `url`, `unurl`, `trim`, `count`, `sha1`, `sha256`, `sha512`; also `uuid`, `now`, and a Unix time becomes a date. The answer shows as you type; Enter copies it |
+| **Ctrl+Alt+K** | The **quick bar**: type a sum (`15% of 80`), a conversion (`5 km in miles`, `100 usd in eur`), a time (`time in tokyo`, `9am london in new york`) or `tr fr good morning` to translate (with Pip's chat provider). A colour (`#53e4ff`, `rgb(…)`, `hsl(…)`) shows its other forms, and `pick` reads the colour under the mouse. A tool's name works on what you copied: `json`, `minify`, `upper`, `lower`, `title`, `camel`, `snake`, `kebab`, `base64`, `unbase64`, `url`, `unurl`, `trim`, `count`, `sha1`, `sha256`, `sha512`; also `uuid`, `now`, and a Unix time becomes a date. `ask <question>` asks Pip (only the question is sent); `explain` and `summarize` send what you copied, on Enter. `timer 10m tea` starts a named timer (the island counts it down, a peek and a notification when it ends; `timers` lists and stops them). The answer shows as you type; Enter copies it |
 | **Ctrl+Alt+P** | Opens or closes it, with the keyboard in it: Tab and Enter answer a question, arrows go between pages, **Esc** closes it and gives the keyboard back |
 | An agent needs you | It grows into a card (Allow/Deny, or the answer buttons), even when tucked, plus a Windows notification |
 | Something runs full screen on its screen | It hides (game mode) and comes back after |

@@ -76,10 +76,12 @@ export interface ExtrasState {
   mixer: { name: string; volume: number; muted: boolean }[] | null
   /** the quick bar: today's currency rates (units per 1 EUR), fetched when a currency question is typed */
   rates: Record<string, number> | null
-  /** the quick bar's last translation (key: "<to>|<text>") */
+  /** the quick bar's last answer from Pip's chat provider: a translation (key "<to>|<text>") or ask/explain/summarize */
   translated: { key: string; text?: string; error?: string } | null
   /** the text on the clipboard when the quick bar opened (its clipboard tools work on it); memory only */
   clipText: string
+  /** timers you started in the quick bar ("timer 10m pasta"), soonest first; memory only */
+  timers: { id: string; name: string; endsAt: number }[]
   /** the colour the picker read under the mouse */
   picked: { hex: string; at: number } | null
   /** the next prayer (Settings → Reminders → Prayer times) */
@@ -103,7 +105,7 @@ export interface ExtrasState {
 }
 
 /** nothing yet (a fresh start; a copy for each user) */
-export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, rates: null, translated: null, clipText: '', picked: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null })
+export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, rates: null, translated: null, clipText: '', timers: [], picked: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null })
 
 /** Everything the island can ask main to do with the extras (validated in main). */
 export type Action =
@@ -126,6 +128,9 @@ export type Action =
   | { do: 'quick.pick' }
   | { do: 'quick.copy'; text: string }
   | { do: 'quick.translate'; text: string; to: string }
+  | { do: 'quick.ask'; how: 'ask' | 'explain' | 'summarize'; text: string }
+  | { do: 'timer.start'; seconds: number; name: string }
+  | { do: 'timer.stop'; id: string }
   | { do: 'mixer.set'; name: string; volume?: number; muted?: boolean }
   | { do: 'wellness'; what: 'water' | 'stand'; done: boolean }
   | { do: 'power'; mode: 'efficiency' | 'balanced' | 'performance' }
@@ -197,6 +202,9 @@ export function trimClips(list: ClipItem[], max: number): ClipItem[] {
 }
 
 /** A short notice the island shows for a moment (a "peek"): something on the PC just changed. */
+/** The Windows drive is almost full: under 8% or 5 GB free. */
+export const diskLow = (free: number, total: number) => total > 0 && (free / total < 0.08 || free < 5e9)
+
 export type Notice =
   | { kind: 'device'; name: string }
   | { kind: 'caps'; on: boolean }
@@ -204,6 +212,8 @@ export type Notice =
   | { kind: 'mute'; on: boolean }
   | { kind: 'mic'; on: boolean }
   | { kind: 'todo'; id: string; text: string }
+  | { kind: 'timer'; text: string }
+  | { kind: 'disk'; drive: string; free: number }
   | { kind: 'wellness'; what: 'water' | 'stand' }
   | { kind: 'prayer'; name: string }
   | { kind: 'usage'; agent: string; window: 'fiveHour' | 'sevenDay' | 'spend'; level: number; when: string }

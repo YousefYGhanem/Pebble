@@ -7,10 +7,10 @@
   import { locale, t } from '../i18n.svelte'
   import Icon from './Icon.svelte'
 
-  let { extras, act }: { extras: ExtrasState; act: (a: Action) => void } = $props()
+  let { extras, act, pip, provider }: { extras: ExtrasState; act: (a: Action) => void; pip: string; provider: string } = $props()
 
   let q = $state(''), input = $state<HTMLInputElement>(), copied = $state(false)
-  const EXAMPLES = ['15% of 80', '5 km in miles', '100 usd in eur', 'time in tokyo', 'tr fr good morning', 'json', '#53e4ff', 'pick']
+  const EXAMPLES = ['15% of 80', '5 km in miles', '100 usd in eur', 'time in tokyo', 'tr fr good morning', 'timer 10m tea', 'ask why is the sky blue', 'explain', 'json', '#53e4ff', 'pick']
 
   // what the clipboard tools work on: the clipboard as the bar opens
   $effect(() => { act({ do: 'quick.clip' }) })
@@ -21,7 +21,8 @@
   $effect(() => { if (a?.kind === 'rates') act({ do: 'quick.rates' }) })
 
   // translating asks Pip's chat provider: only once you stop typing for a moment
-  const key = $derived(a?.kind === 'translate' ? `${a.to}|${a.text}` : '')
+  // (ask, explain and summarize wait for Enter: each one is a question to the provider)
+  const key = $derived(a?.kind === 'translate' ? `${a.to}|${a.text}` : a?.kind === 'ai' ? `${a.how}|${a.how === 'ask' ? a.text : extras.clipText}` : '')
   $effect(() => {
     if (a?.kind !== 'translate') return
     const { text, to } = a
@@ -66,8 +67,15 @@
   function onkey(e: KeyboardEvent) {
     if (e.key !== 'Enter') return
     e.preventDefault()
-    if (a?.kind === 'pick') pick(); else copy()
+    if (a?.kind === 'pick') pick()
+    else if (a?.kind === 'ai' && !tr) act({ do: 'quick.ask', how: a.how, text: a.text })
+    else if (a?.kind === 'timer') { act({ do: 'timer.start', seconds: a.seconds, name: a.name }); q = 'timers' }
+    else copy()
   }
+  // the timers' time left, while they are listed
+  let now = $state(Date.now())
+  $effect(() => { if (a?.kind !== 'timers') return; now = Date.now(); const id = setInterval(() => (now = Date.now()), 1000); return () => clearInterval(id) })
+  const clock = (s: number) => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? `${h}:${String(m).padStart(2, '0')}` : `${m}`) + `:${String(x).padStart(2, '0')}` }
   $effect(() => { const id = setTimeout(() => input?.focus(), 60); return () => clearTimeout(id) })
 </script>
 
@@ -88,11 +96,24 @@
       <p class="muted">{t('i.quick.clip')}</p>
     {:else if a?.kind === 'translate' && !tr?.text}
       <p class="muted">{tr?.error ?? t('i.quick.translating')}</p>
+    {:else if a?.kind === 'ai' && !tr?.text}
+      <p class="muted">{tr ? tr.error ?? t('i.quick.thinking', { pip }) : t(`i.quick.${a.how}`, { pip, provider, n: extras.clipText.length })}</p>
+    {:else if a?.kind === 'timer'}
+      <p class="muted">{t('i.quick.timer', { name: a.name || t('i.timer.name'), time: clock(a.seconds) })}</p>
+    {:else if a?.kind === 'timers'}
+      <div class="timers">
+        {#each extras.timers as tm (tm.id)}
+          <div class="tm"><Icon name="focus" size={14} /><span class="tname">{tm.name || t('i.timer.name')}</span><b>{clock((tm.endsAt - now) / 1000)}</b>
+            <button class="ghost" onclick={() => act({ do: 'timer.stop', id: tm.id })}>{t('i.quick.stop')}</button></div>
+        {:else}
+          <p class="muted">{t('i.quick.noTimers')}</p>
+        {/each}
+      </div>
     {:else if a?.kind === 'hash' && !hashText}
       <p class="muted">{t('i.quick.hashing')}</p>
     {:else if result}
       <button class="answer" class:copied onclick={copy}>
-        <span class="line">{#if swatch}<i class="swatch" style:background={swatch}></i>{/if}<b dir="auto" class:long={result.length > 60}>{result}</b></span>
+        <span class="line">{#if swatch}<i class="swatch" style:background={swatch}></i>{/if}<b dir="auto" class:long={result.length > 60 && a?.kind !== 'ai'} class:prose={a?.kind === 'ai'}>{result}</b></span>
         {#if sub}<small dir="auto">{sub}</small>{/if}
       </button>
     {:else if a?.kind === 'tool'}
@@ -121,6 +142,8 @@
   .answer b { font-size: 1.6em; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
   /* a formatted JSON or a long hash: smaller, kept to a few lines */
   .answer b.long { font-size: 0.95em; font-weight: 500; font-family: ui-monospace, Consolas, monospace; white-space: pre-wrap; max-height: 9.5em; overflow: auto; }
+  /* Pip's answer: a few sentences or bullet points */
+  .answer b.prose { font-size: 0.95em; font-weight: 450; line-height: 1.45; white-space: pre-wrap; max-height: 12em; overflow: auto; }
   .answer b.small { font-size: 1em; display: inline-flex; align-items: center; gap: 8px; }
   .answer small { color: var(--muted); }
   .answer.copied b { color: var(--accent-text); }
@@ -128,4 +151,8 @@
   .examples { display: flex; flex-wrap: wrap; gap: 6px; }
   .examples button { border: 1px solid var(--stroke); font-size: 0.85em; }
   .muted { color: var(--muted); padding: 10px 14px; margin: 0; }
+  .timers { display: flex; flex-direction: column; gap: 2px; }
+  .tm { display: flex; align-items: center; gap: 10px; padding: 6px 14px; }
+  .tname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tm b { font-variant-numeric: tabular-nums; }
 </style>

@@ -29,7 +29,7 @@ your data too.
 | Pip's chat | the AI provider you choose (Anthropic, OpenAI, Google, DeepSeek, or your Claude Code / Codex sign-in) | your messages, and a window's picture and text when you show him one |
 | Claude plan usage | Anthropic | the Claude sign-in Claude Code keeps on your PC, to read your plan's limits (and to renew it when it expires) |
 | Quick bar: currencies | Frankfurter (the European Central Bank's daily rates) | nothing about you: a request for the day's rates, when you type a currency conversion |
-| Quick bar: translate | the AI provider you chose for Pip's chat | the text you ask to translate |
+| Quick bar: translate, ask, explain, summarize | the AI provider you chose for Pip's chat | the text you ask to translate, your question; for explain and summarize, what you copied (only when you press Enter) |
 | Lyrics | LRCLIB (lrclib.net) | the playing song's title, artist, album and length |
 | Prayer times, Weather | Open-Meteo | the name of your city when you look it up; for weather, its coordinates |
 | Live scores | ESPN | the leagues you follow |

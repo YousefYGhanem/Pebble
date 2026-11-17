@@ -154,6 +154,7 @@ export class Extras extends EventEmitter {
   /** when you asked for a snip: the next picture copied within a minute is it */
   private snipping = 0
   private ratesDay = ''
+  private timerHandles = new Map<string, NodeJS.Timeout>()
   private snipSeq = -1
   private async readClipboard() {
     if (this.snipping && Date.now() - this.snipping < 60_000 && (this.clipSeq !== this.snipSeq || !this.native.available)) {
@@ -308,6 +309,19 @@ export class Extras extends EventEmitter {
     switch (a.do) {
       case 'media': return this.native.request('media.control', { action: a.action, positionMs: a.positionMs ?? 0 })
       case 'quick.copy': this.lastClip = a.text; clipboard.writeText(a.text); return
+      case 'timer.start': {
+        if (s.timers.length >= 10) return
+        const t = { id: randomUUID(), name: a.name.trim(), endsAt: Date.now() + Math.round(a.seconds) * 1000 }
+        this.timerHandles.set(t.id, setTimeout(() => {
+          this.timerHandles.delete(t.id)
+          s.timers = s.timers.filter(x => x.id !== t.id)
+          this.emit('notice', { kind: 'timer', text: t.name })
+          this.changed()
+        }, t.endsAt - Date.now()))
+        s.timers = [...s.timers, t].sort((x, y) => x.endsAt - y.endsAt)
+        return this.changed()
+      }
+      case 'timer.stop': clearTimeout(this.timerHandles.get(a.id)); this.timerHandles.delete(a.id); s.timers = s.timers.filter(x => x.id !== a.id); return this.changed()
       case 'quick.clip': {
         // what the clipboard tools work on; a copy password managers mark private stays out, as in the history
         let text = ''
@@ -404,6 +418,9 @@ export function validAction(a: unknown): a is Action {
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
     case 'mixer.refresh': case 'quick.rates': case 'quick.clip': case 'quick.pick': return true
     case 'quick.copy': return typeof o.text === 'string' && o.text.length <= 10_000
+    case 'quick.ask': return ['ask', 'explain', 'summarize'].includes(o.how as string) && typeof o.text === 'string' && o.text.length <= 2000 && (o.how !== 'ask' || !!o.text.trim())
+    case 'timer.start': return Number.isFinite(o.seconds) && (o.seconds as number) >= 1 && (o.seconds as number) <= 7 * 86400 && typeof o.name === 'string' && o.name.length <= 60
+    case 'timer.stop': return typeof o.id === 'string' && o.id.length <= 64
     case 'quick.translate': return typeof o.text === 'string' && !!o.text.trim() && o.text.length <= 2000 && typeof o.to === 'string' && /^[a-z]{2}$/.test(o.to)
     case 'mixer.set': return typeof o.name === 'string' && o.name.length <= 100
       && (o.volume === undefined || (typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100)) && (o.muted === undefined || typeof o.muted === 'boolean')

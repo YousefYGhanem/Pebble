@@ -31,7 +31,7 @@ import { Extras, validAction } from './extras'
 import { DropServer } from './extras/drop'
 import { allowInFirewall, checkReach } from './extras/reach'
 import { FocusGuard, guardPage, guardPreload } from './extras/guard'
-import { emptyExtras, type ExtrasState } from '../shared/extras'
+import { diskLow, emptyExtras, type ExtrasState } from '../shared/extras'
 import { sharedSpawner, type Child } from './connectors/shared'
 import { ConnectorHost } from './connectors/host'
 import { describePermissions } from '../shared/connectors'
@@ -558,15 +558,25 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'drop.network') { void shell.openExternal('ms-settings:network-status'); return }
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
-  if (a.do === 'quick.translate') {
-    // Pip's chat provider, as one question; only the latest one is shown
-    const key = `${a.to}|${a.text}`
-    if (extras.state.translated?.key === key && extras.state.translated.text) return
-    extras.state.translated = { key }
+  if (a.do === 'quick.translate' || a.do === 'quick.ask') {
+    // Pip's chat provider, as one question; only the latest one is shown. explain and summarize get what you copied
+    // (read here, from the clipboard the bar saw: nothing else goes with them)
+    const pip = store.settings.pip.name
+    const job = a.do === 'quick.translate'
+      ? { key: `${a.to}|${a.text}`, system: `Translate the user's text into ${LANG_NAMES[a.to] ?? a.to}. Reply with the translation only: no quotes, notes or explanations.`, text: a.text }
+      : a.how === 'ask'
+        ? { key: `ask|${a.text}`, system: `You are ${pip}, a helpful companion in the Pebble app. Answer in a few sentences, plainly.`, text: a.text }
+        : { key: `${a.how}|${extras.state.clipText}`, text: extras.state.clipText.slice(0, 12_000),
+            system: a.how === 'explain'
+              ? `You are ${pip}, a helpful companion in the Pebble app. Explain the text the user copied (an error, code, a term…) in a few sentences, plainly. If it is an error, say the likely cause and the fix.`
+              : `Summarize the text the user copied in three to five short bullet points, in the language of the text.` }
+    if (!job.text.trim()) return
+    if (extras.state.translated?.key === job.key && extras.state.translated.text) return
+    extras.state.translated = { key: job.key }
     push()
-    chat.complete(`Translate the user's text into ${LANG_NAMES[a.to] ?? a.to}. Reply with the translation only: no quotes, notes or explanations.`, a.text)
-      .then(text => ({ key, text: text.trim() }), (err: Error) => ({ key, error: err.message }))
-      .then(r => { if (extras.state.translated?.key === key) { extras.state.translated = r; push() } })
+    chat.complete(job.system, job.text)
+      .then(text => ({ key: job.key, text: text.trim() }), (err: Error) => ({ key: job.key, error: err.message }))
+      .then(r => { if (extras.state.translated?.key === job.key) { extras.state.translated = r; push() } })
     return
   }
   if (a.do === 'update.install') { updater.install(); return }
@@ -690,6 +700,7 @@ app.whenReady().then(async () => {
   extras.on('notice', (n: { kind: string; text?: string }) => {
     // a task's reminder always shows (peeks can be off); it also goes to Windows' notifications
     if (n.kind === 'todo') { bringBack(); send(CH.notice, n); toast(tr('m.todoDue'), n.text ?? '', undefined, undefined, { kind: 'extras' }) }
+    else if (n.kind === 'timer') { bringBack(); send(CH.notice, n); toast(tr('m.timerDone'), n.text || tr('m.timerDoneBody'), undefined, undefined, { kind: 'extras' }) }
     else if (store.settings.features.peeks) send(CH.notice, n)
   })
   extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) }), undefined, undefined, { kind: 'extras' }))
@@ -807,6 +818,22 @@ app.whenReady().then(async () => {
   }, 60_000).unref()
   applyScreen = () => { front.since = Date.now(); native.watch('foreground', store.settings.screenTime.enabled && rest !== 'off' && !sleepy, 'screentime'); showScreen() }
   applyScreen()
+  // the Windows drive almost full: a peek and a notification, at most once a day (not while resting)
+  let diskTold = ''
+  const checkDisk = async () => {
+    if (rest === 'deep' || rest === 'off') return
+    const drive = (process.env.SystemDrive ?? 'C:') + '\\'
+    const st = await fs.promises.statfs(drive).catch(() => null)
+    if (!st) return
+    const free = st.bavail * st.bsize, total = st.blocks * st.bsize, today = new Date().toDateString()
+    if (!diskLow(free, total) || diskTold === today) return
+    diskTold = today
+    const gb = (free / 1e9).toFixed(1)
+    send(CH.notice, { kind: 'disk', drive: drive.slice(0, 2), free })
+    toast(tr('m.diskLow', { drive: drive.slice(0, 2) }), tr('m.diskLowBody', { gb }), undefined, undefined, { kind: 'extras' })
+  }
+  setTimeout(() => void checkDisk(), 60_000).unref()
+  setInterval(() => void checkDisk(), 30 * 60_000).unref()
   // Claude's plan usage from Anthropic every 5 minutes (also the Claude app's sessions, which run no status line)
   const planUsage = async () => {
     if (!store.settings.agents.claude.enabled || !store.settings.agents.claude.planUsage || rest === 'deep' || rest === 'off') return

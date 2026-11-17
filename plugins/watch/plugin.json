@@ -1,12 +1,42 @@
 {
   "id": "watch",
   "name": "Watch a value",
-  "description": "Watches one value on the web (a price, a status, a count) as a chip and a card, with a notification when it changes.",
-  "permissions": { "net": ["*"], "notify": true },
+  "description": "Watches one value on the web (a price, a status, a count) as a chip and a card. A notification when it changes, or only when it goes above or below the limits you set (a price alert).",
+  "permissions": {
+    "net": [
+      "*"
+    ],
+    "notify": true
+  },
   "settings": [
-    { "key": "url", "label": "Address of the page or API (https://…)", "required": true },
-    { "key": "path", "label": "The value to watch (press Find values and pick it)", "required": true, "pick": "url" },
-    { "key": "label", "label": "What it is, e.g. BTC", "default": "Value" },
-    { "key": "every", "label": "How often: 30s, 5m, 1h", "default": "5m" }
+    {
+      "key": "url",
+      "label": "Address of the page or API (https://…)",
+      "required": true
+    },
+    {
+      "key": "path",
+      "label": "The value to watch (press Find values and pick it)",
+      "required": true,
+      "pick": "url"
+    },
+    {
+      "key": "label",
+      "label": "What it is, e.g. BTC",
+      "default": "Value"
+    },
+    {
+      "key": "every",
+      "label": "How often: 30s, 5m, 1h",
+      "default": "5m"
+    },
+    {
+      "key": "above",
+      "label": "Tell me when it goes above (optional)"
+    },
+    {
+      "key": "below",
+      "label": "Tell me when it goes below (optional)"
+    }
   ]
 }

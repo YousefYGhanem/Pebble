@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, test, expect } from 'vitest'
-import { focusFinished, focusLeft, nextDue, noticesFor, todayProgress, toggleTodo, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
+import { diskLow, focusFinished, focusLeft, nextDue, noticesFor, todayProgress, toggleTodo, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
 import { Lyrics, parseLrc, plainTitle } from '../app/main/extras/lyrics'
 import { guardActive, matchSite } from '../app/main/extras/guard'
 import { DropServer, lanAddress, safeName } from '../app/main/extras/drop'
@@ -199,4 +199,11 @@ test('actions: the mixer and the wellness answers are checked', () => {
   expect(validAction({ do: 'mixer.set', name: 'Discord', volume: 140 })).toBe(false)
   expect(validAction({ do: 'wellness', what: 'water', done: true })).toBe(true)
   expect(validAction({ do: 'wellness', what: 'nap', done: true })).toBe(false)
+})
+
+test('the Windows drive is almost full under 8% or 5 GB free', () => {
+  expect(diskLow(4e9, 1e12)).toBe(true)
+  expect(diskLow(30e9, 500e9)).toBe(true)
+  expect(diskLow(100e9, 500e9)).toBe(false)
+  expect(diskLow(0, 0)).toBe(false)
 })

@@ -95,9 +95,9 @@
   /** a connector's live thing (a match, a call, an upload): it takes the small island while it lasts */
   const activity = $derived(widgets.find(w => w.kind === 'activity'))
   const chipText = (c: string) => widgets.find(w => `widget:${w.plugin}/${w.id}` === c)?.text ?? ''
-  const mode = $derived<Mode>(phase === 'normal' ? modeFor({ tucked, open, sessions: shown, extra: music || focusOn || dropping || !!activity || !!notice || !!reminder || !!extras?.strip }) : 'resting')
+  const mode = $derived<Mode>(phase === 'normal' ? modeFor({ tucked, open, sessions: shown, extra: music || focusOn || dropping || !!activity || !!notice || !!reminder || !!extras?.strip || !!extras?.timers.length }) : 'resting')
   /** what the medium island shows: a drop > music > an agent > a connector's live activity > the focus timer */
-  const medium = $derived<'strip' | 'drop' | 'reminder' | 'notice' | 'music' | 'agent' | 'activity' | 'focus'>(extras?.strip ? 'strip' : dropping ? 'drop' : reminder ? 'reminder' : notice ? 'notice' : music && !(busy && busy.status === 'error') ? 'music' : busy ? 'agent' : activity ? 'activity' : focusOn ? 'focus' : 'agent')
+  const medium = $derived<'strip' | 'drop' | 'reminder' | 'notice' | 'music' | 'agent' | 'activity' | 'focus' | 'timer'>(extras?.strip ? 'strip' : dropping ? 'drop' : reminder ? 'reminder' : notice ? 'notice' : extras?.timers.length && !busy ? 'timer' : music && !(busy && busy.status === 'error') ? 'music' : busy ? 'agent' : activity ? 'activity' : focusOn ? 'focus' : 'agent')
   const chips = $derived(view ? [view.settings.island.chips.left, view.settings.island.chips.right] : ['none', 'none'])
   const chipCount = $derived(chips.filter(c => c !== 'none').length)
   const lyric = $derived(extras?.lyrics && extras.media ? extras.lyrics[lyricIndex(extras.lyrics, positionNow(extras.media, now) + 250)]?.text ?? '' : '')
@@ -283,7 +283,9 @@
       return
     }
     // a device name "Headphones (AirPods Pro)": the part in brackets is the device itself
-    if (n.kind === 'prayer') { peek({ icon: 'moon', title: t(`prayer.${n.name}`), sub: t('i.prayer.now'), tone: 'ok' }); say('done') }
+    if (n.kind === 'disk') peek({ icon: 'files', title: t('i.peek.diskTitle'), sub: t('i.peek.diskSub', { drive: n.drive, gb: (n.free / 1e9).toFixed(1) }), tone: 'warn' })
+    else if (n.kind === 'timer') { peek({ icon: 'focus', title: t('i.timer.done'), sub: n.text || t('i.timer.name'), tone: 'ok' }); say('done') }
+    else if (n.kind === 'prayer') { peek({ icon: 'moon', title: t(`prayer.${n.name}`), sub: t('i.prayer.now'), tone: 'ok' }); say('done') }
     else if (n.kind === 'usage') peek({ icon: 'agents', title: t(n.level >= 100 ? 'i.peek.usageReached' : 'i.peek.usageTitle', { agent: n.agent, n: n.level }),
       sub: `${t(`i.usage.${n.window}`)}${n.when ? ` · ${t('i.usage.resets', { when: n.when })}` : ''}`, value: `${n.level}%`, ring: n.level / 100, tone: 'warn' })
     else if (n.kind === 'device') peek({ icon: 'speaker', title: /\(([^)]+)\)/.exec(n.name)?.[1] ?? n.name, sub: t('i.peek.deviceSub') })
@@ -685,6 +687,10 @@
           {#if activity.since}<span class="count">{clock(now - activity.since)}</span>{/if}
           {#if activity.progress !== undefined}<span class="act-progress"><i style:width="{activity.progress}%"></i></span>{/if}
         </div>
+      {:else if mode === 'medium' && medium === 'timer' && extras?.timers.length}
+        {@const tm = extras.timers[0]!}
+        <div class="line" style:height="{view.settings.island.height}px"><Icon name="focus" size={14} /><span class="title">{tm.name || t('i.timer.name')}</span>
+          <span class="count">{clock(tm.endsAt - now)}{#if extras.timers.length > 1} +{extras.timers.length - 1}{/if}</span></div>
       {:else if mode === 'medium' && medium === 'focus' && extras?.focus}
         <div class="line" style:height="{view.settings.island.height}px"><Icon name="focus" size={14} /><span class="title">{t('i.island.focus', { time: clock(focusLeft(extras.focus, now) * 1000), state: extras.focus.left !== undefined ? t('i.home.paused') : t('i.home.left') })}</span></div>
       {:else if mode === 'medium' && top}
@@ -725,7 +731,7 @@
         <div class="pages" onclick={e => e.stopPropagation()}>
           <!-- the page tabs on top, where the pointer comes in; the page you are on shows its name -->
           {#if quickBar && extras}
-            <QuickBar {extras} {act} />
+            <QuickBar {extras} {act} pip={view.settings.pip.name} provider={view.chat?.provider ?? ''} />
           {:else}
           <PageNav bind:page hidden={view.settings.island.hiddenPages} badges={{ agents: shown.some(x => x.ask || x.status === 'error') }} />
           {#key page}

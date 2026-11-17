@@ -79,3 +79,20 @@ test('colours: hex, rgb and hsl into each other; pick asks main', () => {
   expect(answer('123', c)).toBeNull() // a number, not a colour
   expect(answer('pick', c)).toEqual({ kind: 'pick' })
 })
+
+test('ask Pip: a question alone; explain and summarize only with something copied (and only on purpose)', () => {
+  expect(answer('ask why is the sky blue', c)).toEqual({ kind: 'ai', how: 'ask', text: 'why is the sky blue' })
+  expect(answer('explain', c)).toEqual({ kind: 'clip' })
+  expect(answer('explain', { ...c, clip: 'TypeError: x is undefined' })).toEqual({ kind: 'ai', how: 'explain', text: '' })
+  expect(answer('summarize', { ...c, clip: 'a long text' })).toEqual({ kind: 'ai', how: 'summarize', text: '' })
+  expect(answer('what is this', { ...c, clip: 'secret' })).toBeNull() // nothing goes to the provider by itself
+})
+
+test('timers: "timer 10m tea", seconds and hours, minutes by default; "timers" lists them', () => {
+  expect(answer('timer 10m tea', c)).toEqual({ kind: 'timer', seconds: 600, name: 'tea' })
+  expect(answer('timer 90 s', c)).toEqual({ kind: 'timer', seconds: 90, name: '' })
+  expect(answer('timer 1.5h deploy check', c)).toEqual({ kind: 'timer', seconds: 5400, name: 'deploy check' })
+  expect(answer('timer 25', c)).toEqual({ kind: 'timer', seconds: 1500, name: '' })
+  expect(answer('timers', c)).toEqual({ kind: 'timers' })
+  expect(answer('timer 0', c)).toBeNull()
+})

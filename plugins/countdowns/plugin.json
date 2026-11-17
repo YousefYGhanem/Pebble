@@ -1,0 +1,9 @@
+{
+  "id": "countdowns",
+  "name": "Countdowns",
+  "description": "Days until the dates you care about (a launch, a trip, Eid…): the nearest as a chip, all of them on a card, and a notification when one arrives. Nothing leaves this PC.",
+  "permissions": { "net": [], "notify": true },
+  "settings": [
+    { "key": "dates", "label": "One per line, \"Name: 2026-12-31\" (a time too: \"Launch: 2026-12-01 09:00\")", "type": "list", "required": true }
+  ]
+}
