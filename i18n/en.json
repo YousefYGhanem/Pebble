@@ -690,5 +690,9 @@
   "i.quick.copied": "Copied",
   "i.quick.translating": "Translating…",
   "i.quick.into": "into {lang}",
-  "i.quick.rates": "Getting today's exchange rates…"
+  "i.quick.rates": "Getting today's exchange rates…",
+  "i.quick.clip": "Copy some text first, then type the tool’s name.",
+  "i.quick.pick": "Pick a colour on screen",
+  "i.quick.pickIn": "Point at a colour… {n}",
+  "i.quick.hashing": "Working it out…"
 }

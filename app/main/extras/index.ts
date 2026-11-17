@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { EventEmitter } from 'node:events'
-import { app, clipboard, ClipboardItem, nativeImage, shell } from 'electron'
+import { app, clipboard, ClipboardItem, nativeImage, screen, shell } from 'electron'
 import type { RestLevel } from '../rest'
 import { emptyExtras, focusFinished, nextDue, noticesFor, toggleTodo, trimClips, type PcState, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
@@ -308,6 +308,29 @@ export class Extras extends EventEmitter {
     switch (a.do) {
       case 'media': return this.native.request('media.control', { action: a.action, positionMs: a.positionMs ?? 0 })
       case 'quick.copy': this.lastClip = a.text; clipboard.writeText(a.text); return
+      case 'quick.clip': {
+        // what the clipboard tools work on; a copy password managers mark private stays out, as in the history
+        let text = ''
+        try {
+          text = (await clipboard.readText()).slice(0, 100_000)
+          for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) text = ''
+        } catch { text = '' }
+        if (text !== s.clipText) { s.clipText = text; this.changed() }
+        return
+      }
+      case 'quick.pick': {
+        // the pixel under the mouse, in real pixels, read with the helper's screen capture
+        const at = screen.dipToScreenPoint(screen.getCursorScreenPoint())
+        const file = path.join(os.tmpdir(), `pebble-pick-${process.pid}.png`)
+        try {
+          await this.native.request('screen.capture', { x: Math.round(at.x), y: Math.round(at.y), w: 1, h: 1, file })
+          const px = nativeImage.createFromPath(file).toBitmap() // BGRA
+          if (px.length < 3) return
+          s.picked = { hex: '#' + [px[2]!, px[1]!, px[0]!].map(v => v.toString(16).padStart(2, '0')).join(''), at: Date.now() }
+          this.changed()
+        } catch { /* no helper: nothing to read */ } finally { fs.rm(file, { force: true }, () => {}) }
+        return
+      }
       case 'quick.rates': {
         // the European Central Bank's daily rates (Frankfurter: free, no key), once a day
         if (s.rates && this.ratesDay === new Date().toDateString()) return
@@ -379,7 +402,7 @@ export function validAction(a: unknown): a is Action {
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
-    case 'mixer.refresh': case 'quick.rates': return true
+    case 'mixer.refresh': case 'quick.rates': case 'quick.clip': case 'quick.pick': return true
     case 'quick.copy': return typeof o.text === 'string' && o.text.length <= 10_000
     case 'quick.translate': return typeof o.text === 'string' && !!o.text.trim() && o.text.length <= 2000 && typeof o.to === 'string' && /^[a-z]{2}$/.test(o.to)
     case 'mixer.set': return typeof o.name === 'string' && o.name.length <= 100

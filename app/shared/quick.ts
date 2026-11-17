@@ -2,9 +2,13 @@
 // conversion, time zones, and what to translate (main asks Pip's chat provider for that).
 
 export type Answer =
-  | { kind: 'calc' | 'unit' | 'currency' | 'time'; text: string; sub: string }
+  | { kind: 'calc' | 'unit' | 'currency' | 'time' | 'tool'; text: string; sub: string }
+  | { kind: 'color'; text: string; sub: string; color: string }
   | { kind: 'translate'; text: string; to: string }
   | { kind: 'rates' } // a currency question: main fetches the day's rates first
+  | { kind: 'hash'; algo: 'SHA-1' | 'SHA-256' | 'SHA-512'; text: string } // worked out by the bar (Web Crypto is async)
+  | { kind: 'pick' } // the colour under the mouse: main reads it
+  | { kind: 'clip' } // a clipboard tool, with nothing copied yet
 
 export interface Ctx {
   /** units per 1 EUR (ECB rates), once fetched */
@@ -12,12 +16,14 @@ export interface Ctx {
   now: number
   /** the app's language: number and time formats */
   locale: string
+  /** the text on the clipboard (clipboard tools work on it) */
+  clip?: string
 }
 
 export function answer(q: string, c: Ctx): Answer | null {
   const s = q.trim()
   if (!s) return null
-  return translate(s, c) ?? zones(s, c) ?? currency(s, c) ?? units(s, c) ?? calc(s, c)
+  return tool(s, c) ?? color(s) ?? translate(s, c) ?? zones(s, c) ?? currency(s, c) ?? units(s, c) ?? stamp(s, c) ?? calc(s, c)
 }
 
 const fmt = (n: number, c: Ctx, digits = 10) => n.toLocaleString(c.locale, { maximumFractionDigits: Math.abs(n) >= 1 ? Math.min(digits, 6) : digits })
@@ -194,4 +200,88 @@ function calc(s: string, c: Ctx): Answer | null {
   if (!/[-+*/^%×÷(]|\b(sqrt|sin|cos|tan|log|ln|abs|round|floor|ceil|pi)\b/i.test(s.replace(/^-/, ''))) return null // a plain number is no sum
   const v = evaluate(s)
   return v === null ? null : { kind: 'calc', text: fmt(v, c), sub: s }
+}
+
+// ---------- clipboard tools: a tool's name works on what you copied ----------
+
+const words = (t: string) => t.replace(/([a-z0-9])([A-Z])/g, '$1 $2').split(/[^\p{L}\p{N}]+/u).filter(Boolean)
+const b64 = (t: string) => { let bin = ''; for (const b of new TextEncoder().encode(t)) bin += String.fromCharCode(b); return btoa(bin) }
+const unb64 = (t: string) => new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(atob(t.trim()), ch => ch.charCodeAt(0)))
+const TOOLS: Record<string, (t: string) => string> = {
+  json: t => JSON.stringify(JSON.parse(t), null, 2),
+  minify: t => JSON.stringify(JSON.parse(t)),
+  upper: t => t.toUpperCase(),
+  lower: t => t.toLowerCase(),
+  title: t => t.toLowerCase().replace(/(^|[\s(\-"'])(\p{L})/gu, (_, a: string, b: string) => a + b.toUpperCase()),
+  camel: t => words(t).map((w, i) => (i ? w[0]!.toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase())).join(''),
+  snake: t => words(t).map(w => w.toLowerCase()).join('_'),
+  kebab: t => words(t).map(w => w.toLowerCase()).join('-'),
+  base64: b64,
+  unbase64: unb64,
+  url: t => encodeURIComponent(t),
+  unurl: t => decodeURIComponent(t),
+  trim: t => t.split('\n').map(l => l.trim()).join('\n').trim(),
+  count: t => ([[words(t).length, 'word'], [[...t].length, 'character'], [t.split('\n').length, 'line']] as const).map(([n, w]) => `${n} ${w}${n === 1 ? '' : 's'}`).join(' · ')
+}
+const HASHES = { sha1: 'SHA-1', sha256: 'SHA-256', sha512: 'SHA-512' } as const
+const preview = (t: string) => { const one = t.replace(/\s+/g, ' ').trim(); return one.length > 40 ? one.slice(0, 39) + '…' : one }
+
+function tool(s: string, c: Ctx): Answer | null {
+  const name = s.toLowerCase()
+  if (name === 'uuid') return { kind: 'tool', text: crypto.randomUUID(), sub: 'uuid' }
+  if (name === 'now' || name === 'timestamp') return { kind: 'tool', text: String(Math.floor(c.now / 1000)), sub: new Date(c.now).toLocaleString(c.locale) }
+  if (['pick', 'color', 'colour', 'لون'].includes(name)) return { kind: 'pick' }
+  const run = TOOLS[name], hash = HASHES[name as keyof typeof HASHES]
+  if (!run && !hash) return null
+  if (!c.clip) return { kind: 'clip' }
+  if (hash) return { kind: 'hash', algo: hash, text: c.clip }
+  try { return { kind: 'tool', text: run!(c.clip), sub: `${name} · ${preview(c.clip)}` } }
+  catch { return { kind: 'tool', text: '', sub: `${name}: the copied text is not ${name === 'json' || name === 'minify' ? 'JSON' : 'in that form'}` } }
+}
+
+/** A 10- or 13-digit number: a Unix time, as a date. */
+function stamp(s: string, c: Ctx): Answer | null {
+  if (!/^\d{10}(\d{3})?$/.test(s)) return null
+  const ms = s.length === 13 ? Number(s) : Number(s) * 1000
+  return { kind: 'tool', text: new Date(ms).toLocaleString(c.locale, { dateStyle: 'medium', timeStyle: 'medium' }), sub: new Date(ms).toISOString() }
+}
+
+// ---------- colours: #hex, rgb(), hsl() into the other two ----------
+
+function toHsl(r: number, g: number, b: number): [number, number, number] {
+  const R = r / 255, G = g / 255, B = b / 255, max = Math.max(R, G, B), min = Math.min(R, G, B), l = (max + min) / 2, d = max - min
+  if (!d) return [0, 0, Math.round(l * 100)]
+  const s = d / (1 - Math.abs(2 * l - 1))
+  const h = max === R ? ((G - B) / d) % 6 : max === G ? (B - R) / d + 2 : (R - G) / d + 4
+  return [Math.round((h * 60 + 360) % 360), Math.round(s * 100), Math.round(l * 100)]
+}
+function fromHsl(h: number, s: number, l: number): [number, number, number] {
+  const S = s / 100, L = l / 100, a = S * Math.min(L, 1 - L), k = (n: number) => (n + h / 30) % 12
+  const f = (n: number) => Math.round(255 * (L - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1))))
+  return [f(0), f(8), f(4)]
+}
+const toHex = (rgb: number[]) => '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('')
+
+export function color(s: string): Answer | null {
+  const t = s.trim().toLowerCase()
+  let rgb: [number, number, number] | undefined, from = ''
+  const h = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/.exec(t)
+  if (h && (t.startsWith('#') || /[a-f]/.test(h[1]!))) { // "123" alone is a number, not a colour
+    const v = h[1]!.length === 3 ? [...h[1]!].map(x => x + x).join('') : h[1]!
+    rgb = [0, 2, 4].map(i => parseInt(v.slice(i, i + 2), 16)) as [number, number, number]; from = 'hex'
+  }
+  const r = /^rgba?\(\s*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})/.exec(t)
+  if (r) { rgb = [Number(r[1]), Number(r[2]), Number(r[3])]; from = 'rgb' }
+  const l = /^hsla?\(\s*(\d{1,3})(?:deg)?[\s,]+(\d{1,3})%?[\s,]+(\d{1,3})%?/.exec(t)
+  if (l) { rgb = fromHsl(Number(l[1]), Number(l[2]), Number(l[3])); from = 'hsl' }
+  if (!rgb || rgb.some(v => v > 255)) return null
+  const hex = toHex(rgb), [hh, ss, ll] = toHsl(...rgb), rgbText = `rgb(${rgb.join(', ')})`, hslText = `hsl(${hh}, ${ss}%, ${ll}%)`
+  const main = from === 'hex' ? rgbText : hex
+  return { kind: 'color', text: main, sub: [hex, rgbText, hslText].filter(v => v !== main).join(' · '), color: hex }
+}
+
+/** A clipboard tool's hash, as hex (Web Crypto, in the bar). */
+export async function digest(algo: 'SHA-1' | 'SHA-256' | 'SHA-512', text: string): Promise<string> {
+  const d = await crypto.subtle.digest(algo, new TextEncoder().encode(text))
+  return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2, '0')).join('')
 }

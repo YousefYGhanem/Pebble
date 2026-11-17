@@ -318,7 +318,7 @@ const ar: Content = {
     title: 'لمسات صغيرة في كل مكان',
     lead: 'التفاصيل التي تجعله يبدو مكتملًا.',
     items: [
-      { icon: 'search', title: 'الشريط السريع', text: 'Ctrl+Alt+K: عمليات حسابية، وحدات، عملات، الوقت في أي مدينة، أو tr للترجمة. Enter ينسخ الجواب.' },
+      { icon: 'search', title: 'الشريط السريع', text: 'Ctrl+Alt+K: عمليات حسابية، وحدات، عملات، الوقت في أي مدينة، tr للترجمة، الألوان وملتقط ألوان من الشاشة، وأدوات لما نسخته (json وbase64 وcamelCase والتجزئة…). Enter ينسخ الجواب.' },
       { icon: 'terminal', title: 'الأوامر الطويلة', text: 'PowerShell أو Git Bash يخبرانك حين ينتهي أمر استغرق 10 ثوانٍ أو أكثر، بالأحمر إن فشل.' },
       { icon: 'code', title: 'VS Code وCursor', text: 'الإضافة تُظهر تبويب الطرفية نفسه حين تنتقل إليه.' },
       { icon: 'prompt', title: 'أمر pebble', text: 'pebble notify وpebble ask من أي سكربت أو خطوة CI.' },

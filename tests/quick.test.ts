@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest'
-import { answer, evaluate } from '../app/shared/quick'
+import { answer, digest, evaluate, type Ctx } from '../app/shared/quick'
 
-const c: { rates: Record<string, number> | null; now: number; locale: string } = { rates: null, now: Date.UTC(2026, 10, 17, 10, 0), locale: 'en-US' }
+const c: Ctx = { rates: null, now: Date.UTC(2026, 10, 17, 10, 0), locale: 'en-US' }
 const text = (q: string, ctx = c) => { const a = answer(q, ctx); return a && 'text' in a ? a.text : a }
 
 test('the calculator: order, brackets, powers, percent, functions; never eval', () => {
@@ -48,4 +48,34 @@ test('translate: tr text, tr <language> text; Arabic goes to English', () => {
   expect(answer('tr fr good morning', c)).toEqual({ kind: 'translate', text: 'good morning', to: 'fr' })
   expect(answer('translate good morning', c)).toEqual({ kind: 'translate', text: 'good morning', to: 'ar' })
   expect(answer('tr good morning', { ...c, locale: 'ar' })).toEqual({ kind: 'translate', text: 'good morning', to: 'ar' })
+})
+
+test('clipboard tools work on what you copied; without a copy they say so', async () => {
+  const clip = (q: string, t: string) => text(q, { ...c, clip: t })
+  expect(clip('json', '{"a":1}')).toBe('{\n  "a": 1\n}')
+  expect(clip('minify', '{ "a": [1, 2] }')).toBe('{"a":[1,2]}')
+  expect(answer('json', { ...c, clip: 'not json' })).toMatchObject({ kind: 'tool', text: '' })
+  expect(clip('camel', 'hello big world')).toBe('helloBigWorld')
+  expect(clip('snake', 'helloBigWorld')).toBe('hello_big_world')
+  expect(clip('kebab', 'Hello Big World')).toBe('hello-big-world')
+  expect(clip('title', 'hello big world')).toBe('Hello Big World')
+  expect(clip('base64', 'مرحبا')).toBe('2YXYsdit2KjYpw==')
+  expect(clip('unbase64', '2YXYsdit2KjYpw==')).toBe('مرحبا')
+  expect(clip('url', 'a b&c')).toBe('a%20b%26c')
+  expect(clip('count', 'one two\nthree')).toBe('3 words · 13 characters · 2 lines')
+  expect(clip('count', 'hi')).toBe('1 word · 2 characters · 1 line')
+  expect(answer('sha256', { ...c, clip: 'x' })).toEqual({ kind: 'hash', algo: 'SHA-256', text: 'x' })
+  expect(await digest('SHA-256', 'abc')).toBe('ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad')
+  expect(answer('upper', c)).toEqual({ kind: 'clip' })
+  expect(answer('uuid', c)).toMatchObject({ kind: 'tool', sub: 'uuid' })
+  expect(text('1731840000')).toContain('2024')
+})
+
+test('colours: hex, rgb and hsl into each other; pick asks main', () => {
+  expect(answer('#ff8800', c)).toMatchObject({ kind: 'color', text: 'rgb(255, 136, 0)', color: '#ff8800' })
+  expect(answer('rgb(83, 228, 255)', c)).toMatchObject({ text: '#53e4ff' })
+  expect(answer('hsl(0, 100%, 50%)', c)).toMatchObject({ text: '#ff0000' })
+  expect(answer('#abc', c)).toMatchObject({ color: '#aabbcc' })
+  expect(answer('123', c)).toBeNull() // a number, not a colour
+  expect(answer('pick', c)).toEqual({ kind: 'pick' })
 })

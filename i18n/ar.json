@@ -690,5 +690,9 @@
   "i.quick.copied": "نُسخ",
   "i.quick.translating": "جارٍ الترجمة…",
   "i.quick.into": "إلى {lang}",
-  "i.quick.rates": "جارٍ جلب أسعار الصرف اليوم…"
+  "i.quick.rates": "جارٍ جلب أسعار الصرف اليوم…",
+  "i.quick.clip": "انسخ نصًا أولًا، ثم اكتب اسم الأداة.",
+  "i.quick.pick": "التقط لونًا من الشاشة",
+  "i.quick.pickIn": "أشر إلى لون… {n}",
+  "i.quick.hashing": "جارٍ الحساب…"
 }
