@@ -729,5 +729,6 @@
   "quick.tools": "أدوات الحافظة",
   "quick.toolsHint": "json وbase64 وcamelCase والتجزئة… على ما نسخته، على هذا الجهاز",
   "quick.copyToAi": "شرح ما نسخته وتلخيصه",
-  "quick.copyToAiHint": "يُرسلان ما نسخته إلى ذكاء المحادثة، فقط حين تضغط Enter"
+  "quick.copyToAiHint": "يُرسلان ما نسخته إلى ذكاء المحادثة، فقط حين تضغط Enter",
+  "chat.freeHint": "مجاني وبلا مفتاح: تُرسل رسائلك إلى Pollinations (pollinations.ai)، خدمة ذكاء اصطناعي مجانية مفتوحة المصدر. لأي شيء خاص، اختر Claude أو ChatGPT الخاص بك أو مفتاح API."
 }

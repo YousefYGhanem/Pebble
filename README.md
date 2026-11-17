@@ -99,7 +99,7 @@ lavender, cream or graphite like the app icons, or your own body and visor colou
 [pip.ts](app/renderer/island/pip.ts). While `npm run dev` runs, http://localhost:5173/pip-gallery/index.html shows every
 mood live as you edit. Settings → Advanced → Test mode → **Pip: …** plays each mood in the island.
 
-**Chat with Pip** (the Chat page): Settings → **Pip's chat** picks who answers: Claude Code or Codex (your own plan, run
+**Chat with Pip** (the Pip page): out of the box he answers with a **free AI** (Pollinations, an open model, no account or key; your messages go to pollinations.ai). Settings → **Pip's chat** picks someone else: Claude Code or Codex (your own plan, run
 in an empty folder with Pebble's hooks off), or the Anthropic, OpenAI, Gemini or DeepSeek API with your key (kept
 encrypted in `%APPDATA%\Pebble\keys.secrets`, sent only to that provider). The conversation stays in memory only. The model is picked from the
 provider's own list. The `claude` and `codex` commands need their own sign-in (the Claude desktop app's does not count):
@@ -337,7 +337,7 @@ are used only to say what Pebble works with.
 | `app/main/island.ts`, `tray.ts`, `log.ts` | Window (fixed, see-through, click-through), tray menu, logging |
 | `app/main/settings-window.ts`, `app/renderer/settings/`, `app/renderer/welcome/` | The Settings window (tray → Settings…, the gear on Home, or `Pebble --settings`) and the welcome tour |
 | `app/main/diagnostics.ts`, `app/main/ai/word.ts`, `app/renderer/island/skins.ts`, `i18n/` | Diagnostics, Fix in Word, living skins, languages |
-| `app/main/ai/` | Pip's chat: the providers (Claude Code, Codex, Anthropic, OpenAI, Gemini, DeepSeek) and the conversation |
+| `app/main/ai/` | Pip's chat: the providers (the free AI, Claude Code, Codex, Anthropic, OpenAI, Gemini, DeepSeek) and the conversation |
 | `app/main/chatapps.ts`, `app/shared/chatapps.ts`, `extensions/chat/` | Chat apps in the browser (extension) and desktop (UI Automation) as sessions |
 | `native/Ocr.cs`, `native/Uia.cs`, `native/Input.cs` | Text on screen (OCR), reading and typing into desktop chat apps |
 | `app/main/fullscreen.ts` | Game mode: whether the window in front covers the island's screen |

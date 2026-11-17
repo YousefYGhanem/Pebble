@@ -188,7 +188,7 @@ export const DEFAULTS: Settings = {
   terminals: { minSeconds: 10 },
   features: { sound: true, toasts: true, peeks: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
   quick: { translateTo: 'auto', tools: true, copyToAi: true },
-  chat: { provider: 'claude-cli', model: '', readAloud: false },
+  chat: { provider: 'free', model: '', readAloud: false },
   chatApps: { desktop: [] },
   server: { port: 47901 }
 }

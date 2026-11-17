@@ -729,5 +729,6 @@
   "quick.tools": "Clipboard tools",
   "quick.toolsHint": "json, base64, camelCase, hashes… on what you copied, on this PC",
   "quick.copyToAi": "Explain and summarize what you copied",
-  "quick.copyToAiHint": "they send what you copied to the chat's AI, only when you press Enter"
+  "quick.copyToAiHint": "they send what you copied to the chat's AI, only when you press Enter",
+  "chat.freeHint": "Free and without a key: your messages go to Pollinations (pollinations.ai), a free open-source AI service. For anything private, pick your own Claude, ChatGPT or an API key."
 }

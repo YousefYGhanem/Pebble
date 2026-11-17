@@ -26,7 +26,7 @@ your data too.
 
 | Feature | Service | What is sent |
 | --- | --- | --- |
-| Pip's chat | the AI provider you choose (Anthropic, OpenAI, Google, DeepSeek, or your Claude Code / Codex sign-in) | your messages, and a window's picture and text when you show him one |
+| Pip's chat | the AI provider you choose. Out of the box: **Pollinations** (pollinations.ai), a free AI service that needs no account; or Anthropic, OpenAI, Google, DeepSeek, or your Claude Code / Codex sign-in | your messages, and a window's text when you show him one (its picture too, for providers that can see images) |
 | Claude plan usage | Anthropic | the Claude sign-in Claude Code keeps on your PC, to read your plan's limits (and to renew it when it expires) |
 | Pip's page: currencies | Frankfurter (the European Central Bank's daily rates) | nothing about you: a request for the day's rates, when you type a currency conversion |
 | Pip's page: translate, explain, summarize | the AI provider you chose for Pip's chat | the text you ask to translate; for explain and summarize, what you copied (only when you press Enter, and they can be switched off) |

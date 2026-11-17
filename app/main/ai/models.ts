@@ -18,6 +18,7 @@ const json = async (url: string, headers: Record<string, string> = {}) => {
 /** Chat models from the provider's own list, newest first where the provider says. API providers need their key. */
 export async function listModels(provider: ProviderId, key?: string): Promise<ModelChoice[]> {
   switch (provider) {
+    case 'free': return [] // one model, picked by the service
     case 'claude-cli': return CLAUDE_CLI
     case 'codex-cli': return [] // Codex picks the model that goes with your ChatGPT plan
     case 'anthropic': {

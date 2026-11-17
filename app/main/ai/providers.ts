@@ -28,6 +28,7 @@ const png = (a: Ask, m: ChatMessage) => fs.readFileSync(path.join(a.sandbox, m.l
 /** Streams one answer; resolves when it is complete. */
 export function ask(a: Ask): Promise<void> {
   switch (a.provider) {
+    case 'free': return openaiCompatible(a, FREE_URL, false) // text only: a window you show goes as its OCR text
     case 'anthropic': return anthropic(a)
     case 'openai': return openaiCompatible(a, 'https://api.openai.com/v1', true)
     case 'deepseek': return openaiCompatible(a, 'https://api.deepseek.com', false) // text only: it gets the OCR text
@@ -67,15 +68,19 @@ async function sse(res: Response, on: (data: string) => void) {
   }
 }
 
+const FREE_URL = 'https://text.pollinations.ai/openai'
+
 async function openaiCompatible(a: Ask, base: string, vision: boolean) {
   const res = await fetch(`${base}/chat/completions`, {
     method: 'POST', signal: a.signal,
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${a.key}` },
+    headers: { 'content-type': 'application/json', ...(a.key ? { authorization: `Bearer ${a.key}` } : {}) },
     body: JSON.stringify({ model: a.model, stream: true, messages: [{ role: 'system', content: a.system }, ...a.messages.map(m => ({
       role: m.role,
       content: m.look && vision ? [{ type: 'text', text: textOf(m) }, { type: 'image_url', image_url: { url: `data:image/png;base64,${png(a, m)}` } }] : textOf(m)
     }))] })
   })
+  // the free service, busy or limited: say so plainly, with the way out
+  if (base === FREE_URL && (res.status === 402 || res.status === 429 || res.status >= 500)) throw new Error('The free AI is busy right now. Try again in a few seconds, or pick your own Claude, ChatGPT or an API key in Settings → Pip\'s chat.')
   await sse(res, d => { const t = JSON.parse(d).choices?.[0]?.delta?.content; if (t) a.onText(t) })
 }
 

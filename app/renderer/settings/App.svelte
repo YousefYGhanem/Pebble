@@ -391,7 +391,7 @@
         {@const models = v.chatModels?.provider === s.chat.provider ? v.chatModels : undefined}
         <h1>{t('tab.chat')}</h1>
         <section>
-          <label class="row"><span>{t('chat.who')}<small>{t('chat.whoHint')}</small></span>
+          <label class="row"><span>{t('chat.who')}<small>{s.chat.provider === 'free' ? t('chat.freeHint') : t('chat.whoHint')}</small></span>
             <select value={s.chat.provider} onchange={e => set('chat', { provider: text(e), model: '' })}>
               {#each PROVIDERS as x}<option value={x.id}>{x.name}</option>{/each}
             </select></label>

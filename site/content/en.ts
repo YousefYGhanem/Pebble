@@ -221,7 +221,7 @@ const en: Content = {
       icon: 'chat',
       kicker: 'Pip\'s chat',
       title: 'Ask Pip. Show him a window.',
-      text: 'Pick who answers: Claude Code or Codex with your own plan, or the Anthropic, OpenAI, Gemini or DeepSeek API with your key, kept encrypted. Point at a window and Pip sees it. In Word, he proposes fixes as tracked changes you accept or reject.',
+      text: 'He answers right away with a free AI, no account or key. Or pick who answers: Claude Code or Codex with your own plan, or the Anthropic, OpenAI, Gemini or DeepSeek API with your key, kept encrypted. Point at a window and Pip sees it. In Word, he proposes fixes as tracked changes you accept or reject.',
       points: ['Show him a window: Ctrl+Alt+B', 'Talk to him: Ctrl+Alt+Space', 'Fix in Word, as tracked changes'],
       live: 'chat',
       chips: [

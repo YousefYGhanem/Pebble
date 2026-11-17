@@ -1,6 +1,9 @@
 // Pip's chat: which AI answers, and what the island shows of the conversation.
 
 export const PROVIDERS = [
+  // free and keyless: Pollinations (open source; an open model, GPT-OSS 20B; limits per address). The default, so
+  // Pip answers from the first minute; your own Claude, ChatGPT or an API key is one click away in Settings.
+  { id: 'free', name: 'Free AI (Pollinations, no key)', key: false, model: 'openai' },
   { id: 'claude-cli', name: 'Claude Code (your plan)', key: false, model: '' },
   { id: 'codex-cli', name: 'Codex (your ChatGPT login)', key: false, model: '' },
   { id: 'anthropic', name: 'Anthropic API', key: true, model: 'claude-opus-5-5' },

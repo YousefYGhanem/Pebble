@@ -113,6 +113,12 @@ const store = new Store(userData)
 // theme "auto": Windows' light or dark mode, also when it changes
 store.prefersDark = () => nativeTheme.shouldUseDarkColors
 store.load()
+// 0.5.0: the chat's default became the free AI. Someone who already used Pebble keeps Claude Code (the old default),
+// so nothing they type starts going to a new service without them choosing it.
+try {
+  const mine = JSON.parse(fs.readFileSync(path.join(userData, 'settings.json'), 'utf8')) as { general?: { welcomed?: boolean }; chat?: { provider?: string } }
+  if (mine.general?.welcomed && !mine.chat?.provider) store.update({ chat: { provider: 'claude-cli' } })
+} catch { /* a new install: nothing to keep */ }
 nativeTheme.on('updated', () => { if (store.settings.theme === 'auto') { store.load(); store.emit('change') } })
 const token = loadToken(userData)
 const chat = new Chat(userData, vault, () => ({ ...store.settings.chat, name: store.settings.pip.name }))

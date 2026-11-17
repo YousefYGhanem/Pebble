@@ -221,7 +221,7 @@ const ar: Content = {
       icon: 'chat',
       kicker: 'دردشة Pip',
       title: 'اسأل Pip. أرِه نافذة.',
-      text: 'اختر من يجيب: Claude Code أو Codex باشتراكك، أو واجهة Anthropic أو OpenAI أو Gemini أو DeepSeek بمفتاحك محفوظًا مشفّرًا. أشر إلى نافذة فيراها Pip. وفي Word يقترح إصلاحات كتغييرات متعقَّبة تقبلها أو ترفضها.',
+      text: 'يجيب فورًا بذكاء اصطناعي مجاني، بلا حساب ولا مفتاح. أو اختر من يجيب: Claude Code أو Codex باشتراكك، أو واجهة Anthropic أو OpenAI أو Gemini أو DeepSeek بمفتاحك محفوظًا مشفّرًا. أشر إلى نافذة فيراها Pip. وفي Word يقترح إصلاحات كتغييرات متعقَّبة تقبلها أو ترفضها.',
       points: ['أرِه نافذة: Ctrl+Alt+B', 'تحدّث إليه: Ctrl+Alt+Space', 'إصلاح في Word كتغييرات متعقَّبة'],
       live: 'chat',
       chips: [
