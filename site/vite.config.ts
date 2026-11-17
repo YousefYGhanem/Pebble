@@ -19,13 +19,13 @@ const onlyUsedImages = (): Plugin => ({
   }
 })
 
-/** In the built page only (the dev server needs its websocket): no scripts but ours, and no request but GitHub's API. */
+/** In the built page only (the dev server needs its websocket): no scripts but ours, and no request but GitHub's API (the latest release) and Frankfurter (the demo box's exchange rates). */
 const csp = (): Plugin => ({
   name: 'pebble-csp',
   apply: 'build',
   transformIndexHtml: () => [{
     tag: 'meta',
-    attrs: { 'http-equiv': 'Content-Security-Policy', content: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://api.github.com; base-uri 'self'; form-action 'none'" },
+    attrs: { 'http-equiv': 'Content-Security-Policy', content: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src https://api.github.com https://api.frankfurter.dev; base-uri 'self'; form-action 'none'" },
     injectTo: 'head-prepend'
   }]
 })

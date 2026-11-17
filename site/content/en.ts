@@ -20,7 +20,8 @@ const en: Content = {
     storeSoon: 'Coming soon',
     small: 'Free · Open source (MIT) · Windows 10 and 11',
     worksWith: 'Follows',
-    agents: ['Claude Code', 'Codex', 'Gemini CLI', 'Cursor', 'OpenCode', 'Aider', 'DeepSeek Harness', 'Any MCP agent']
+    agents: ['Claude Code', 'Codex', 'Gemini CLI', 'Cursor', 'OpenCode', 'Aider', 'DeepSeek Harness', 'Any MCP agent'],
+    news: { badge: 'New in 0.5', text: 'One box for everything' }
   },
   demo: {
     label: 'A live demo of the Pebble island following an agent',
@@ -55,10 +56,43 @@ const en: Content = {
       { state: 'done', title: 'Done', text: 'The task is finished. Pip is happy, the result waits until you have looked at it, then the island settles again.' }
     ]
   },
+  box: {
+    kicker: "New in 0.5 · Pip's page",
+    title: 'One box for everything',
+    lead: "Ctrl+Alt+K opens Pip's page with the box ready. Ask in plain words, in English or Arabic: the answer shows above the box as you type, and Enter takes it. Anything else goes to Pip.",
+    points: [
+      "Sums, units, and currencies at the European Central Bank's daily rates",
+      'The time anywhere, or 9am London in New York',
+      'Timers the island counts down',
+      'Colours, translations, and tools for what you copied',
+      'Tab asks Pip, even when there is an instant answer'
+    ],
+    label: "A live demo of the box on Pip's page",
+    placeholder: 'Message Pip…',
+    try: "Click in and type your own: it answers with the app's own code.",
+    enter: 'Enter copies',
+    starts: 'Enter starts it',
+    into: 'into {lang}',
+    timer: 'Timer',
+    canned: 'In the app, Pip translates it as you type.',
+    pipAnswers: 'In the app, Pip answers this one.',
+    toPip: 'In the app, Enter sends this to Pip.',
+    appOnly: 'This one works in the app: it reads your screen, what you copied or your running timers.',
+    rates: "Getting today's exchange rates…",
+    noRates: 'The rates did not load here. In the app they come from the European Central Bank.',
+    examples: [
+      { q: "what's 15% of 80" },
+      { q: 'how many miles is 5 km' },
+      { q: 'what time is it in Tokyo' },
+      { q: '#53e4ff' },
+      { q: 'set a timer for 10 minutes for tea' },
+      { q: 'translate good morning to French', a: 'Bonjour' }
+    ]
+  },
   featuresTitle: {
     kicker: 'Everything in the island',
     title: 'Made for agents. Handy all day.',
-    lead: 'The open island has its pages on top: Home, Agents, Chat, Music, Files, Clipboard, Notes, Focus and Widgets. Keep the ones you use.'
+    lead: 'The open island has its pages on top: Home, Agents, Pip, Music, Files, Clipboard, Notes, Focus and Widgets. Keep the ones you use.'
   },
   features: [
     {
@@ -212,7 +246,7 @@ const en: Content = {
       kicker: 'Connectors',
       title: 'Your world, in the island',
       text: 'Connectors bring apps and web services in: a chip next to Pip, cards on Home and Widgets, live activities and notifications. Write your own in a few lines.',
-      points: ['GitHub: reviews waiting, notifications, your CI live while it runs', 'Local servers: which dev servers are up, one click to open', 'Weather, news feeds, live scores', 'Calendar, with a Join button two minutes before an online meeting', 'Webhook inbox, watch a value, DeepSeek balance', 'Each one runs with only what it declares'],
+      points: ['GitHub: reviews waiting, notifications, your CI live on the island while it runs', 'Local servers: which dev servers answer on this PC, one click to open, a notice when one stops', 'Countdowns: the days until the dates you care about', 'Watch a value: price alerts, only when it goes above or below your limits', 'Weather, news feeds, live scores, a calendar with a Join button', 'Webhook inbox and DeepSeek balance; each one runs with only what it declares'],
       shots: [{ src: 'page-widgets', alt: 'The Widgets page with connector cards', h: 334 }],
       mood: 'curious'
     },
@@ -221,7 +255,7 @@ const en: Content = {
       icon: 'chat',
       kicker: 'Pip\'s chat',
       title: 'Ask Pip. Show him a window.',
-      text: 'He answers right away with a free AI, no account or key. Or pick who answers: Claude Code or Codex with your own plan, or the Anthropic, OpenAI, Gemini or DeepSeek API with your key, kept encrypted. Point at a window and Pip sees it. In Word, he proposes fixes as tracked changes you accept or reject.',
+      text: 'Type or talk to him on his page. Point at a window and Pip sees it: its picture and the text on it go with your next message. In Word, he proposes fixes as tracked changes you accept or reject.',
       points: ['Show him a window: Ctrl+Alt+B', 'Talk to him: Ctrl+Alt+Space', 'Fix in Word, as tracked changes'],
       live: 'chat',
       chips: [
@@ -231,6 +265,39 @@ const en: Content = {
         { id: 'pip', label: '3 fixes ready as tracked changes.' }
       ],
       mood: 'love'
+    },
+    {
+      id: 'free-ai',
+      icon: 'sparkle',
+      kicker: 'A free AI out of the box',
+      title: 'Pip answers from the first minute',
+      text: 'A new Pebble answers right away with a free AI: Pollinations, an open model, with no account and no key. Your own Claude Code, Codex or an API key is one click away in Settings, and the note there says plainly where your messages go.',
+      points: ['No account, no key, no setup', 'Switch to Claude Code, Codex or your own API key anytime', 'API keys are kept encrypted and go only to that provider', 'Already using Pebble? Nothing changes: you keep Claude Code'],
+      live: 'ai',
+      chips: [
+        { id: 'free', label: 'Free AI', sub: 'Pollinations · no account or key' },
+        { id: 'claude', label: 'Claude Code', sub: 'Your own plan' },
+        { id: 'codex', label: 'Codex', sub: 'Your ChatGPT login' },
+        { id: 'api', label: 'Your API key', sub: 'Anthropic, OpenAI, Gemini or DeepSeek' }
+      ],
+      mood: 'happy'
+    },
+    {
+      id: 'voices',
+      icon: 'speaker',
+      kicker: 'Natural voices',
+      title: 'Pip reads aloud, in 50+ languages',
+      text: "The speaker on an answer reads it in its own language, with a natural voice that runs on your PC (Piper). A language's voice downloads once, about 60 MB, the first time an answer in it is read. Nothing you read is sent anywhere.",
+      points: ['Each answer in the voice of its own language', 'Runs on this PC, after one download per language', "Or switch back to Windows' own voices in Settings"],
+      live: 'voices',
+      chips: [
+        { id: 'en', label: 'English', sub: "Hi, I'm Pip. I live at the top of your screen." },
+        { id: 'ar', label: 'Arabic', sub: 'مرحبا، أنا بيب. أعيش في أعلى شاشتك.' },
+        { id: 'fr', label: 'French', sub: "Salut, je suis Pip. J'habite en haut de ton écran." },
+        { id: 'es', label: 'Spanish', sub: 'Hola, soy Pip. Vivo en la parte de arriba de tu pantalla.' },
+        { id: 'de', label: 'German', sub: 'Hallo, ich bin Pip. Ich wohne oben auf deinem Bildschirm.' }
+      ],
+      mood: 'dancing'
     },
     {
       id: 'peeks',
@@ -318,9 +385,9 @@ const en: Content = {
     title: 'Small touches, all over',
     lead: 'The details that make it feel finished.',
     items: [
-      { icon: 'search', title: 'One box for everything', text: "Ctrl+Alt+K opens Pip's page: ask in plain words. Sums, conversions, currencies, the time anywhere, translations, timers, colours and tools for what you copied answer instantly; anything else goes to Pip." },
-      { icon: 'timer', title: 'Timers and countdowns', text: 'timer 10m tea in the quick bar: the island counts it down. Countdowns to the dates you care about. A warning when the disk fills up.' },
-      { icon: 'chat', title: 'Ask Pip anywhere', text: 'ask, explain or summarize in the quick bar: Pip answers right there, using the AI you chose.' },
+      { icon: 'timer', title: 'Timers on the island', text: '"set a timer for 10 minutes for tea" or "remind me in 5 min to stretch" in Pip\'s box: the island counts it down. Type "timer" to see the running ones and stop them.' },
+      { icon: 'disk', title: 'Disk almost full', text: 'A warning when the Windows drive is almost full.' },
+      { icon: 'chat', title: 'Explain what you copied', text: '"explain this" or "summarize this" in Pip\'s box sends what you copied to Pip, only when you press Enter.' },
       { icon: 'terminal', title: 'Long commands', text: 'PowerShell or Git Bash tell you when a command of 10 s or more finishes, red when it failed.' },
       { icon: 'code', title: 'VS Code and Cursor', text: 'The extension shows the exact terminal tab when you jump to it.' },
       { icon: 'prompt', title: 'The pebble command', text: 'pebble notify and pebble ask from any script or CI step.' },
@@ -358,6 +425,7 @@ const en: Content = {
     items: [
       { q: 'Is Pebble free?', a: 'Yes. Pebble is free and open source under the MIT license. No account, no subscription.' },
       { q: 'Which agents does it work with?', a: 'Claude Code (also inside the Claude app), Codex, Gemini CLI, Cursor, OpenCode, Aider and DeepSeek Harness, plus any agent that speaks MCP. Claude Code\'s permissions, questions and plans are answered from the island; the others show what they do and tell you when they wait for you in their own window.' },
+      { q: 'Do I need an AI account or key?', a: "No. Pip answers out of the box with a free AI (Pollinations, an open model; your messages go to pollinations.ai). Claude Code, Codex or your own Anthropic, OpenAI, Gemini or DeepSeek key is one click away in Settings → Pip's chat. If you already used Pebble, you keep Claude Code." },
       { q: 'Will it slow my PC down?', a: 'Hardly. At rest the island draws no frames. With an agent working it uses about 6% of one CPU core, and about 0.1% while tucked away. When you are away or in a game, what nobody needs pauses.' },
       { q: 'What about my privacy?', a: 'Pebble has no server of its own: no account, no analytics, no tracking. It talks to a service only for a feature you switch on, such as lyrics, weather or the AI you pick for the chat. Keys are encrypted for your Windows account.' },
       { q: 'Why does Windows warn me about the installer?', a: 'The installer is not code-signed yet, so SmartScreen may show "Windows protected your PC" the first time. Choose More info, then Run anyway. The source code is all on GitHub.' },

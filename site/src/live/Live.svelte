@@ -8,11 +8,13 @@
   import Keys from './Keys.svelte'
   import Chat from './Chat.svelte'
   import Lang from './Lang.svelte'
+  import Providers from './Providers.svelte'
+  import Voices from './Voices.svelte'
   import { glow } from '../lib/motion'
 
   // Which live demo a feature shows (its `live` field in the content files).
   let { f }: { f: Feature } = $props()
-  const DEMOS = { status: Status, usage: Usage, pip: Moods, peeks: Peeks, themes: Themes, keys: Keys, chat: Chat, lang: Lang }
+  const DEMOS = { status: Status, usage: Usage, pip: Moods, peeks: Peeks, themes: Themes, keys: Keys, chat: Chat, lang: Lang, ai: Providers, voices: Voices }
   const Demo = $derived(f.live ? DEMOS[f.live] : null)
 </script>
 

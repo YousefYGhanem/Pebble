@@ -6,6 +6,7 @@
   import DownloadButton from './DownloadButton.svelte'
   import StoreButton from './StoreButton.svelte'
   import PipCanvas from './PipCanvas.svelte'
+  import Icon from './Icon.svelte'
   import type { PipMood } from '../../content/types'
 
   const h = $derived(site.c.hero)
@@ -66,6 +67,7 @@
     <span class="haze"></span><span class="core"></span><span class="line"></span>
   </div>
   <div class="container copy">
+    <a class="news intro" style="--i: 0" href="#one-box"><span class="badge">{h.news.badge}</span><span class="news-text">{h.news.text}</span><span class="news-arrow" aria-hidden="true"><Icon name="arrow" size={13} /></span></a>
     <p class="eyebrow intro" style="--i: 0"><span class="live-dot"></span>{h.eyebrow}</p>
     <h1 id="hero-title" class="sr-only">{h.title}</h1>
     <div class="pip intro" style="--i: 1" aria-hidden="true" onpointerenter={() => (petted = true)} onpointerleave={() => (petted = false)}>
@@ -156,6 +158,27 @@
     background: rgb(14 13 21 / 0.6); border: 1px solid var(--stroke-strong); box-shadow: var(--highlight);
     backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
+  /* the newest big feature: a hairline pill with a light that runs along it, above the eyebrow */
+  .news {
+    position: relative; display: inline-flex; align-items: center; gap: 0.6rem; margin: 0 0 0.8rem; padding: 0.22rem 0.7rem 0.22rem 0.25rem;
+    border-radius: 999px; font-size: 0.8rem; color: #e6e1ff; text-decoration: none; isolation: isolate; overflow: hidden;
+    background: rgb(124 92 255 / 0.1); border: 1px solid rgb(185 168 255 / 0.28); box-shadow: var(--highlight);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .news::before {
+    content: ''; position: absolute; z-index: -1; inset-block: 0; inset-inline-start: 0; inline-size: 40%;
+    background: linear-gradient(90deg, transparent, rgb(185 168 255 / 0.25), transparent);
+    translate: -120% 0; animation: sheen 4.5s var(--ease-out) 1.6s infinite;
+  }
+  @keyframes sheen { 60%, 100% { translate: 260% 0; } }
+  :global([dir='rtl']) .news::before { animation-name: sheen-rtl; translate: 120% 0; }
+  @keyframes sheen-rtl { 60%, 100% { translate: -260% 0; } }
+  .news:hover { background: rgb(124 92 255 / 0.18); border-color: rgb(185 168 255 / 0.5); }
+  .badge { padding: 0.12rem 0.5rem; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 600; font-size: 0.72rem; }
+  .news-arrow { display: grid; transition: translate 0.3s var(--spring); }
+  .news:hover .news-arrow { translate: 0.15rem 0; }
+  :global([dir='rtl']) .news-arrow { rotate: 180deg; }
+  :global([dir='rtl']) .news:hover .news-arrow { translate: -0.15rem 0; }
   .live-dot { inline-size: 0.4rem; block-size: 0.4rem; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 3px rgb(74 222 128 / 0.18); }
   /* the headline, for screen readers and search engines only */
   .sr-only { position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

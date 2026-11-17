@@ -4,6 +4,7 @@
   import Nav from './components/Nav.svelte'
   import Hero from './components/Hero.svelte'
   import Story from './components/Story.svelte'
+  import OneBox from './components/OneBox.svelte'
   import Feature from './components/Feature.svelte'
   import More from './components/More.svelte'
   import Steps from './components/Steps.svelte'
@@ -23,6 +24,7 @@
 <main id="main" tabindex="-1">
   <Hero />
   <Story />
+  <OneBox />
   <section class="features" id="features" aria-labelledby="features-title">
     <header class="container head" use:reveal>
       <p class="kicker">{c.featuresTitle.kicker}</p>

@@ -18,7 +18,7 @@ export interface Chip {
 }
 
 /** Live demos a feature can show next to its text (site/src/live). */
-export type Live = 'status' | 'usage' | 'pip' | 'peeks' | 'themes' | 'keys' | 'chat' | 'lang'
+export type Live = 'status' | 'usage' | 'pip' | 'peeks' | 'themes' | 'keys' | 'chat' | 'lang' | 'ai' | 'voices'
 
 /** Pip's moods (app/shared/pip.ts) */
 export type PipMood = 'idle' | 'curious' | 'focused' | 'alert' | 'happy' | 'love' | 'sleepy' | 'dizzy' | 'grumpy' | 'dancing' | 'sad'
@@ -66,6 +66,8 @@ export interface Content {
     small: string
     worksWith: string
     agents: string[]
+    /** the pill over the eyebrow that scrolls to the newest big feature (#one-box) */
+    news: { badge: string; text: string }
   }
   demo: {
     label: string
@@ -87,6 +89,35 @@ export interface Content {
     kicker: string
     title: string
     steps: { state: 'resting' | 'working' | 'ask' | 'done'; title: string; text: string }[]
+  }
+  /** Pip's box (Ctrl+Alt+K): a demo that answers with the app's own parser (app/shared/quick.ts) */
+  box: {
+    kicker: string
+    title: string
+    lead: string
+    points: string[]
+    /** the demo's accessible name, and the box's placeholder */
+    label: string
+    placeholder: string
+    /** under the demo: click in and type your own */
+    try: string
+    /** the answer's hint (as in the app): Enter copies it, Enter starts the timer, into {lang} */
+    enter: string
+    starts: string
+    into: string
+    /** a timer with no name */
+    timer: string
+    /** a translation's answer in the loop is shown, not worked out: this says so */
+    canned: string
+    /** asked by a visitor: translations and anything else go to Pip in the app */
+    pipAnswers: string
+    toPip: string
+    /** pick, clipboard tools, the running timers: only in the app */
+    appOnly: string
+    rates: string
+    noRates: string
+    /** what types itself in the loop; a is the shown answer of a translation */
+    examples: { q: string; a?: string }[]
   }
   featuresTitle: { kicker: string; title: string; lead: string }
   features: Feature[]
