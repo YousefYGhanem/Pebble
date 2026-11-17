@@ -22,6 +22,7 @@ import { emptyDay, usageAlerts } from '../shared/today'
 import { freshWellness, wellnessAnswer, wellnessCheck } from '../shared/wellness'
 import { appName, countTime, freshScreen, topApps, type ScreenDay } from '../shared/screentime'
 import { LANG_NAMES } from '../shared/quick'
+import { speechLanguage } from '../shared/speech'
 import { findCity, nextPrayer } from './prayer'
 import { PipStore } from './pip'
 import { ACHIEVEMENTS, wearable } from '../shared/pip'
@@ -302,7 +303,8 @@ async function say(text: string) {
   const file = path.join(chat.folder, 'say.wav')
   const plain = text.replace(/```[\s\S]*?```/g, ' (code) ').replace(/[`*_#>|]/g, '').slice(0, 5000)
   try {
-    await native.request('speech.say', { text: plain, file })
+    // a voice of the message's own language (Windows' default voice reads other languages' words badly)
+    await native.request('speech.say', { text: plain, file, language: speechLanguage(plain) })
     send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`)
   } catch (err) {
     log.warn('say:', (err as Error).message)
