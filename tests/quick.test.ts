@@ -96,3 +96,35 @@ test('timers: "timer 10m tea", seconds and hours, minutes by default; "timers" l
   expect(answer('timers', c)).toEqual({ kind: 'timers' })
   expect(answer('timer 0', c)).toBeNull()
 })
+
+test('plain words, in English and Arabic, become the same answers', () => {
+  const rated = { ...c, rates: { EUR: 1, USD: 1.1, GBP: 0.85, ILS: 4 } }
+  expect(text("what's 15% of 80?")).toBe('12')
+  expect(text('calculate 12 times 8')).toBe('96')
+  expect(text('what is 20 percent of 50')).toBe('10')
+  expect(text('how many miles is 5 km')).toBe('3.106856 mi')
+  expect(text('convert 100 f to c')).toBe('37.777778 °C')
+  expect(text('how much is 110 dollars in euros', rated)).toBe('100 EUR')
+  expect(text('$11 to shekels', rated)).toBe('40 ILS')
+  expect(text('100 euros in pounds', rated)).toBe('85 GBP') // pounds next to money: sterling
+  expect(text('2 kg in pounds')).toBe('4.409245 lb') // pounds next to a weight: a weight
+  expect(text('what time is it in Tokyo?')).toBe('07:00 PM')
+  expect(answer('translate good morning to French', c)).toEqual({ kind: 'translate', text: 'good morning', to: 'fr' })
+  expect(answer('how do you say thank you in Spanish', c)).toEqual({ kind: 'translate', text: 'thank you', to: 'es' })
+  expect(answer('ترجم صباح الخير إلى الفرنسية', c)).toEqual({ kind: 'translate', text: 'صباح الخير', to: 'fr' })
+  expect(answer('please set a timer for 10 minutes for tea', c)).toEqual({ kind: 'timer', seconds: 600, name: 'tea' })
+  expect(answer('a 25 minute timer', c)).toEqual({ kind: 'timer', seconds: 1500, name: '' })
+  expect(answer('remind me in 5 min to stretch', c)).toEqual({ kind: 'timer', seconds: 300, name: 'stretch' })
+  expect(answer('مؤقت 10 دقائق', c)).toEqual({ kind: 'timer', seconds: 600, name: '' })
+  expect(answer('explain this', { ...c, clip: 'TypeError' })).toEqual({ kind: 'ai', how: 'explain', text: '' })
+  expect(text('format the json', { ...c, clip: '{"a":1}' })).toBe('{\n  "a": 1\n}')
+  // anything else is for Pip: no instant answer
+  expect(answer('what is the capital of Japan', c)).toBeNull()
+  expect(answer('hey pip, how are you today?', c)).toBeNull()
+})
+
+test('settings: translations into a chosen language; tools and explain can be switched off', () => {
+  expect(answer('tr good morning', { ...c, translateTo: 'fr' })).toEqual({ kind: 'translate', text: 'good morning', to: 'fr' })
+  expect(answer('json', { ...c, clip: '{}', tools: false })).toBeNull()
+  expect(answer('explain', { ...c, clip: 'x', copyToAi: false })).toBeNull()
+})

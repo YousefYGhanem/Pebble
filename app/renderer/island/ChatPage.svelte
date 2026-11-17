@@ -1,13 +1,21 @@
 <script lang="ts">
-  // Chat with Pip: ask anything; the answer streams in. Who answers is picked in Settings → Pip's chat.
+  // Pip's page: one box for everything. Instant answers show above it as you type (sums, conversions, times,
+  // colours, translations, timers, clipboard tools: Instant.svelte), and Enter takes them; anything else is a
+  // message to Pip, whose answer streams in (who answers: Settings → Pip's chat). Tab always asks Pip.
   // Look shows Pip a window (its picture and text go with your next message); the mic starts Windows voice typing.
-  import type { Action } from '../../shared/extras'
+  import type { Action, ExtrasState } from '../../shared/extras'
   import type { ChatState } from '../../shared/chat'
+  import type { Settings } from '../../shared/settings'
   import { markdown } from './md'
   import Icon from './Icon.svelte'
+  import Instant from './Instant.svelte'
   import { t } from '../i18n.svelte'
 
-  let { chat, act, listen = 0, name = 'Pip' }: { chat: ChatState; act: (a: Action) => void; listen?: number; name?: string } = $props()
+  let { chat, act, listen = 0, name = 'Pip', extras, quick }: {
+    chat: ChatState; act: (a: Action) => void; listen?: number; name?: string; extras?: ExtrasState | null; quick: Settings['quick']
+  } = $props()
+  let instant = $state<Instant>()
+  const EXAMPLES = ['15% of 80', 'how much is 100 dollars in euros', 'what time is it in Tokyo', 'translate good morning to French', 'set a timer for 10 minutes', '#53e4ff']
   let text = $state('')
   let list = $state<HTMLDivElement>()
   let box = $state<HTMLTextAreaElement>()
@@ -19,7 +27,11 @@
   // the voice shortcut: type here by voice
   $effect(() => { if (listen && box) dictate() })
 
-  function send() {
+  // the page opened (also by its shortcut): ready to type
+  $effect(() => { box?.focus() })
+
+  function send(words = text) {
+    text = words
     if (!text.trim() || chat.busy) return
     // /login (what the CLI itself would say) opens the sign-in instead of asking the AI
     if (/^\/log ?in$/i.test(text.trim())) { act({ do: 'chat.signIn' }); text = ''; return }
@@ -82,6 +94,7 @@
         <div class="empty">{t('i.chat.empty', { name })}</div>
         <!-- what Pip can do, to start with one click (an empty page that teaches) -->
         <div class="starters">
+          {#each EXAMPLES as ex}<button class="ghost" onclick={() => { text = ex; box?.focus() }}>{ex}</button>{/each}
           <button class="ghost" onclick={() => act({ do: 'chat.windows' })}><Icon name="eye" size={12} />{t('i.chat.startLook')}</button>
           <button class="ghost" onclick={() => { text = t('i.chat.startExplainText'); box?.focus() }}><Icon name="chat" size={12} />{t('i.chat.startExplain')}</button>
           <button class="ghost" onclick={dictate}><Icon name="mic" size={12} />{t('i.chat.speak')}</button>
@@ -107,11 +120,15 @@
         <button class="ghost x" onclick={() => act({ do: 'chat.look', hwnd: 0 })} aria-label={t('i.chat.removeWindow')}><Icon name="close" size={11} /></button>
       </div>
     {/if}
+    {#if extras}<Instant bind:this={instant} q={text} {extras} {act} pip={name} provider={chat.provider} {quick} onsend={w => send(w)} onset={w => { text = w; box?.focus() }} />{/if}
     <form class="ask" onsubmit={e => { e.preventDefault(); send() }}>
       <button type="button" class="tool" onclick={() => act({ do: 'chat.windows' })} title={t('i.chat.look')} aria-label={t('i.chat.look')}><Icon name="eye" size={13} /></button>
       <button type="button" class="tool" onclick={dictate} title={t('i.chat.speak')} aria-label={t('i.chat.speak')}><Icon name="mic" size={13} /></button>
       <textarea rows="1" bind:this={box} bind:value={text} placeholder={t('i.chat.message', { name })} aria-label={t('i.chat.message', { name })}
-        onkeydown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}></textarea>
+        onkeydown={e => {
+          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!instant?.enter()) send() }
+          else if (e.key === 'Tab' && !e.shiftKey && instant?.shown()) { e.preventDefault(); send() } // ask Pip instead
+        }}></textarea>
       {#if chat.busy}
         <button type="button" onclick={() => act({ do: 'chat.stop' })} aria-label={t('i.common.stop')}><Icon name="stop" size={13} /></button>
       {:else}

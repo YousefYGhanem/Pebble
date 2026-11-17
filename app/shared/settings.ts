@@ -152,6 +152,9 @@ export const settingsSchema = z.object({
     rest: z.object({ away: z.boolean(), games: z.boolean(), battery: z.boolean() }),
     doneSeconds: z.number().min(1).max(600)
   }),
+  /** Pip's page: its instant answers (translations go into translateTo, 'auto': Arabic and English into each other;
+   *  tools: the clipboard tools; copyToAi: explain and summarize, which send what you copied to the chat's provider) */
+  quick: z.object({ translateTo: z.string().max(5), tools: z.boolean(), copyToAi: z.boolean() }),
   /** Pip's chat: who answers (API keys are kept encrypted, outside this file); model '' = the provider's default */
   chat: z.object({ provider: z.enum(PROVIDER_IDS), model: z.string().max(100).regex(/^[\w.:/@-]*$/), readAloud: z.boolean() }),
   /** chat apps followed as sessions: desktop apps by process name (UI Automation, beta); the browser goes through the extension */
@@ -184,6 +187,7 @@ export const DEFAULTS: Settings = {
   },
   terminals: { minSeconds: 10 },
   features: { sound: true, toasts: true, peeks: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
+  quick: { translateTo: 'auto', tools: true, copyToAi: true },
   chat: { provider: 'claude-cli', model: '', readAloud: false },
   chatApps: { desktop: [] },
   server: { port: 47901 }

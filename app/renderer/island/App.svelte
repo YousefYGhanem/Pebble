@@ -16,7 +16,6 @@
   import WidgetsPage from './WidgetsPage.svelte'
   import ChatPage from './ChatPage.svelte'
   import PageNav from './PageNav.svelte'
-  import QuickBar from './QuickBar.svelte'
   import Wave from './Wave.svelte'
   import { fly } from 'svelte/transition'
   import { emitPeak } from './peak'
@@ -255,10 +254,6 @@
   let voice: HTMLAudioElement | undefined
   window.pebble.onWorry(() => { worriedAt = Date.now(); kick(); say('question'); later(4100) })
   window.pebble.onPlay(url => { voice?.pause(); voice = url ? new Audio(url) : undefined; void voice?.play() })
-  // the quick bar: up until the island closes
-  let quickBar = $state(false)
-  window.pebble.onQuick(() => { tucked = false; open = true; quickBar = true })
-  $effect(() => { if (!open) quickBar = false })
   window.pebble.onToggle(() => {
     if (tucked) { tucked = false; open = true } else open = !open
     if (open) focusFirst(); else window.pebble.release()
@@ -730,9 +725,6 @@
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
         <div class="pages" onclick={e => e.stopPropagation()}>
           <!-- the page tabs on top, where the pointer comes in; the page you are on shows its name -->
-          {#if quickBar && extras}
-            <QuickBar {extras} {act} pip={view.settings.pip.name} provider={view.chat?.provider ?? ''} />
-          {:else}
           <PageNav bind:page hidden={view.settings.island.hiddenPages} badges={{ agents: shown.some(x => x.ask || x.status === 'error') }} />
           {#key page}
             <div in:fly={{ x: reduced ? 0 : 24 * pageDir, duration: reduced ? 0 : 240, opacity: 0.15 }}>
@@ -745,12 +737,11 @@
               {:else if page === 'clipboard' && extras}<ClipboardPage {extras} {now} {act} enabled={view.settings.clipboard.enabled} />
               {:else if page === 'notes' && extras}<NotesPage notes={extras.notes} todos={extras.todos} {now} {act} />
               {:else if page === 'focus' && extras}<FocusPage focus={extras.focus} done={extras.focusDone} sound={view.settings.music.focusSound} {now} {act} />
-              {:else if page === 'chat' && view.chat}<ChatPage chat={view.chat} {act} {listen} name={view.settings.pip.name} />
+              {:else if page === 'chat' && view.chat}<ChatPage chat={view.chat} {act} {listen} name={view.settings.pip.name} {extras} quick={view.settings.quick} />
               {:else if page === 'widgets'}<WidgetsPage {widgets} connectors={view.connectors} {now} {act} />
               {/if}
             </div>
           {/key}
-          {/if}
           {#if tip === 'tuck' || tip === 'drop'}<div class="tip" role="note">{t(`i.tip.${tip}`)}<button onclick={() => (tip = null)}>{t('i.tip.ok')}</button></div>{/if}
           {#if undo.text}<div class="undo" role="status">{undo.text}<button onclick={() => undo.take()}>{t('i.common.undo')}</button></div>{/if}
         </div>

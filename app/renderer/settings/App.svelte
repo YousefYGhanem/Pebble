@@ -10,6 +10,7 @@
   import { OUTFITS, PIP_LOOKS, pipColors, type PipLookId } from '../../shared/pip'
   import { drawPip } from '../island/pip'
   import { PROVIDERS } from '../../shared/chat'
+  import { LANG_NAMES } from '../../shared/quick'
   import { markdown } from '../island/md'
 
   let v = $state<SettingsView>()
@@ -71,7 +72,7 @@
   const HOME: Record<string, Tab> = {
     general: 'general', update: 'general', notify: 'general', rest: 'general', island: 'island', size: 'island', chip: 'island',
     look: 'look', colors: 'look', motion: 'look', icon: 'look', pipLook: 'pip', pip: 'pip', agents: 'agents', terminals: 'agents',
-    chat: 'chat', apps: 'chat', extras: 'extras', guard: 'extras', well: 'day', prayer: 'day', connectors: 'connectors', advanced: 'advanced', diag: 'advanced'
+    chat: 'chat', apps: 'chat', quick: 'chat', extras: 'extras', guard: 'extras', well: 'day', prayer: 'day', connectors: 'connectors', advanced: 'advanced', diag: 'advanced'
   }
   /** words that are states, not settings (shown only sometimes: nothing to go to) */
   const NOT_FOUND = new Set(['colors.custom', 'colors.revert', 'connectors.on', 'connectors.off', 'connectors.attention', 'connectors.starting', 'general.taken', 'general.reset', 'size.reset', 'advanced.restartNow', 'advanced.historyCleared'])
@@ -431,6 +432,18 @@
           {/each}
         </section>
         </details>
+        <h2>{t('quick.title')} <span class="muted">· {t('quick.hint', { pip })}</span></h2>
+        <section>
+          <label class="row"><span>{t('quick.translateTo')}</span>
+            <select value={s.quick.translateTo} onchange={e => set('quick.translateTo', text(e))}>
+              <option value="auto">{t('quick.auto')}</option>
+              {#each Object.entries(LANG_NAMES) as [code, english]}<option value={code}>{english}</option>{/each}
+            </select></label>
+          <label class="row"><span>{t('quick.tools')}<small>{t('quick.toolsHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.quick.tools} onchange={() => set('quick.tools', !s.quick.tools)} /></label>
+          <label class="row"><span>{t('quick.copyToAi')}<small>{t('quick.copyToAiHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.quick.copyToAi} onchange={() => set('quick.copyToAi', !s.quick.copyToAi)} /></label>
+        </section>
 
       {:else if tab === 'extras'}
         <h1>{t('tab.extras')}</h1>

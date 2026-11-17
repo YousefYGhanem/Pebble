@@ -418,7 +418,6 @@ export function validAction(a: unknown): a is Action {
     case 'clip.copy': case 'clip.remove': case 'clip.pin': return Number.isInteger(o.id)
     case 'mixer.refresh': case 'quick.rates': case 'quick.clip': case 'quick.pick': return true
     case 'quick.copy': return typeof o.text === 'string' && o.text.length <= 10_000
-    case 'quick.ask': return ['ask', 'explain', 'summarize'].includes(o.how as string) && typeof o.text === 'string' && o.text.length <= 2000 && (o.how !== 'ask' || !!o.text.trim())
     case 'timer.start': return Number.isFinite(o.seconds) && (o.seconds as number) >= 1 && (o.seconds as number) <= 7 * 86400 && typeof o.name === 'string' && o.name.length <= 60
     case 'timer.stop': return typeof o.id === 'string' && o.id.length <= 64
     case 'quick.translate': return typeof o.text === 'string' && !!o.text.trim() && o.text.length <= 2000 && typeof o.to === 'string' && /^[a-z]{2}$/.test(o.to)

@@ -351,7 +351,7 @@ function applySettings() {
   bindShortcut('buddy', s.general.buddyShortcut, () => void buddy())
   bindShortcut('voice', s.general.voiceShortcut, () => showPage('chat', true))
   // the microphone for every app at once; the island shows a muted mic until it is back on
-  bindShortcut('quick', s.general.quickShortcut, () => { bringBack(); island?.focus(); send(CH.quick) })
+  bindShortcut('quick', s.general.quickShortcut, () => showPage('chat')) // Pip's page, ready to type
   bindShortcut('mic', s.general.micShortcut, () => { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)) })
   chatApps.apply()
   updater.apply()
@@ -558,18 +558,9 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   if (a.do === 'drop.network') { void shell.openExternal('ms-settings:network-status'); return }
   if (a.do === 'drop.stop') { drop.stop(); return }
   if (a.do === 'settings.open') { settingsWin.open(false, a.tab); return }
-  if (a.do === 'quick.translate' || a.do === 'quick.ask') {
-    // Pip's chat provider, as one question; only the latest one is shown. explain and summarize get what you copied
-    // (read here, from the clipboard the bar saw: nothing else goes with them)
-    const pip = store.settings.pip.name
-    const job = a.do === 'quick.translate'
-      ? { key: `${a.to}|${a.text}`, system: `Translate the user's text into ${LANG_NAMES[a.to] ?? a.to}. Reply with the translation only: no quotes, notes or explanations.`, text: a.text }
-      : a.how === 'ask'
-        ? { key: `ask|${a.text}`, system: `You are ${pip}, a helpful companion in the Pebble app. Answer in a few sentences, plainly.`, text: a.text }
-        : { key: `${a.how}|${extras.state.clipText}`, text: extras.state.clipText.slice(0, 12_000),
-            system: a.how === 'explain'
-              ? `You are ${pip}, a helpful companion in the Pebble app. Explain the text the user copied (an error, code, a term…) in a few sentences, plainly. If it is an error, say the likely cause and the fix.`
-              : `Summarize the text the user copied in three to five short bullet points, in the language of the text.` }
+  if (a.do === 'quick.translate') {
+    // Pip's chat provider, as one question; only the latest one is shown
+    const job = { key: `${a.to}|${a.text}`, system: `Translate the user's text into ${LANG_NAMES[a.to] ?? a.to}. Reply with the translation only: no quotes, notes or explanations.`, text: a.text }
     if (!job.text.trim()) return
     if (extras.state.translated?.key === job.key && extras.state.translated.text) return
     extras.state.translated = { key: job.key }

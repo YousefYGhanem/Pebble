@@ -318,7 +318,7 @@ const en: Content = {
     title: 'Small touches, all over',
     lead: 'The details that make it feel finished.',
     items: [
-      { icon: 'search', title: 'Quick bar', text: 'Ctrl+Alt+K: sums, units, currencies, the time in any city, tr to translate, colours and a screen picker, and tools for what you copied (json, base64, camelCase, hashes…). Enter copies the answer.' },
+      { icon: 'search', title: 'One box for everything', text: "Ctrl+Alt+K opens Pip's page: ask in plain words. Sums, conversions, currencies, the time anywhere, translations, timers, colours and tools for what you copied answer instantly; anything else goes to Pip." },
       { icon: 'timer', title: 'Timers and countdowns', text: 'timer 10m tea in the quick bar: the island counts it down. Countdowns to the dates you care about. A warning when the disk fills up.' },
       { icon: 'chat', title: 'Ask Pip anywhere', text: 'ask, explain or summarize in the quick bar: Pip answers right there, using the AI you chose.' },
       { icon: 'terminal', title: 'Long commands', text: 'PowerShell or Git Bash tell you when a command of 10 s or more finishes, red when it failed.' },

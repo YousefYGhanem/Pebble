@@ -125,7 +125,7 @@ sent twice by itself.
 | --- | --- | --- |
 | ![](docs/screens/page-home.png) | ![](docs/screens/page-music.png) | ![](docs/screens/page-files.png) |
 
-The open island has its page tabs on top: **Home, Agents, Chat, Music, Files, Clipboard, Notes, Focus, Widgets** (arrow keys too; Settings → Island → Pages leaves out the ones you don't use).
+The open island has its page tabs on top: **Home, Agents, Pip, Music, Files, Clipboard, Notes, Focus, Widgets** (arrow keys too; Settings → Island → Pages leaves out the ones you don't use).
 
 | Page | What it does |
 | --- | --- |
@@ -223,7 +223,7 @@ If the exe is missing, Pebble still runs; game mode and jump to terminal are off
 | Point at it (or click, with "Open when I point at it" off) | Opens the Agents page; it closes when the mouse leaves (not while you type) |
 | Right-click it, or **Ctrl+Alt+H** | Tucks it into a thin coloured line (dashed: stopped, dotted: needs you); clicks pass through, and every service rests (below). Point at the line to bring it back |
 | A question during a full-screen game | Only the thin line shows; point at it to answer, and it is gone again after |
-| **Ctrl+Alt+K** | The **quick bar**: type a sum (`15% of 80`), a conversion (`5 km in miles`, `100 usd in eur`), a time (`time in tokyo`, `9am london in new york`) or `tr fr good morning` to translate (with Pip's chat provider). A colour (`#53e4ff`, `rgb(…)`, `hsl(…)`) shows its other forms, and `pick` reads the colour under the mouse. A tool's name works on what you copied: `json`, `minify`, `upper`, `lower`, `title`, `camel`, `snake`, `kebab`, `base64`, `unbase64`, `url`, `unurl`, `trim`, `count`, `sha1`, `sha256`, `sha512`; also `uuid`, `now`, and a Unix time becomes a date. `ask <question>` asks Pip (only the question is sent); `explain` and `summarize` send what you copied, on Enter. `timer 10m tea` starts a named timer (the island counts it down, a peek and a notification when it ends; `timers` lists and stops them). The answer shows as you type; Enter copies it |
+| **Ctrl+Alt+K** | Opens **Pip's page**: one box for everything, in plain words, English or Arabic. Instant answers show above it as you type, and Enter takes them: a sum (`what's 15% of 80`), a conversion (`how many miles is 5 km`, `how much is 100 dollars in euros`), the time somewhere (`what time is it in Tokyo`), a translation (`translate good morning to French`, with Pip's chat provider), a timer (`set a timer for 10 minutes for tea`: the island counts it down; `timers` lists and stops them), a colour (`#53e4ff`, `rgb(…)`; `pick` reads the colour under the mouse), or a tool on what you copied (`format the json`, `base64`, `camel`, `sha256`, `count`…; `explain this` and `summarize this` send it to Pip). Anything else is a message to Pip; Tab asks Pip even when there is an instant answer. Settings → Pip's chat → Instant answers: the language translations go into, the clipboard tools, explain and summarize |
 | **Ctrl+Alt+P** | Opens or closes it, with the keyboard in it: Tab and Enter answer a question, arrows go between pages, **Esc** closes it and gives the keyboard back |
 | An agent needs you | It grows into a card (Allow/Deny, or the answer buttons), even when tucked, plus a Windows notification |
 | Something runs full screen on its screen | It hides (game mode) and comes back after |

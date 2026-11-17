@@ -21,12 +21,78 @@ export interface Ctx {
   locale: string
   /** the text on the clipboard (clipboard tools work on it) */
   clip?: string
+  /** Settings → Pip: the language translations go into ('auto': Arabic ↔ English) */
+  translateTo?: string
+  /** Settings → Pip: the clipboard tools (json, base64…) and explain/summarize (they send what you copied) */
+  tools?: boolean
+  copyToAi?: boolean
 }
 
 export function answer(q: string, c: Ctx): Answer | null {
-  const s = q.trim()
+  const s = natural(q.trim())
   if (!s) return null
   return tool(s, c) ?? color(s) ?? translate(s, c) ?? zones(s, c) ?? currency(s, c) ?? units(s, c) ?? stamp(s, c) ?? calc(s, c)
+}
+
+// ---------- plain words: "what's 15% of 80", "translate hi to French", "set a timer for 10 minutes" ----------
+
+/** language names (English and Arabic) → codes */
+const LANG_WORDS: Record<string, string> = {
+  english: 'en', arabic: 'ar', french: 'fr', spanish: 'es', german: 'de', italian: 'it', portuguese: 'pt', turkish: 'tr', russian: 'ru', chinese: 'zh',
+  japanese: 'ja', korean: 'ko', hindi: 'hi', urdu: 'ur', persian: 'fa', farsi: 'fa', hebrew: 'he', dutch: 'nl', indonesian: 'id',
+  'الإنجليزية': 'en', 'الانجليزية': 'en', 'الإنكليزية': 'en', 'العربية': 'ar', 'الفرنسية': 'fr', 'الإسبانية': 'es', 'الاسبانية': 'es', 'الألمانية': 'de', 'الالمانية': 'de',
+  'الإيطالية': 'it', 'الايطالية': 'it', 'البرتغالية': 'pt', 'التركية': 'tr', 'الروسية': 'ru', 'الصينية': 'zh', 'اليابانية': 'ja', 'الكورية': 'ko', 'الهندية': 'hi',
+  'الأردية': 'ur', 'الاردية': 'ur', 'الفارسية': 'fa', 'العبرية': 'he', 'الهولندية': 'nl', 'الإندونيسية': 'id'
+}
+const LANG_RE = Object.keys(LANG_WORDS).sort((a, b) => b.length - a.length).join('|')
+/** currency names → codes ("pounds" is a weight unless the other side is a currency) */
+const MONEY: Record<string, string> = {
+  dollar: 'USD', dollars: 'USD', '$': 'USD', euro: 'EUR', euros: 'EUR', '€': 'EUR', sterling: 'GBP', '£': 'GBP', yen: 'JPY', yuan: 'CNY', rupee: 'INR', rupees: 'INR',
+  shekel: 'ILS', shekels: 'ILS', nis: 'ILS', lira: 'TRY', liras: 'TRY', franc: 'CHF', francs: 'CHF', won: 'KRW', real: 'BRL', reais: 'BRL', rand: 'ZAR', ringgit: 'MYR',
+  peso: 'MXN', pesos: 'MXN', krona: 'SEK', kronor: 'SEK', 'دولار': 'USD', 'يورو': 'EUR', 'شيكل': 'ILS', 'ين': 'JPY', 'ليرة': 'TRY', 'روبية': 'INR'
+}
+const ARABIC_UNITS: Record<string, string> = { 'ثانية': 's', 'ثواني': 's', 'ثوان': 's', 'دقيقة': 'm', 'دقائق': 'm', 'دقيقتين': 'm', 'ساعة': 'h', 'ساعات': 'h', 'ساعتين': 'h' }
+
+/** A request in plain words, rewritten into the bar's own short forms (anything else stays as it was). */
+export function natural(input: string): string {
+  let s = input.trim().replace(/[?؟!.]+$/, '').trim()
+  // polite openings: "hey pip, please", "can you", "could you"
+  s = s.replace(/^(?:(?:hey|hi|ok|okay)\s+)?(?:pip[,:]?\s+)?(?:please\s+|pls\s+|(?:can|could|would) you\s+)?(?:please\s+)?/i, '').replace(/^(?:من فضلك|لو سمحت)\s+/, '')
+  let m: RegExpExecArray | null
+  // translate: "translate X to/into French", "how do you say X in French", "X in French please" is left to Pip
+  if ((m = new RegExp(`^(?:translate|ترجم)\\s+(.+?)\\s+(?:to|into|in|إلى|الى|ل)\\s*(${LANG_RE})$`, 'is').exec(s))) return `tr ${LANG_WORDS[m[2]!.toLowerCase()]} ${m[1]}`
+  if ((m = new RegExp(`^how (?:do|would) (?:you|i) say\\s+(.+?)\\s+in\\s+(${LANG_RE})$`, 'is').exec(s))) return `tr ${LANG_WORDS[m[2]!.toLowerCase()]} ${m[1]}`
+  if ((m = /^translate\s+(.+)$/is.exec(s))) return `tr ${m[1]}`
+  // timers: "set a timer for 10 minutes (for tea)", "a 25 minute timer", "remind me in 5 min to stretch", "مؤقت 10 دقائق"
+  const unitOf = (u: string) => ARABIC_UNITS[u] ?? u
+  if ((m = /^(?:set |start )?(?:a |an )?timer (?:for |of )?(\d+(?:\.\d+)?)\s*([a-z]+)?(?:\s+(?:for|called|named)\s+(.+))?$/i.exec(s))) return `timer ${m[1]}${m[2] ? m[2][0] : 'm'} ${m[3] ?? ''}`.trim()
+  if ((m = /^(?:set |start )?(?:a |an )?(\d+(?:\.\d+)?)[ -]?(second|sec|minute|min|hour|hr)s? timer(?:\s+(?:for|called|named)\s+(.+))?$/i.exec(s))) return `timer ${m[1]}${m[2]![0]} ${m[3] ?? ''}`.trim()
+  if ((m = /^remind me in (\d+(?:\.\d+)?)\s*([a-z]+)(?:\s+(?:to|about)\s+(.+))?$/i.exec(s))) return `timer ${m[1]}${m[2]![0]} ${m[3] ?? ''}`.trim()
+  if ((m = /^(?:مؤقت|ذكرني بعد)\s+(\d+(?:\.\d+)?)?\s*(\S+)(?:\s+(?:لـ|ل|عن)?\s*(.+))?$/.exec(s)) && ARABIC_UNITS[m[2]!]) return `timer ${m[1] ?? (/ين$/.test(m[2]!) ? '2' : '1')}${unitOf(m[2]!)} ${m[3] ?? ''}`.trim()
+  // the time somewhere: "what time is it in Tokyo"
+  if ((m = /^what(?:'s| is)? the time in\s+(.+)$|^what time is it in\s+(.+)$/i.exec(s))) return `time in ${m[1] ?? m[2]}`
+  // clipboard: "explain this", "summarize what I copied", "format the json"
+  if (/^(?:explain|اشرح)\s+(?:this|it|that|what i copied|the clipboard|هذا|ما نسخته)$/i.test(s)) return 'explain'
+  if (/^(?:summari[sz]e|sum up|لخص|لخّص)\s+(?:this|it|that|what i copied|the clipboard|هذا|ما نسخته)$/i.test(s)) return 'summarize'
+  if (/^(?:format|pretty ?print|beautify)\s+(?:the |this |my )?json$/i.test(s)) return 'json'
+  if ((m = /^(?:make it |to |convert (?:it|this) to )(upper|lower|title|camel|snake|kebab)\s*case$/i.exec(s))) return m[1]!.toLowerCase()
+  // sums and conversions: "what's 15% of 80", "calculate 12 times 8", "how much is 100 dollars in euros", "how many miles is 5 km"
+  s = s.replace(/^(?:what(?:'s| is)|whats|how much is|how much are|calculate|calc|compute|convert|كم يساوي|كم|احسب|حوّل|حول|ما هو|ما هي)\s+/i, '')
+  if ((m = /^how many\s+(.+?)\s+(?:is|are|in)\s+(.+)$/i.exec(s))) s = `${m[2]} in ${m[1]}`
+  s = s.replace(/(\d)\s*(?:percent|per cent|٪)/gi, '$1%').replace(/\s+(?:times|multiplied by)\s+/gi, ' * ').replace(/\s+divided by\s+/gi, ' / ')
+    .replace(/\s+plus\s+/gi, ' + ').replace(/\s+minus\s+/gi, ' - ').replace(/(\d)\s*x\s*(\d)/gi, '$1*$2').replace(/\s+(?:into|إلى|الى|بال|ب)\s+/g, ' in ')
+  // money words: "100 dollars in euros" → "100 usd in eur"; "$100 to €" works too
+  const money = (w: string) => MONEY[w.toLowerCase()] ?? (/^[a-z]{3}$/i.test(w) ? w.toUpperCase() : undefined)
+  const pound = (w: string) => /^pounds?$/i.test(w)
+  if ((m = /^([$€£]?)\s*([\d.,]+)\s*([^\s\d]+)?\s+(?:in|to)\s+([^\s\d]+)$/i.exec(s))) {
+    const left = m[1] || m[3] || '', right = m[4]!, named = (w: string) => !!MONEY[w.toLowerCase()]
+    let from = money(left), to = money(right)
+    if (pound(left) && named(right)) from = 'GBP' // "pounds" is money only next to money
+    if (pound(right) && named(left)) to = 'GBP'
+    // rewritten only when a money word or sign was used (codes like "usd" already work as typed)
+    if (from && to && (named(left) || named(right) || (pound(left) && named(right)) || (pound(right) && named(left)))) return `${m[2]} ${from.toLowerCase()} in ${to.toLowerCase()}`
+  }
+  return s
 }
 
 const fmt = (n: number, c: Ctx, digits = 10) => n.toLocaleString(c.locale, { maximumFractionDigits: Math.abs(n) >= 1 ? Math.min(digits, 6) : digits })
@@ -45,7 +111,7 @@ function translate(s: string, c: Ctx): Answer | null {
   const lang = /^([a-z]{2})\s+(.+)$/is.exec(text)
   if (lang && LANGS.includes(lang[1]!.toLowerCase())) { to = lang[1]!.toLowerCase(); text = lang[2]!.trim() }
   // Arabic becomes English; anything else becomes the app's language, or Arabic when that is English already
-  to ||= ARABIC.test(text) ? 'en' : c.locale.startsWith('ar') ? 'ar' : /^[\x00-\x7F]*$/.test(text) ? 'ar' : 'en'
+  to ||= c.translateTo && c.translateTo !== 'auto' ? c.translateTo : ARABIC.test(text) ? 'en' : c.locale.startsWith('ar') ? 'ar' : /^[\x00-\x7F]*$/.test(text) ? 'ar' : 'en'
   return text ? { kind: 'translate', text, to } : null
 }
 
@@ -237,7 +303,7 @@ function tool(s: string, c: Ctx): Answer | null {
   const ask = /^(?:ask|اسأل)\s+(.+)$/is.exec(s)
   if (ask) return { kind: 'ai', how: 'ask', text: ask[1]!.trim() }
   const work = name === 'explain' || name === 'اشرح' ? 'explain' : ['summarize', 'summarise', 'summary', 'لخص', 'لخّص'].includes(name) ? 'summarize' : null
-  if (work) return c.clip ? { kind: 'ai', how: work, text: '' } : { kind: 'clip' }
+  if (work && c.copyToAi !== false) return c.clip ? { kind: 'ai', how: work, text: '' } : { kind: 'clip' }
   if (name === 'timer' || name === 'timers' || name === 'مؤقت') return { kind: 'timers' }
   const timer = /^(?:timer|مؤقت)\s+(\d+(?:\.\d+)?)\s*(s|sec|secs|seconds?|m|min|mins|minutes?|h|hr|hrs|hours?)?\b\s*(.*)$/i.exec(s)
   if (timer) {
@@ -246,7 +312,7 @@ function tool(s: string, c: Ctx): Answer | null {
     if (seconds >= 1 && seconds <= 7 * 86400) return { kind: 'timer', seconds, name: timer[3]!.trim().slice(0, 60) }
   }
   const run = TOOLS[name], hash = HASHES[name as keyof typeof HASHES]
-  if (!run && !hash) return null
+  if ((!run && !hash) || c.tools === false) return null
   if (!c.clip) return { kind: 'clip' }
   if (hash) return { kind: 'hash', algo: hash, text: c.clip }
   try { return { kind: 'tool', text: run!(c.clip), sub: `${name} · ${preview(c.clip)}` } }

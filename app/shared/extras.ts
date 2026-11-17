@@ -128,7 +128,6 @@ export type Action =
   | { do: 'quick.pick' }
   | { do: 'quick.copy'; text: string }
   | { do: 'quick.translate'; text: string; to: string }
-  | { do: 'quick.ask'; how: 'ask' | 'explain' | 'summarize'; text: string }
   | { do: 'timer.start'; seconds: number; name: string }
   | { do: 'timer.stop'; id: string }
   | { do: 'mixer.set'; name: string; volume?: number; muted?: boolean }
