@@ -116,6 +116,9 @@ test('plain words, in English and Arabic, become the same answers', () => {
   expect(answer('a 25 minute timer', c)).toEqual({ kind: 'timer', seconds: 1500, name: '' })
   expect(answer('remind me in 5 min to stretch', c)).toEqual({ kind: 'timer', seconds: 300, name: 'stretch' })
   expect(answer('مؤقت 10 دقائق', c)).toEqual({ kind: 'timer', seconds: 600, name: '' })
+  expect(answer('مؤقت 10 دقائق للشاي', c)).toEqual({ kind: 'timer', seconds: 600, name: 'الشاي' })
+  expect(answer('ذكرني بعد 5 دقائق عن الاجتماع', c)).toEqual({ kind: 'timer', seconds: 300, name: 'الاجتماع' })
+  expect(answer('مؤقت ساعة لعبة', c)).toEqual({ kind: 'timer', seconds: 3600, name: 'لعبة' }) // a name that starts with ل keeps it
   expect(answer('explain this', { ...c, clip: 'TypeError' })).toEqual({ kind: 'ai', how: 'explain', text: '' })
   expect(text('format the json', { ...c, clip: '{"a":1}' })).toBe('{\n  "a": 1\n}')
   // anything else is for Pip: no instant answer

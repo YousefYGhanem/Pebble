@@ -68,7 +68,7 @@ export function natural(input: string): string {
   if ((m = /^(?:set |start )?(?:a |an )?timer (?:for |of )?(\d+(?:\.\d+)?)\s*([a-z]+)?(?:\s+(?:for|called|named)\s+(.+))?$/i.exec(s))) return `timer ${m[1]}${m[2] ? m[2][0] : 'm'} ${m[3] ?? ''}`.trim()
   if ((m = /^(?:set |start )?(?:a |an )?(\d+(?:\.\d+)?)[ -]?(second|sec|minute|min|hour|hr)s? timer(?:\s+(?:for|called|named)\s+(.+))?$/i.exec(s))) return `timer ${m[1]}${m[2]![0]} ${m[3] ?? ''}`.trim()
   if ((m = /^remind me in (\d+(?:\.\d+)?)\s*([a-z]+)(?:\s+(?:to|about)\s+(.+))?$/i.exec(s))) return `timer ${m[1]}${m[2]![0]} ${m[3] ?? ''}`.trim()
-  if ((m = /^(?:مؤقت|ذكرني بعد)\s+(\d+(?:\.\d+)?)?\s*(\S+)(?:\s+(?:لـ|ل|عن)?\s*(.+))?$/.exec(s)) && ARABIC_UNITS[m[2]!]) return `timer ${m[1] ?? (/ين$/.test(m[2]!) ? '2' : '1')}${unitOf(m[2]!)} ${m[3] ?? ''}`.trim()
+  if ((m = /^(?:مؤقت|ذكرني بعد)\s+(\d+(?:\.\d+)?)?\s*(\S+)(?:\s+(?:لـ\s*|عن\s+)?(.+))?$/.exec(s)) && ARABIC_UNITS[m[2]!]) return `timer ${m[1] ?? (/ين$/.test(m[2]!) ? '2' : '1')}${unitOf(m[2]!)} ${(m[3] ?? '').replace(/^لل(?=\S)/, 'ال')}`.trim() // "للشاي" (for the tea): "الشاي"
   // the time somewhere: "what time is it in Tokyo"
   if ((m = /^what(?:'s| is)? the time in\s+(.+)$|^what time is it in\s+(.+)$/i.exec(s))) return `time in ${m[1] ?? m[2]}`
   // clipboard: "explain this", "summarize what I copied", "format the json"

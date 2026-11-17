@@ -14,3 +14,9 @@ test('the language a message is read in: its script, and for Latin letters its l
   expect(speechLanguage('The function `x` failed. سبب الخطأ هو أن المتغير غير معرّف في هذا السطر')).toBe('ar') // mostly Arabic
   expect(speechLanguage('12345')).toBe('en')
 })
+
+test("a voice's settings lose the two-letter phonemes the 2023 engine refuses (it never asks for them)", async () => {
+  const { forThisEngine } = await import('../app/main/voices')
+  const out = JSON.parse(forThisEngine(Buffer.from(JSON.stringify({ audio: { sample_rate: 22050 }, phoneme_id_map: { a: [14], 'aɪ': [161], 'ɪ': [74], ' ': [3] } }))).toString())
+  expect(out).toEqual({ audio: { sample_rate: 22050 }, phoneme_id_map: { a: [14], 'ɪ': [74], ' ': [3] } })
+})

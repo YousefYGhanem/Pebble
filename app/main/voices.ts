@@ -16,7 +16,16 @@ const PICK: Record<string, string> = {
   en: 'en_US-kristin-medium', ar: 'ar_JO-kareem-medium', fr: 'fr_FR-siwis-medium', es: 'es_ES-davefx-medium', de: 'de_DE-thorsten-medium',
   it: 'it_IT-paola-medium', pt: 'pt_BR-faber-medium', nl: 'nl_NL-mls-medium', ru: 'ru_RU-irina-medium', zh: 'zh_CN-huayan-medium'
 }
-type Catalog = Record<string, { language: { family: string }; quality: string; files: Record<string, { size_bytes: number; md5_digest: string }> }>
+/** A voice's settings for the 2023 engine: newer voices list a few two-letter phonemes ("aɪ") that it refuses to load;
+ *  it reads phonemes one letter at a time, so it never asks for those and they can go. */
+export function forThisEngine(json: Buffer): Buffer {
+  const config = JSON.parse(json.toString('utf8')) as { phoneme_id_map?: Record<string, number[]> }
+  if (!config.phoneme_id_map) return json
+  for (const key of Object.keys(config.phoneme_id_map)) if ([...key].length !== 1) delete config.phoneme_id_map[key]
+  return Buffer.from(JSON.stringify(config))
+}
+
+type Catalog =Record<string, { language: { family: string }; quality: string; files: Record<string, { size_bytes: number; md5_digest: string }> }>
 
 export class Voices {
   private catalog?: Catalog
@@ -88,7 +97,7 @@ export class Voices {
         const data = Buffer.from(await res.arrayBuffer())
         if (createHash('md5').update(data).digest('hex') !== meta.md5_digest) throw new Error(`${voice}: the download does not match`)
         const local = path.join(this.dir, path.basename(remote))
-        fs.writeFileSync(`${local}.part`, data)
+        fs.writeFileSync(`${local}.part`, remote.endsWith('.json') ? forThisEngine(data) : data)
         fs.renameSync(`${local}.part`, local)
       }
       log.info(`voice ${voice} ready`)
