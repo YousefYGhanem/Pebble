@@ -239,6 +239,19 @@ function updateVisibility() {
   const hide = inGame() && !shownAnyway && !peeking && !strip
   if (hide && island.isVisible()) island.hide()
   if (!hide && !island.isVisible()) island.showInactive()
+  // over a full-screen game or video: games set their own window always-on-top too, and Windows puts the one activated
+  // last in front. So the island goes back to the top of that group now, and every 2 s while it shows over the game.
+  const over = inGame() && !hide
+  if (over) raise()
+  if (over && !raising) raising = setInterval(raise, 2000)
+  if (!over && raising) { clearInterval(raising); raising = undefined }
+}
+let raising: NodeJS.Timeout | undefined
+function raise() {
+  if (!island || island.isDestroyed() || !island.isVisible()) return
+  island.setAlwaysOnTop(false)
+  island.setAlwaysOnTop(true, 'screen-saver') // back in at the top of the always-on-top windows
+  island.moveTop()
 }
 
 /** The island is on screen, neither tucked away nor hidden by game mode: what it shows needs no Windows notification. */
@@ -369,6 +382,7 @@ function applySettings() {
   bindShortcut('buddy', s.general.buddyShortcut, () => void buddy())
   bindShortcut('voice', s.general.voiceShortcut, () => showPage('chat', true))
   // the microphone for every app at once; the island shows a muted mic until it is back on
+  bindShortcut('strip', s.general.stripShortcut, () => store.update({ island: { gameStrip: !store.settings.island.gameStrip } })) // the game strip on or off
   bindShortcut('quick', s.general.quickShortcut, () => showPage('chat')) // Pip's page, ready to type
   bindShortcut('mic', s.general.micShortcut, () => { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)) })
   chatApps.apply()

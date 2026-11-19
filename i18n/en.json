@@ -739,5 +739,6 @@
   "m.voiceDownloading": "Getting a natural voice",
   "m.voiceDownloadingBody": "The first message in this language: its voice downloads once (about 60 MB), then reading starts.",
   "m.replyCopied": "Your reply is copied",
-  "m.replyCopiedBody": "In the Claude app, open {project}, press Ctrl+V and Enter: Claude then hears it from you."
+  "m.replyCopiedBody": "In the Claude app, open {project}, press Ctrl+V and Enter: Claude then hears it from you.",
+  "general.stripShortcut": "Game strip on or off (over full-screen games and videos)"
 }

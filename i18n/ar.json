@@ -739,5 +739,6 @@
   "m.voiceDownloading": "جارٍ جلب صوت طبيعي",
   "m.voiceDownloadingBody": "أول رسالة بهذه اللغة: يُنزَّل صوتها مرة واحدة (نحو 60 ميغابايت)، ثم تبدأ القراءة.",
   "m.replyCopied": "نُسخ ردّك",
-  "m.replyCopiedBody": "في تطبيق Claude افتح {project} واضغط Ctrl+V ثم Enter: فيسمعه Claude منك."
+  "m.replyCopiedBody": "في تطبيق Claude افتح {project} واضغط Ctrl+V ثم Enter: فيسمعه Claude منك.",
+  "general.stripShortcut": "شريط الألعاب تشغيل أو إيقاف (فوق الألعاب والفيديوهات بملء الشاشة)"
 }
