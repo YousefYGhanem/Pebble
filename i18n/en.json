@@ -737,5 +737,7 @@
   "chat.voiceNaturalHint": "Natural voices in 50+ languages that run on this PC (Piper). Each language downloads once, about 60 MB, the first time a message in it is read.",
   "chat.voiceWindowsHint": "The voices installed in Windows: nothing to download, but they sound robotic and cover few languages.",
   "m.voiceDownloading": "Getting a natural voice",
-  "m.voiceDownloadingBody": "The first message in this language: its voice downloads once (about 60 MB), then reading starts."
+  "m.voiceDownloadingBody": "The first message in this language: its voice downloads once (about 60 MB), then reading starts.",
+  "m.replyCopied": "Your reply is copied",
+  "m.replyCopiedBody": "In the Claude app, open {project}, press Ctrl+V and Enter: Claude then hears it from you."
 }

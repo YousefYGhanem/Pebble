@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { spawn } from 'node:child_process'
 import path from 'node:path'
-import { app, BrowserWindow, dialog, globalShortcut, ipcMain, nativeImage, nativeTheme, Notification, powerMonitor, safeStorage, screen, shell, utilityProcess } from 'electron'
+import { app, BrowserWindow, clipboard, dialog, globalShortcut, ipcMain, nativeImage, nativeTheme, Notification, powerMonitor, safeStorage, screen, shell, utilityProcess } from 'electron'
 import { CH, type Answer, type IslandState, type Usage } from '../shared/ipc'
 import { SCENES, type Scene } from '../shared/island'
 import { AGENT_NAMES, type Agent, type Session } from '../shared/state'
@@ -533,6 +533,16 @@ ipcMain.on(CH.reply, (e, id: unknown, text: unknown) => {
 async function reply(id: string, text: string) {
   const s = hub.sessions.get(id)
   const words = text.replace(/\s*\n\s*/g, ' ').trim() // one line: Enter sends it
+  // the Claude app: it does not show other programs which session is on screen (UI Automation sees almost nothing of
+  // it), so Pebble cannot make sure a reply lands in the right one. Your reply is copied and the app comes to the front:
+  // you paste it into that session and send it, as you. The Stop hook keeps waiting and lets go when you send it.
+  if (s?.agent === 'claude' && hub.waiting(id) && words && (!s.windowPid || /^claude$/i.test(s.windowProcess ?? ''))) {
+    clipboard.writeText(text.trim())
+    const app = native.available ? (await native.request<{ hwnd: number; pid: number; process: string }[]>('windows.list').catch(() => [])).find(w => /^claude$/i.test(w.process)) : undefined
+    if (app) native.request('window.focus', { hwnd: app.hwnd, pid: app.pid }).catch(() => {})
+    toast(tr('m.replyCopied'), tr('m.replyCopiedBody', { project: s.project }), undefined, undefined, { kind: 'asks' })
+    return
+  }
   if (s?.windowPid && hub.waiting(id) && words && native.available) {
     try {
       // in VS Code or Cursor, Pebble's extension first shows the exact terminal tab, so the typing lands there
