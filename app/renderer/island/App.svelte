@@ -54,7 +54,6 @@
   let content = $state<HTMLDivElement>()
   let selected = $state<string>() // the session shown on the Agents page
   let page = $state<Page>('home')
-  let lastPage: Page = 'home'
   const started = dayStart() // living skins: how long today has been
   let dropping = $state(false) // a file is being dragged over the island
   let album = $state<string | null>(null) // the album's colour, "r, g, b"
@@ -244,11 +243,13 @@
   // tucked away: every service rests (main), until the island comes back
   $effect(() => { const on = mode === 'tucked'; if (!scene) window.pebble.tucked(on) })
 
-  // opening the island: the Agents page when an agent has something to show, else the page you were on
+  // opening the island: the Agents page when an agent has something to show; the page of what the island's line shows
+  // (the song, the focus timer, a live activity); else Home. Shortcuts and links open their own page (onPage).
   $effect(() => {
     if (!open) return
     // decided once, when it opens (later session updates must not pull you away from the page you went to)
-    page = untrack(() => shown.some(x => x.ask || x.status === 'running' || (x.status === 'done' && !x.seenAt) || x.status === 'error')) ? 'agents' : untrack(() => lastPage)
+    page = untrack(() => shown.some(x => x.ask || x.status === 'running' || (x.status === 'done' && !x.seenAt) || x.status === 'error')) ? 'agents'
+      : untrack(() => ({ music: 'music', focus: 'focus', activity: 'widgets' } as Partial<Record<string, Page>>)[medium] ?? 'home')
   })
   let pageDir = $state(1)
   let pagePrev: Page = 'home'
@@ -256,13 +257,12 @@
     const i = PAGES.findIndex(p => p.id === page), j = PAGES.findIndex(p => p.id === pagePrev)
     pageDir = i >= j ? 1 : -1
     pagePrev = page
-    lastPage = page
   })
   const act = (a: Action) => { if (!scene) window.pebble.act(a) }
   window.pebble.onExpand(id => { tucked = false; open = true; if (id) { selected = id; queueMicrotask(() => (page = 'agents')) } })
   // a shortcut opened a page (voice: start listening in the chat's message box)
   let listen = $state(0)
-  window.pebble.onPage((p, l) => { tucked = false; open = true; lastPage = p as Page; queueMicrotask(() => (page = p as Page)); if (l) listen++ })
+  window.pebble.onPage((p, l) => { tucked = false; open = true; queueMicrotask(() => (page = p as Page)); if (l) listen++ })
   let voice: HTMLAudioElement | undefined
   window.pebble.onWorry(() => { worriedAt = Date.now(); kick(); say('question'); later(4100) })
   window.pebble.onPlay(url => { voice?.pause(); voice = url ? new Audio(url) : undefined; void voice?.play() })
@@ -314,7 +314,7 @@
     sceneWidgets = setup.widgets ?? null
     dropping = !!setup.dropping
     open = !!setup.open; tucked = !!setup.tucked; split = !!setup.split
-    if (setup.page) { const p = setup.page; lastPage = p; queueMicrotask(() => (page = p)) }
+    if (setup.page) { const p = setup.page; queueMicrotask(() => (page = p)) }
     lastStatus = {}
     if (phase === 'gone' && s !== 'bye') phase = 'normal' // another scene after the goodbye scene
     if (s === 'hello') startHello()
@@ -686,7 +686,7 @@
         <div class="line" style:height="{view.settings.island.height}px"><Icon name="files" size={14} /><span class="title">{t('i.island.dropHere')}</span></div>
       {:else if mode === 'medium' && medium === 'music' && extras?.media}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-        <div class="line music-line" style:height="{view.settings.island.height}px" onclick={e => { e.stopPropagation(); page = 'music'; lastPage = 'music'; open = true }}>
+        <div class="line music-line" style:height="{view.settings.island.height}px" onclick={e => { e.stopPropagation(); page = 'music'; open = true }}>
           {#if extras.art}<img class="mini-cover" src={extras.art} alt="" />{:else}<Icon name="music" size={14} />{/if}
           <span class="title lyric">
             {#key lyric || extras.media.title}
