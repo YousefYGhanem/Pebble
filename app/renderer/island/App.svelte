@@ -105,6 +105,9 @@
   const chipText = (c: string) => widgets.find(w => `widget:${w.plugin}/${w.id}` === c)?.text ?? ''
   const mode = $derived<Mode>(phase === 'normal' ? modeFor({ tucked, open, sessions: shown, extra: music || focusOn || dropping || !!activity || !!notice || !!reminder || !!extras?.strip || !!extras?.timers.length }) : 'resting')
   /** what the medium island shows: a drop > music > an agent > a connector's live activity > the focus timer */
+  // the game strip grows with what it shows (a reading this PC does not give is left out)
+  const stripCount = $derived(view && extras ? view.settings.strip.items.filter(i => i === 'cpuTemp' ? extras!.system.cpuTemp != null : i === 'gpu' ? extras!.system.gpu != null
+    : i === 'gpuTemp' ? extras!.system.gpuTemp != null : i === 'agent' ? !!top && top.status !== 'ready' : i === 'music' ? !!extras!.media?.playing : true).length + (view.settings.strip.items.some(i => i === 'agent' || i === 'music') ? 1.5 : 0) : 3)
   const medium = $derived<'strip' | 'drop' | 'reminder' | 'notice' | 'music' | 'agent' | 'activity' | 'focus' | 'timer'>(extras?.strip ? 'strip' : dropping ? 'drop' : reminder ? 'reminder' : notice ? 'notice' : extras?.timers.length && !busy ? 'timer' : music && !(busy && busy.status === 'error') ? 'music' : busy ? 'agent' : activity ? 'activity' : focusOn ? 'focus' : 'agent')
   const chips = $derived(view ? [view.settings.island.chips.left, view.settings.island.chips.right] : ['none', 'none'])
   const chipCount = $derived(chips.filter(c => c !== 'none').length)
@@ -115,7 +118,7 @@
     if (!view) return { w: 0, h: 0, r: 0 }
     const t0 = sizeFor(mode, view.settings.island, contentHeight)
     const t = mode === 'medium' && medium === 'notice' && notice ? { w: Math.max(t0.w, 340), h: Math.max(t0.h, 52), r: 26 }
-      : mode === 'medium' && medium === 'strip' ? { w: 230, h: 24, r: 12 }
+      : mode === 'medium' && medium === 'strip' ? { w: Math.min(640, 50 + 66 * stripCount), h: 24, r: 12 }
       : mode === 'medium' && view.settings.island.compact === 'minimal' ? { ...t0, w: Math.min(t0.w, 200) } : t0
     const room = chips.reduce((n, c) => n + (c === 'none' ? 0 : c.startsWith('widget:') ? 110 : 52), 0)
     return mode === 'resting' && room ? { ...t, w: t.w + room } : t // room for the chips left and right of Pip
@@ -654,8 +657,17 @@
       {:else if mode === 'medium' && medium === 'strip' && extras}
         <!-- in a full-screen game: the time and the PC's load, small, clicks go to the game -->
         <div class="strip" style:height="24px">
-          <span>{hhmm(now)}</span>
-          <span>{t('i.home.cpuChip')} {extras.system.cpu}%</span><span>{t('i.home.ramChip')} {extras.system.ram}%</span>
+          {#each view.settings.strip.items as item (item)}
+            {@const sys = extras.system}
+            {#if item === 'time'}<span>{hhmm(now)}</span>
+            {:else if item === 'cpu'}<span>{t('i.home.cpuChip')} {sys.cpu}%</span>
+            {:else if item === 'cpuTemp' && sys.cpuTemp != null}<span>{t('i.home.cpuChip')} {sys.cpuTemp}°</span>
+            {:else if item === 'ram'}<span>{t('i.home.ramChip')} {sys.ram}%</span>
+            {:else if item === 'gpu' && sys.gpu != null}<span>{t('i.strip.gpu')} {sys.gpu}%</span>
+            {:else if item === 'gpuTemp' && sys.gpuTemp != null}<span>{t('i.strip.gpu')} {sys.gpuTemp}°</span>
+            {:else if item === 'agent' && top && top.status !== 'ready'}<span class="agent"><StatusMark status={top.status} /> {top.project}</span>
+            {:else if item === 'music' && extras.media?.playing}<span class="music">♪ {extras.media.title}</span>{/if}
+          {/each}
         </div>
       {:else if mode === 'medium' && medium === 'reminder' && reminder}
         <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -782,7 +794,9 @@
   .content.minimal .line:not(.peek) .title, .content.minimal .line:not(.peek) .count { display: none; }
   .content.minimal .line:not(.peek) { gap: 12px; }
   .reminder button.small { padding: 3px 10px; font-size: 0.82em; flex: none; }
+  .strip .agent, .strip .music { display: inline-flex; align-items: center; gap: 5px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .strip { display: flex; align-items: center; justify-content: center; gap: 14px; font-size: 0.78em; font-variant-numeric: tabular-nums; color: var(--muted); padding-inline-end: 30px; }
+  .strip > span { white-space: nowrap; }
   .who { font-size: 0.78em; color: var(--muted); margin-bottom: 2px; }
   .who.tipline { color: var(--accent-text); }
   .tip { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--accent) 22%, transparent); font-size: 0.86em; }

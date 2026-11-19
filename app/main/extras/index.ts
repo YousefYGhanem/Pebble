@@ -252,7 +252,15 @@ export class Extras extends EventEmitter {
     this.cpuPrev = now
     const cpu = total ? Math.round((busy / total) * 100) : 0
     const ram = Math.round((1 - os.freemem() / os.totalmem()) * 100)
-    if (Math.abs(cpu - this.state.system.cpu) >= 5 || Math.abs(ram - this.state.system.ram) >= 1) { this.state.system = { cpu, ram }; this.changed() }
+    if (Math.abs(cpu - this.state.system.cpu) >= 5 || Math.abs(ram - this.state.system.ram) >= 1) { this.state.system = { ...this.state.system, cpu, ram }; this.changed() }
+    // over a game: the GPU and temperatures too, only for the items you show
+    const items = this.settings().strip.items
+    if (this.state.strip && this.native.available && items.some(i => i === 'gpu' || i === 'gpuTemp' || i === 'cpuTemp')) {
+      this.native.request<{ gpu: number | null; gpuTemp: number | null; cpuTemp: number | null }>('sensors.read').then(r => {
+        const s = this.state.system
+        if (r.gpu !== s.gpu || r.gpuTemp !== s.gpuTemp || r.cpuTemp !== s.cpuTemp) { this.state.system = { ...s, ...r }; this.changed() }
+      }).catch(() => {})
+    }
   }
 
   private async readRadios() {

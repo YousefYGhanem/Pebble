@@ -4,7 +4,7 @@
   import { applyTheme } from '../theme'
   import { LANGUAGES, setLanguage, t, tOr } from '../i18n.svelte'
   import { accelerator, inAppNotes, THEME_COLORS, type SettingsAction, type SettingsView } from '../../shared/settings-ui'
-  import { CHIPS, DEFAULTS, PRAYER_METHODS } from '../../shared/settings'
+  import { CHIPS, DEFAULTS, PRAYER_METHODS, STRIP_ITEMS } from '../../shared/settings'
   import { WORDS } from '../../shared/i18n'
   import { SCENES, type Scene } from '../../shared/island'
   import { OUTFITS, PIP_LOOKS, pipColors, type PipLookId } from '../../shared/pip'
@@ -62,7 +62,7 @@
     paint(o)
     return { update: paint }
   }
-  const TABS = ['general', 'island', 'look', 'pip', 'agents', 'chat', 'extras', 'day', 'connectors', 'advanced', 'whatsnew'] as const
+  const TABS = ['general', 'island', 'look', 'pip', 'agents', 'chat', 'extras', 'day', 'strip', 'connectors', 'advanced', 'whatsnew'] as const
   type Tab = (typeof TABS)[number]
 
   // ---------- search (about 70 settings in 9 tabs: people search before they guess a tab) ----------
@@ -72,7 +72,7 @@
   const HOME: Record<string, Tab> = {
     general: 'general', update: 'general', notify: 'general', rest: 'general', island: 'island', size: 'island', chip: 'island',
     look: 'look', colors: 'look', motion: 'look', icon: 'look', pipLook: 'pip', pip: 'pip', agents: 'agents', terminals: 'agents',
-    chat: 'chat', apps: 'chat', quick: 'chat', extras: 'extras', guard: 'extras', well: 'day', prayer: 'day', connectors: 'connectors', advanced: 'advanced', diag: 'advanced'
+    chat: 'chat', apps: 'chat', quick: 'chat', strip: 'strip', extras: 'extras', guard: 'extras', well: 'day', prayer: 'day', connectors: 'connectors', advanced: 'advanced', diag: 'advanced'
   }
   /** words that are states, not settings (shown only sometimes: nothing to go to) */
   const NOT_FOUND = new Set(['colors.custom', 'colors.revert', 'connectors.on', 'connectors.off', 'connectors.attention', 'connectors.starting', 'general.taken', 'general.reset', 'size.reset', 'advanced.restartNow', 'advanced.historyCleared'])
@@ -246,8 +246,6 @@
           {/if}
           <label class="row"><span>{t('island.gameMode')}</span>
             <input type="checkbox" class="switch" checked={s.island.gameMode} onchange={() => set('island.gameMode', !s.island.gameMode)} /></label>
-          <label class="row"><span>{t('island.gameStrip')}<small>{t('island.gameStripHint')}</small></span>
-            <input type="checkbox" class="switch" checked={s.island.gameStrip} disabled={!s.island.gameMode} onchange={() => set('island.gameStrip', !s.island.gameStrip)} /></label>
           <label class="row"><span>{t('island.seeThrough')}<small>{s.island.seeThrough}%</small></span>
             <input type="range" min="0" max="60" value={s.island.seeThrough} onchange={e => set('island.seeThrough', num(e))} /></label>
           <div class="row"><span>{t('island.compact')}<small>{t('island.compactHint')}</small></span>
@@ -479,6 +477,28 @@
           <label class="row"><span>{t('guard.snooze')}<small>{t('unit.minutes')}</small></span>
             <input type="number" min="1" max="120" value={s.focusGuard.snoozeMinutes} onchange={e => set('focusGuard.snoozeMinutes', num(e))} /></label>
         </section>
+      {:else if tab === 'strip'}
+        <h1>{t('tab.strip')}</h1>
+        <p class="muted">{t('strip.hint')}</p>
+        <section>
+          <label class="row"><span>{t('island.gameStrip')}<small>{s.island.gameMode ? t('strip.shortcut', { keys: s.general.stripShortcut.replace('Control', 'Ctrl') }) : t('strip.needsGameMode')}</small></span>
+            <input type="checkbox" class="switch" checked={s.island.gameStrip} disabled={!s.island.gameMode} onchange={() => set('island.gameStrip', !s.island.gameStrip)} /></label>
+        </section>
+        <h2>{t('strip.items')} <span class="muted">· {t('strip.itemsHint')}</span></h2>
+        <section>
+          {#each [...s.strip.items, ...STRIP_ITEMS.filter(i => !s.strip.items.includes(i))] as item, i (item)}
+            {@const on = s.strip.items.includes(item)}
+            <div class="row"><span>{t(`strip.item.${item}`)}{#if item === 'cpuTemp' || item === 'gpuTemp'}<small>{t(`strip.item.${item}Hint`)}</small>{/if}</span>
+              <span class="inline">
+                {#if on}
+                  <button class="ghost" disabled={i === 0} aria-label={t('strip.up', { item: t(`strip.item.${item}`) })} onclick={() => { const l = [...s.strip.items]; [l[i - 1], l[i]] = [l[i]!, l[i - 1]!]; set('strip.items', l) }}>↑</button>
+                  <button class="ghost" disabled={i === s.strip.items.length - 1} aria-label={t('strip.down', { item: t(`strip.item.${item}`) })} onclick={() => { const l = [...s.strip.items]; [l[i], l[i + 1]] = [l[i + 1]!, l[i]!]; set('strip.items', l) }}>↓</button>
+                {/if}
+                <input type="checkbox" class="switch" checked={on} aria-label={t(`strip.item.${item}`)} onchange={() => set('strip.items', on ? s.strip.items.filter(x => x !== item) : [...s.strip.items, item])} />
+              </span></div>
+          {/each}
+        </section>
+        <p class="muted small">{t('strip.fps')}</p>
       {:else if tab === 'day'}
         <h2>{t('well.title', { pip })} <span class="muted">· {t('well.hint')}</span></h2>
         <section>

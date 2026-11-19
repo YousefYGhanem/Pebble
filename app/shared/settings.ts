@@ -5,6 +5,9 @@ import { PIP_LOOKS } from './pip'
 // Everything the user can change. settings.json in userData holds only what differs from DEFAULTS;
 // it is merged over DEFAULTS and then checked against this schema.
 /** how prayer times are worked out (adhan's calculation methods) */
+/** what the game strip can show: CPU temperature only on PCs that report it (most do not) */
+export const STRIP_ITEMS = ['time', 'cpu', 'cpuTemp', 'ram', 'gpu', 'gpuTemp', 'agent', 'music'] as const
+
 export const PRAYER_METHODS = ['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey'] as const
 
 export const CHIPS = ['none', 'time', 'battery', 'cpu', 'ram', 'prayer'] as const
@@ -154,6 +157,8 @@ export const settingsSchema = z.object({
     rest: z.object({ away: z.boolean(), games: z.boolean(), battery: z.boolean() }),
     doneSeconds: z.number().min(1).max(600)
   }),
+  /** the game strip's items, in the order shown (the strip itself: island.gameStrip) */
+  strip: z.object({ items: z.array(z.enum(STRIP_ITEMS)).max(STRIP_ITEMS.length) }),
   /** Pip's page: its instant answers (translations go into translateTo, 'auto': Arabic and English into each other;
    *  tools: the clipboard tools; copyToAi: explain and summarize, which send what you copied to the chat's provider) */
   quick: z.object({ translateTo: z.string().max(5), tools: z.boolean(), copyToAi: z.boolean() }),
@@ -189,6 +194,7 @@ export const DEFAULTS: Settings = {
   },
   terminals: { minSeconds: 10 },
   features: { sound: true, toasts: true, peeks: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
+  strip: { items: ['time', 'cpu', 'gpu', 'gpuTemp', 'ram'] },
   quick: { translateTo: 'auto', tools: true, copyToAi: true },
   chat: { provider: 'free', model: '', readAloud: false, voice: 'natural' },
   chatApps: { desktop: [] },

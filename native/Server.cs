@@ -79,6 +79,7 @@ static class Server
         "power.set" => Win32.SetPowerMode(Str(a, "mode")),
         "mic.mute" => Audio.MicSetMute(a["on"]?.GetValue<bool>() ?? !(Audio.MicMuted() ?? false)),
         "radios.get" => await Radios.Get(),
+        "sensors.read" => Sensors.Read(),
         "radios.set" => await Radios.Set(Str(a, "kind"), a["on"]?.GetValue<bool>() ?? false),
         "speech.voices" => Speech.Voices(),
         "speech.say" => await Say(a),

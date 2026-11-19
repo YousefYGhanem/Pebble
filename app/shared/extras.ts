@@ -97,7 +97,7 @@ export interface ExtrasState {
   /** the default microphone is muted (null: there is none) */
   mic: boolean | null
   /** 0–100 */
-  system: { cpu: number; ram: number }
+  system: { cpu: number; ram: number; gpu?: number | null; gpuTemp?: number | null; cpuTemp?: number | null }
   radios: { wifi?: boolean; bluetooth?: boolean } | null
   drop: Drop | null
   /** the speakers' volume (0–100), as Windows has it: the Music page's slider follows it */
