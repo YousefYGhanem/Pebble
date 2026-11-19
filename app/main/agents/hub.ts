@@ -154,14 +154,18 @@ export class Hub extends EventEmitter {
     if (this.sessions.delete(id)) this.emit('change')
   }
 
-  /** Wakes a stopped agent with your text (through its waiting Stop hook), or sends it in a chat app. */
-  reply(id: string, text: string): boolean {
+  /** A stopped agent waits for your reply (its Stop hook is still open). */
+  waiting(id: string) { return this.waits.has(id) }
+
+  /** Wakes a stopped agent with your text (through its waiting Stop hook), or sends it in a chat app. typed: main
+   *  already typed it into the agent's terminal, so the hook lets go with nothing (the agent hears it once, as you). */
+  reply(id: string, text: string, typed = false): boolean {
     const chat = this.chatReplies.get(id)
     if (chat && text.trim()) { chat(text.trim()); this.patch(id, { prompt: text.trim(), detail: 'Sent: ' + text.trim().slice(0, 130) }); return true } // running once the app streams
     const res = this.waits.get(id)
     if (!res || !text.trim()) return false
     this.waits.delete(id)
-    res.writeHead(200, JSON_TYPE).end(JSON.stringify({ reply: text.trim() }))
+    res.writeHead(200, JSON_TYPE).end(JSON.stringify({ reply: typed ? '' : text.trim() }))
     const s = this.sessions.get(id)
     this.patch(id, { replyable: false, status: 'running', prompt: text.trim(), detail: text.trim().slice(0, 140), startedAt: Date.now(), steps: [], files: [], diff: undefined, message: undefined, seenAt: undefined })
     if (s) log.info(`reply sent to ${s.project}`)

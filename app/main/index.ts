@@ -525,8 +525,26 @@ ipcMain.on(CH.answer, (e, id: unknown, a: unknown) => {
   if (fromIsland(e) && typeof id === 'string' && validAnswer(a) && !hub.answer(id, a)) log.info('that question was already answered elsewhere')
 })
 ipcMain.on(CH.reply, (e, id: unknown, text: unknown) => {
-  if (fromIsland(e) && typeof id === 'string' && typeof text === 'string') hub.reply(id, text.slice(0, 20000))
+  if (fromIsland(e) && typeof id === 'string' && typeof text === 'string') void reply(id, text.slice(0, 20000))
 })
+/** Your reply from the island. Typed into the agent's own terminal when Pebble knows it, so the agent gets it as your
+ *  message: a reply that arrives through its Stop hook, Claude Code marks as hook output, and Claude rightly does not
+ *  take instructions from that. With no terminal (the Claude app), or if typing fails, the hook carries it as before. */
+async function reply(id: string, text: string) {
+  const s = hub.sessions.get(id)
+  const words = text.replace(/\s*\n\s*/g, ' ').trim() // one line: Enter sends it
+  if (s?.windowPid && hub.waiting(id) && words && native.available) {
+    try {
+      // in VS Code or Cursor, Pebble's extension first shows the exact terminal tab, so the typing lands there
+      const scheme = editorScheme(s.windowProcess)
+      if (scheme && s.pidChain?.length && editorExtension(scheme)) { await shell.openExternal(`${scheme}://pebble.pebble/focus?pids=${s.pidChain.join(',')}`); await new Promise(r => setTimeout(r, 600)) }
+      await native.request('window.type', { pid: s.windowPid, hwnd: s.windowHandle ?? 0, text: words })
+      hub.reply(id, words, true)
+      return
+    } catch (err) { log.warn('reply by typing:', (err as Error).message) }
+  }
+  hub.reply(id, text)
+}
 ipcMain.on(CH.jump, (e, id: unknown) => {
   if (!fromIsland(e) || typeof id !== 'string') return
   const s = hub.sessions.get(id)

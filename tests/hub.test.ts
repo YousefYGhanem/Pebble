@@ -89,6 +89,18 @@ test('reply: the Stop hook waits; your text wakes it; typing in the terminal end
   expect(h.sessions.get('r')?.replyable).toBe(false)
 })
 
+test('reply typed into the terminal by Pebble: the Stop hook lets go with nothing, so Claude hears it once, as you', async () => {
+  const h = await start()
+  await post('/hook', { session_id: 'y', hook_event_name: 'Stop', last_assistant_message: 'Shall I start?' })
+  const wait = fetch(url('/wait?session=y'), { headers: { 'X-Pebble-Token': TOKEN } })
+  await new Promise(res => setTimeout(res, 50))
+  expect(h.waiting('y')).toBe(true)
+  expect(h.reply('y', 'yes, start it', true)).toBe(true)
+  expect(await (await wait).json()).toEqual({ reply: '' })
+  expect(h.sessions.get('y')).toMatchObject({ status: 'running', prompt: 'yes, start it' })
+  expect(h.waiting('y')).toBe(false)
+})
+
 test('status line: usage for the ring, model and context per session, and the line to print', async () => {
   const h = await start()
   await post('/hook', { session_id: 'u', hook_event_name: 'UserPromptSubmit', prompt: 'x' })

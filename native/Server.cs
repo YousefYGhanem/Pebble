@@ -63,6 +63,7 @@ static class Server
         "window.foreground" => Windows.Foreground(owner),
         "window.fromPoint" => Windows.FromPoint(Int(a, "x"), Int(a, "y"), owner),
         "window.focus" => Windows.Focus((nint)Long(a, "hwnd"), (uint)Long(a, "pid")),
+        "window.type" => TypeInto((nint)Long(a, "hwnd"), (uint)Long(a, "pid"), Str(a, "text")),
         "window.ofProcess" => OfProcess((uint)Long(a, "pid")),
         "window.minimize" => Windows.Minimize((nint)Long(a, "hwnd")),
         "windows.list" => Windows.List(),
@@ -97,6 +98,18 @@ static class Server
         foreach (var a in Windows.Ancestors(pid)) chain.Add((JsonNode)JsonValue.Create(a));
         return new JsonObject { ["pid"] = p, ["hwnd"] = (long)h, ["process"] = p == 0 ? "" : Windows.NameOf(p), ["chain"] = chain };
     }
+    /// <summary>Brings an agent's terminal to the front and types your reply there, then Enter: the agent gets it as you
+    /// typing (a reply through its hook it may rightly treat as not yours). Nothing is typed unless that program is in front.</summary>
+    static bool TypeInto(nint hwnd, uint pid, string text)
+    {
+        Windows.Focus(hwnd, pid);
+        Thread.Sleep(150);
+        if (Win32.Pid(Win32.GetForegroundWindow()) != pid) throw new InvalidOperationException("the terminal is not in front: nothing typed");
+        Input.Type(text);
+        Input.Key(Input.VK_RETURN);
+        return true;
+    }
+
     static string CaptureTo(JsonObject a) { var f = Str(a, "file"); Capture.Region(Int(a, "x"), Int(a, "y"), Int(a, "w"), Int(a, "h"), f); return f; }
     /// <summary>A window as a PNG (what is on screen there: the window must be visible).</summary>
     static JsonObject CaptureWindow(nint hwnd, string file)
