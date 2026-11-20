@@ -313,8 +313,8 @@ async function buddy() {
 }
 
 /** Reads text aloud with Windows' voices (the island plays it). */
-// natural voices (Piper, offline): the engine ships in resources/piper; a build from source has it in build/piper
-const voices = new Voices(path.join(userData, 'voices'), app.isPackaged ? path.join(process.resourcesPath, 'piper') : path.join(app.getAppPath(), 'build', 'piper'))
+// natural voices (Piper, offline): an optional download, started by choosing "Natural" in Settings → Pip's chat
+const voices = new Voices(path.join(userData, 'voices'), () => settingsWin.push())
 async function say(text: string) {
   const file = path.join(chat.folder, 'say.wav')
   const plain = text.replace(/```[\s\S]*?```/g, ' (code) ').replace(/[`*_#>|]/g, '').slice(0, 5000)
@@ -441,6 +441,7 @@ const updater = new Updater(() => store.settings.general.updates)
 const settingsWin = new SettingsWindow({
   view: () => ({
     shortcutsTaken: [...takenShortcuts],
+    voiceEngine: { state: voices.state, error: voices.failed || undefined },
     version: app.getVersion(),
     settings: store.settings,
     theme: store.theme,
@@ -942,7 +943,10 @@ app.whenReady().then(async () => {
     updateVisibility()
     applyRest()
   })
-  store.on('change', () => { applySettings(); refreshTray(); schedulePrayer(); applyScreen(); push() })
+  store.on('change', () => {
+    applySettings(); refreshTray(); schedulePrayer(); applyScreen(); push()
+    if (store.settings.chat.voice === 'natural' && (voices.state === 'missing' || voices.state === 'failed')) void voices.install() // you chose them: they download
+  })
   updater.on('change', (s: { state: string; version?: string }) => {
     refreshTray()
     if (s.state === 'ready') toast(tr('m.updateReady', { version: s.version ?? '' }), tr('m.updateReadyBody'))

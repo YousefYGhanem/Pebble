@@ -19,6 +19,8 @@
   let recording = $state<(typeof SHORTCUTS)[number] | null>(null)
 
   let tabAsked = 0
+  /** the natural voices' engine (an optional download) */
+  const engine = $derived(v?.voiceEngine?.state ?? 'missing')
   window.settingsApi.onView(next => {
     if (next.openTab && next.openTab.n !== tabAsked) { tabAsked = next.openTab.n; tab = next.openTab.tab }
     v = next; applyTheme(next.theme); setLanguage(next.settings.general.language) })
@@ -401,7 +403,8 @@
             </select></label>
           <label class="row"><span>{t('chat.readAloud')}<small>{t('chat.readAloudHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.chat.readAloud} onchange={() => set('chat.readAloud', !s.chat.readAloud)} /></label>
-          <div class="row"><span>{t('chat.voice')}<small>{t(s.chat.voice === 'natural' ? 'chat.voiceNaturalHint' : 'chat.voiceWindowsHint')}</small></span>
+          <div class="row"><span>{t('chat.voice')}<small>{s.chat.voice !== 'natural' ? t('chat.voiceWindowsHint') : engine === 'downloading' ? t('chat.voiceDownloading') : engine === 'failed' ? t('chat.voiceFailed', { error: v.voiceEngine?.error ?? '' }) : t('chat.voiceNaturalHint')}</small>
+            {#if s.chat.voice === 'natural' && engine === 'failed'}<button class="link" onclick={() => set('chat.voice', 'natural')}>{t('chat.voiceRetry')}</button>{/if}</span>
             <div class="seg">
               {#each ['natural', 'windows'] as const as v}
                 <button class:on={s.chat.voice === v} aria-pressed={s.chat.voice === v} onclick={() => set('chat.voice', v)}>{t(`chat.voice.${v}`)}</button>

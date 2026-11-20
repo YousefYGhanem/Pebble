@@ -2,7 +2,6 @@
 // where `npm run dev` and the CLI use it. Needs the .NET 10 SDK and Visual Studio's "Desktop development with C++" (the
 // linker). The AOT build finds the linker through vswhere.exe, which Visual Studio does not put on PATH.
 import { spawnSync } from 'node:child_process'
-import './fetch-piper.mjs' // the speech engine goes with the app too
 import fs from 'node:fs'
 import path from 'node:path'
 

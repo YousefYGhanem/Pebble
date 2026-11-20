@@ -16,7 +16,6 @@ if (fs.existsSync(exe)) {
   }
 }
 if (!fs.existsSync('native/publish/pebble-native.exe')) sh('npm run build:native')
-sh('node scripts/fetch-piper.mjs')
 sh('npx electron-vite build')
 sh('npx electron-builder --win --dir --publish never')
 spawn(exe, [], { detached: true, stdio: 'ignore' }).unref()

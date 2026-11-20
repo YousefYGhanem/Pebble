@@ -735,7 +735,7 @@
   "chat.voice.natural": "طبيعي",
   "chat.voice.windows": "Windows",
   "chat.voiceNaturalHint": "أصوات طبيعية بأكثر من 50 لغة تعمل على هذا الجهاز (Piper). تُنزَّل كل لغة مرة واحدة، نحو 60 ميغابايت، أول مرة تُقرأ فيها رسالة بها.",
-  "chat.voiceWindowsHint": "الأصوات المثبّتة في Windows: لا تنزيل، لكنها آلية الوقع وتغطي لغات قليلة.",
+  "chat.voiceWindowsHint": "أصوات Windows: لا تنزيل، لكنها آلية الوقع وتغطي لغات قليلة. الأصوات الطبيعية تنزيل اختياري.",
   "m.voiceDownloading": "جارٍ جلب صوت طبيعي",
   "m.voiceDownloadingBody": "أول رسالة بهذه اللغة: يُنزَّل صوتها مرة واحدة (نحو 60 ميغابايت)، ثم تبدأ القراءة.",
   "m.replyCopied": "نُسخ ردّك",
@@ -760,5 +760,8 @@
   "strip.item.agent": "وكلاؤك (يعمل، انتهى، يحتاجك)",
   "strip.item.music": "الأغنية الحالية",
   "strip.fps": "عدد الإطارات في الثانية يحتاج تتبعًا في Windows لا يُسمح به إلا للمسؤولين، لذا لا يعرضه Pebble.",
-  "i.strip.gpu": "GPU"
+  "i.strip.gpu": "GPU",
+  "chat.voiceDownloading": "جارٍ تنزيل محرك الأصوات الطبيعية (22 ميغابايت، مرة واحدة)… وحتى ذلك، تقرأ أصوات Windows.",
+  "chat.voiceFailed": "لم ينجح التنزيل: {error}. تقرأ أصوات Windows في هذه الأثناء.",
+  "chat.voiceRetry": "أعد المحاولة"
 }

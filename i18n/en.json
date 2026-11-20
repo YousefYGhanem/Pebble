@@ -735,7 +735,7 @@
   "chat.voice.natural": "Natural",
   "chat.voice.windows": "Windows",
   "chat.voiceNaturalHint": "Natural voices in 50+ languages that run on this PC (Piper). Each language downloads once, about 60 MB, the first time a message in it is read.",
-  "chat.voiceWindowsHint": "The voices installed in Windows: nothing to download, but they sound robotic and cover few languages.",
+  "chat.voiceWindowsHint": "Windows' own voices: nothing to download, but they sound robotic and cover few languages. Natural voices are an optional download.",
   "m.voiceDownloading": "Getting a natural voice",
   "m.voiceDownloadingBody": "The first message in this language: its voice downloads once (about 60 MB), then reading starts.",
   "m.replyCopied": "Your reply is copied",
@@ -760,5 +760,8 @@
   "strip.item.agent": "Your agents (working, done, needs you)",
   "strip.item.music": "The song playing",
   "strip.fps": "Frames per second need Windows tracing that only administrators may use, so Pebble does not show them.",
-  "i.strip.gpu": "GPU"
+  "i.strip.gpu": "GPU",
+  "chat.voiceDownloading": "Downloading the natural voices engine (22 MB, once)… Until then, Windows voices read.",
+  "chat.voiceFailed": "The download did not work: {error}. Windows voices read meanwhile.",
+  "chat.voiceRetry": "Try again"
 }

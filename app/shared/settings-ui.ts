@@ -16,6 +16,8 @@ export interface ConnectorView {
 }
 
 export interface SettingsView {
+  /** the natural voices' engine (an optional download): missing, downloading, ready or failed */
+  voiceEngine?: { state: 'missing' | 'downloading' | 'ready' | 'failed'; error?: string }
   /** the shortcut settings another app holds ('toggleShortcut', …) */
   shortcutsTaken?: string[]
   /** main asks for a tab (the island's "Fix in Settings") */

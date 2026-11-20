@@ -196,7 +196,7 @@ export const DEFAULTS: Settings = {
   features: { sound: true, toasts: true, peeks: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
   strip: { items: ['time', 'cpu', 'gpu', 'gpuTemp', 'ram'] },
   quick: { translateTo: 'auto', tools: true, copyToAi: true },
-  chat: { provider: 'free', model: '', readAloud: false, voice: 'natural' },
+  chat: { provider: 'free', model: '', readAloud: false, voice: 'windows' },
   chatApps: { desktop: [] },
   server: { port: 47901 }
 }

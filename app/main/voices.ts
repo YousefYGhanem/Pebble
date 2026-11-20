@@ -6,11 +6,15 @@ import { logger } from './log'
 
 const log = logger('voices')
 
-// Natural voices for reading Pip's messages aloud: Piper (offline neural speech, MIT), one voice per language,
-// downloaded the first time a message in that language is read (about 60 MB each) and kept in userData/voices.
-// Nothing is sent anywhere to speak: the voice runs on this PC.
+// Natural voices for reading Pip's messages aloud: Piper (offline neural speech, MIT), an optional download. Choosing
+// "Natural" in Settings fetches the engine once (its last Windows build, checked against this SHA-256); each language's
+// voice comes the first time a message in it is read (about 60 MB). All of it lives in userData/voices; nothing is
+// sent anywhere to speak: the voice runs on this PC.
 
 const HUB = 'https://huggingface.co/rhasspy/piper-voices/resolve/main/'
+const ENGINE_URL = 'https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip'
+const ENGINE_SHA256 = 'f3c58906402b24f3a96d92145f58acba6d86c9b5db896d207f78dc80811efcea'
+export type EngineState = 'missing' | 'downloading' | 'ready' | 'failed'
 /** The voice for a language where there is a choice: clear licences first (public domain, CC0, CC BY). */
 const PICK: Record<string, string> = {
   en: 'en_US-kristin-medium', ar: 'ar_JO-kareem-medium', fr: 'fr_FR-siwis-medium', es: 'es_ES-davefx-medium', de: 'de_DE-thorsten-medium',
@@ -31,10 +35,45 @@ export class Voices {
   private catalog?: Catalog
   private getting = new Map<string, Promise<string>>()
 
-  constructor(private dir: string, private engine: string) {}
+  private engine: string
+  private installing?: Promise<void>
+  failed = ''
 
-  /** The engine is there (it ships with Pebble; a build from source gets it with npm run app). */
+  constructor(private dir: string, private onChange: () => void = () => {}) { this.engine = path.join(dir, 'piper') }
+
+  /** The engine is downloaded. */
   get available() { return fs.existsSync(path.join(this.engine, 'piper.exe')) }
+
+  get state(): EngineState { return this.available ? 'ready' : this.installing ? 'downloading' : this.failed ? 'failed' : 'missing' }
+
+  /** Downloads the engine once (about 22 MB, 38 MB unpacked), checked, into userData/voices/piper. */
+  install(): Promise<void> {
+    if (this.available) return Promise.resolve()
+    this.installing ??= (async () => {
+      this.failed = ''
+      this.onChange()
+      const res = await fetch(ENGINE_URL, { signal: AbortSignal.timeout(10 * 60_000) })
+      if (!res.ok) throw new Error(`the download failed (${res.status})`)
+      const zip = Buffer.from(await res.arrayBuffer())
+      if (createHash('sha256').update(zip).digest('hex') !== ENGINE_SHA256) throw new Error('the download does not match')
+      fs.mkdirSync(this.dir, { recursive: true })
+      const file = path.join(this.dir, 'piper.zip'), out = path.join(this.dir, 'piper-unzip')
+      fs.writeFileSync(file, zip)
+      fs.rmSync(out, { recursive: true, force: true })
+      const q = (s: string) => `'${s.replace(/'/g, "''")}'`
+      await new Promise<void>((resolve, reject) => {
+        const p = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Expand-Archive -LiteralPath ${q(file)} -DestinationPath ${q(out)} -Force`], { windowsHide: true })
+        p.on('error', reject)
+        p.on('close', code => (code === 0 ? resolve() : reject(new Error('could not unpack it'))))
+      })
+      fs.rmSync(this.engine, { recursive: true, force: true })
+      fs.renameSync(path.join(out, 'piper'), this.engine) // the zip holds one folder, piper/
+      fs.rmSync(out, { recursive: true, force: true })
+      fs.rmSync(file, { force: true })
+      log.info('natural voices engine ready')
+    })().catch(err => { this.failed = (err as Error).message; log.warn('voices engine:', this.failed) }).finally(() => { this.installing = undefined; this.onChange() })
+    return this.installing
+  }
 
   /** That language's voice is already on this PC. */
   has(lang: string) { const v = this.pickSync(lang); return !!v && fs.existsSync(path.join(this.dir, `${v}.onnx`)) }

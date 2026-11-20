@@ -1,6 +1,8 @@
 # The Windows installer (npm run dist → dist/). Per-user, no admin rights. Updates come from GitHub Releases.
 appId: dev.pebble.app
 productName: Pebble
+# Chromium's own words (its menus, errors) only in Pebble's languages: the other 50 cost about 45 MB
+electronLanguages: [en-US, ar]
 copyright: Copyright © 2026 Yousef Ghanem
 directories:
   output: dist
@@ -16,9 +18,6 @@ extraResources:
     to: native/pebble.cmd
   - from: plugins
     to: plugins
-  # Piper, the offline speech engine (MIT): scripts/fetch-piper.mjs puts it in build/piper
-  - from: build/piper
-    to: piper
   - from: extensions/chat
     to: extensions/chat
   # the icons you can choose in Settings (tray and windows)

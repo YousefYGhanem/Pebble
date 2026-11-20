@@ -5,7 +5,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 // One entry per window: add a preload + html pair here when a new window arrives (settings, buddy, …).
 export default defineConfig({
   main: {
-    build: { rollupOptions: { input: { index: resolve(__dirname, 'app/main/index.ts'), 'connector-runner': resolve(__dirname, 'app/main/connectors/runner.ts') } } }
+    // the libraries are bundled (only the code Pebble uses goes into the app, not their whole node_modules folders)
+    build: { externalizeDeps: false, rollupOptions: { input: { index: resolve(__dirname, 'app/main/index.ts'), 'connector-runner': resolve(__dirname, 'app/main/connectors/runner.ts') } } }
   },
   preload: {
     build: { rollupOptions: { input: { island: resolve(__dirname, 'app/preload/island.ts'), guard: resolve(__dirname, 'app/preload/guard.ts'), settings: resolve(__dirname, 'app/preload/settings.ts') } } }

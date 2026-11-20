@@ -26,27 +26,25 @@
     "site:build": "vite build --config site/vite.config.ts"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/node": "^24.19.2",
     "@types/qrcode": "^1.5.6",
+    "adhan": "^4.4.6",
     "electron": "^45.2.1",
     "electron-builder": "^26.18.0",
+    "electron-updater": "^6.8.11",
     "electron-vite": "^6.0.0",
+    "qrcode": "^1.5.4",
     "svelte": "^5.57.3",
     "svelte-check": "^4.7.8",
     "typescript": "^6.0.3",
     "vite": "^8.3.5",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "zod": "^4.6.7"
   },
   "allowScripts": {
     "electron@45.2.1": true
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^1.4.0",
-    "adhan": "^4.4.6",
-    "electron-updater": "^6.8.11",
-    "qrcode": "^1.5.4",
-    "zod": "^4.6.7"
   },
   "author": {
     "name": "Yousef Ghanem"
