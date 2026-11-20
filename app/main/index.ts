@@ -319,6 +319,8 @@ async function say(text: string) {
   const play = () => send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`)
   try {
     // a natural voice of the message's own language; the first time for a language it downloads (about 60 MB)
+    // chosen before the engine became a download (0.5.0 shipped it): it downloads now, Windows reads meanwhile
+    if (store.settings.chat.voice === 'natural' && voices.state === 'missing') void voices.install()
     if (store.settings.chat.voice === 'natural' && voices.available) {
       if (!voices.has(language)) toast(tr('m.voiceDownloading'), tr('m.voiceDownloadingBody'), undefined, undefined, { kind: 'extras' })
       const ok = await voices.speak(plain, language, file).catch(err => { log.warn('natural voice:', (err as Error).message); return false })

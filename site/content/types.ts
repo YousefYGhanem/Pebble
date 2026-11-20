@@ -18,7 +18,7 @@ export interface Chip {
 }
 
 /** Live demos a feature can show next to its text (site/src/live). */
-export type Live = 'status' | 'usage' | 'pip' | 'peeks' | 'themes' | 'keys' | 'chat' | 'lang' | 'ai' | 'voices'
+export type Live = 'status' | 'usage' | 'pip' | 'peeks' | 'themes' | 'keys' | 'chat' | 'lang' | 'ai' | 'voices' | 'strip'
 
 /** Pip's moods (app/shared/pip.ts) */
 export type PipMood = 'idle' | 'curious' | 'focused' | 'alert' | 'happy' | 'love' | 'sleepy' | 'dizzy' | 'grumpy' | 'dancing' | 'sad'
@@ -66,8 +66,8 @@ export interface Content {
     small: string
     worksWith: string
     agents: string[]
-    /** the pill over the eyebrow that scrolls to the newest big feature (#one-box) */
-    news: { badge: string; text: string }
+    /** the pill over the eyebrow that scrolls to the newest big feature (to: its section's id) */
+    news: { badge: string; text: string; to: string }
   }
   demo: {
     label: string

@@ -67,7 +67,7 @@
     <span class="haze"></span><span class="core"></span><span class="line"></span>
   </div>
   <div class="container copy">
-    <a class="news intro" style="--i: 0" href="#one-box"><span class="badge">{h.news.badge}</span><span class="news-text">{h.news.text}</span><span class="news-arrow" aria-hidden="true"><Icon name="arrow" size={13} /></span></a>
+    <a class="news intro" style="--i: 0" href="#{h.news.to}"><span class="badge">{h.news.badge}</span><span class="news-text">{h.news.text}</span><span class="news-arrow" aria-hidden="true"><Icon name="arrow" size={13} /></span></a>
     <p class="eyebrow intro" style="--i: 0"><span class="live-dot"></span>{h.eyebrow}</p>
     <h1 id="hero-title" class="sr-only">{h.title}</h1>
     <div class="pip intro" style="--i: 1" aria-hidden="true" onpointerenter={() => (petted = true)} onpointerleave={() => (petted = false)}>

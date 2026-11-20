@@ -21,7 +21,7 @@ const en: Content = {
     small: 'Free · Open source (MIT) · Windows 10 and 11',
     worksWith: 'Follows',
     agents: ['Claude Code', 'Codex', 'Gemini CLI', 'Cursor', 'OpenCode', 'Aider', 'DeepSeek Harness', 'Any MCP agent'],
-    news: { badge: 'New in 0.5', text: 'One box for everything' }
+    news: { badge: 'New in 0.5.1', text: 'The game strip, over full-screen games', to: 'game-strip' }
   },
   demo: {
     label: 'A live demo of the Pebble island following an agent',
@@ -287,8 +287,8 @@ const en: Content = {
       icon: 'speaker',
       kicker: 'Natural voices',
       title: 'Pip reads aloud, in 50+ languages',
-      text: "The speaker on an answer reads it in its own language, with a natural voice that runs on your PC (Piper). A language's voice downloads once, about 60 MB, the first time an answer in it is read. Nothing you read is sent anywhere.",
-      points: ['Each answer in the voice of its own language', 'Runs on this PC, after one download per language', "Or switch back to Windows' own voices in Settings"],
+      text: "The speaker on an answer reads it in its own language, with a natural voice that runs on your PC (Piper). They are an optional download: choose Natural in Settings and the engine comes once (22 MB), then a language's voice (about 60 MB) the first time an answer in it is read. Nothing you read is sent anywhere.",
+      points: ['Each answer in the voice of its own language', 'Optional: nothing downloads until you choose them', "Windows' own voices read until then, with nothing to download"],
       live: 'voices',
       chips: [
         { id: 'en', label: 'English', sub: "Hi, I'm Pip. I live at the top of your screen." },
@@ -298,6 +298,23 @@ const en: Content = {
         { id: 'de', label: 'German', sub: 'Hallo, ich bin Pip. Ich wohne oben auf deinem Bildschirm.' }
       ],
       mood: 'dancing'
+    },
+    {
+      id: 'game-strip',
+      icon: 'gamepad',
+      kicker: 'Game strip',
+      title: "Your PC's readings, over the game",
+      text: 'In a full-screen game or video the island steps aside and a thin strip stays on top: CPU and GPU use and temperatures, memory, the time, your agents and the song. Ctrl+Alt+G shows or hides it, and Settings → Game strip picks its items and their order.',
+      points: ['Stays over full-screen games and videos', 'GPU use and temperature as Task Manager reads them', 'Ctrl+Alt+G turns it on or off', 'Your items, in your order'],
+      live: 'strip',
+      chips: [
+        { id: 'cpu', label: 'CPU', sub: '%' },
+        { id: 'cpuTemp', label: 'CPU', sub: '°C' },
+        { id: 'ram', label: 'RAM', sub: '%' },
+        { id: 'gpu', label: 'GPU', sub: '%' },
+        { id: 'gpuTemp', label: 'GPU', sub: '°C' }
+      ],
+      mood: 'focused'
     },
     {
       id: 'peeks',
@@ -426,6 +443,7 @@ const en: Content = {
       { q: 'Is Pebble free?', a: 'Yes. Pebble is free and open source under the MIT license. No account, no subscription.' },
       { q: 'Which agents does it work with?', a: 'Claude Code (also inside the Claude app), Codex, Gemini CLI, Cursor, OpenCode, Aider and DeepSeek Harness, plus any agent that speaks MCP. Claude Code\'s permissions, questions and plans are answered from the island; the others show what they do and tell you when they wait for you in their own window.' },
       { q: 'Do I need an AI account or key?', a: "No. Pip answers out of the box with a free AI (Pollinations, an open model; your messages go to pollinations.ai). Claude Code, Codex or your own Anthropic, OpenAI, Gemini or DeepSeek key is one click away in Settings → Pip's chat. If you already used Pebble, you keep Claude Code." },
+      { q: 'How big is it?', a: 'The installer is about 116 MB. Natural voices are not in it: they download only if you choose them.' },
       { q: 'Will it slow my PC down?', a: 'Hardly. At rest the island draws no frames. With an agent working it uses about 6% of one CPU core, and about 0.1% while tucked away. When you are away or in a game, what nobody needs pauses.' },
       { q: 'What about my privacy?', a: 'Pebble has no server of its own: no account, no analytics, no tracking. It talks to a service only for a feature you switch on, such as lyrics, weather or the AI you pick for the chat. Keys are encrypted for your Windows account.' },
       { q: 'Why does Windows warn me about the installer?', a: 'The installer is not code-signed yet, so SmartScreen may show "Windows protected your PC" the first time. Choose More info, then Run anyway. The source code is all on GitHub.' },
