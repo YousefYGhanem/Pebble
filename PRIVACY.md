@@ -1,6 +1,6 @@
 # Pebble privacy policy
 
-*Last updated: 13 November 2026. Applies to Pebble (also listed as "Pebble Pet") from GitHub and the Microsoft Store.*
+*Last updated: 20 November 2026. Applies to Pebble (also listed as "Pebble Pet") from GitHub and the Microsoft Store.*
 
 **In short:** Pebble has no server and no account. It collects nothing about you for itself: no analytics, no
 tracking, no ads. What it keeps stays on your PC. It goes online only for features you use, and then only to that
@@ -8,7 +8,8 @@ feature's own service.
 
 ## What stays on your PC
 
-Pebble keeps its data in `%APPDATA%\Pebble` on your computer, and nowhere else:
+Pebble keeps its data in `%APPDATA%\Pebble` on your computer (`%USERPROFILE%\.pebble` for the Microsoft Store
+version), and nowhere else:
 
 - your settings, themes and Pip's outfits
 - notes, to-dos, the file shelf list, today's agent summary and today's screen time
@@ -19,8 +20,7 @@ Pebble keeps its data in `%APPDATA%\Pebble` on your computer, and nowhere else:
 Clipboard history stays in memory only and is never written to disk; copies that password managers mark as private
 are skipped. API keys and connector secrets are encrypted for your Windows account.
 
-Pebble's developer never receives any of this. Uninstalling removes Pebble; delete `%APPDATA%\Pebble` to remove
-your data too.
+Pebble's developer never receives any of this. Uninstalling removes Pebble; delete that folder to remove your data too.
 
 ## What goes online, and only when you use it
 

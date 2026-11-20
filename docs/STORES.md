@@ -65,18 +65,19 @@ Windows SDK's own tool:
 Upload the `.appx` unsigned: the Store signs it.
 
 **What the Store package does differently (done):**
-- `build/appxmanifest.xml` (electron-builder's own, plus one line) turns off file-write virtualization, so
-  `%APPDATA%\Pebble` (the agents' hook token, hook scripts, settings) is the real folder that coding tools read. This
-  needs the restricted capability `unvirtualizedResources`.
-- Agents' hooks and terminals run a copy of `pebble-native.exe` in `%APPDATA%\Pebble\native\<version>`, because
+- Its data lives in `%USERPROFILE%\.pebble` instead of `%APPDATA%\Pebble`. A packaged app's writes to AppData are
+  virtualized, so coding tools would not see the hook token and scripts; the user's own folder is not. (Turning
+  virtualization off needs the restricted capability `unvirtualizedResources`, which certification denied in Nov 2026.)
+  The native helper and the VS Code extension look in both places.
+- Agents' hooks and terminals run a copy of `pebble-native.exe` in `%USERPROFILE%\.pebble\native\<version>`, because
   programs outside the package cannot start an exe inside WindowsApps.
 - Pebble's own updater is off (the Store updates it). It starts with Windows through a startup task, which you
   switch in Windows Settings → Apps → Startup (Pebble's own "Start with Windows" switch does not apply there).
 
 **When submitting, Partner Center asks why for the restricted capabilities:**
 - `runFullTrust`: "Pebble is a desktop app (Electron) with a native helper for audio, windows and notifications."
-- `unvirtualizedResources`: "Pebble writes hook settings and a token in its AppData folder that coding tools on the same
-  PC (Claude Code, Codex, Gemini CLI) read to report to it; with virtualization they would not see them."
+
+**Product declarations:** tick "This product incorporates generative AI features" (Pip's chat; policy 11.16).
 
 **Before the first submission, test the package** with a Partner Center *package flight* (a private test group with
 only you): install from the Store link, then check that an agent reaches the island, Start with Windows, the native

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- electron-builder's own AppX manifest (app-builder-lib/templates/appx) plus one change: see Properties. -->
+<!-- electron-builder's own AppX manifest (app-builder-lib/templates/appx). -->
 <!--suppress XmlUnusedNamespaceDeclaration -->
 <Package
    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -16,9 +16,6 @@
     <PublisherDisplayName>${publisherDisplayName}</PublisherDisplayName>
     <Description>${description}</Description>
     <Logo>${logo}</Logo>
-    <!-- Pebble's files in %APPDATA%\Pebble (the agents' hook token and hook scripts) must be the real ones: coding
-         tools outside the package read them. Needs the restricted capability unvirtualizedResources. -->
-    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
   </Properties>
   <Resources>
     ${resourceLanguages}

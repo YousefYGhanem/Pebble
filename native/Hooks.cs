@@ -166,11 +166,13 @@ static class Hooks
         catch (HttpRequestException e) when (e.StatusCode == null) { Stderr("Pebble is not running."); return 2; }
     }
 
-    /// <summary>Pebble's port and token from %APPDATA%Pebble (%APPDATA% first, as Electron and scripts see it), or null.</summary>
+    /// <summary>Pebble's port and token from %APPDATA%\Pebble (%APPDATA% first, as Electron and scripts see it), or the Store
+    /// version's %USERPROFILE%\.pebble; null when neither has one.</summary>
     public static (int port, string token)? Pebble()
     {
         var appData = Environment.GetEnvironmentVariable("APPDATA") is { Length: > 0 } a ? a : Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var dir = Path.Combine(appData, "Pebble");
+        if (!File.Exists(Path.Combine(dir, "hook-token"))) dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".pebble");
         string token;
         try { token = File.ReadAllText(Path.Combine(dir, "hook-token")).Trim(); } catch { return null; }
         var port = 47901;

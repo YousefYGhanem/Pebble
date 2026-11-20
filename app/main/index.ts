@@ -49,6 +49,9 @@ import { PROVIDERS, type ProviderId } from '../shared/chat'
 
 app.setName('Pebble')
 app.setAppUserModelId('dev.pebble.app') // Windows shows "Pebble" on its notifications
+// The Store version keeps its data in %USERPROFILE%\.pebble: a packaged app's writes to AppData are virtualized, and
+// the coding tools that read its hook token and scripts run outside the package
+if (process.windowsStore) app.setPath('userData', path.join(app.getPath('home'), '.pebble'))
 const userData = app.getPath('userData')
 const logFile = initLog(path.join(userData, 'logs'))
 const log = logger('app')

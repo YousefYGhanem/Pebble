@@ -7,9 +7,10 @@ const fs = require('fs')
 const path = require('path')
 const http = require('http')
 
-/** Pebble's port and token (%APPDATA%\Pebble), or null when Pebble is not set up. */
+/** Pebble's port and token (%APPDATA%\Pebble, or the Store version's ~/.pebble), or null when Pebble is not set up. */
 function pebble() {
-  const dir = path.join(process.env.APPDATA || '', 'Pebble')
+  let dir = path.join(process.env.APPDATA || '', 'Pebble')
+  if (!fs.existsSync(path.join(dir, 'hook-token'))) dir = path.join(require('os').homedir(), '.pebble')
   try {
     const token = fs.readFileSync(path.join(dir, 'hook-token'), 'utf8').trim()
     let port = 47901
