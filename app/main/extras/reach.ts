@@ -3,7 +3,7 @@ import { execFile, spawn } from 'node:child_process'
 // Can a phone on the same network reach this PC? Windows blocks incoming connections when the network is set to
 // "Public", or when no firewall rule lets this program in. Both are checked (read-only) when phone drop starts.
 
-export interface Reach { profile: 'Private' | 'Public' | 'DomainAuthenticated' | 'unknown'; allowed: boolean }
+interface Reach { profile: 'Private' | 'Public' | 'DomainAuthenticated' | 'unknown'; allowed: boolean }
 
 const ps = (script: string) => new Promise<string>(resolve =>
   // encoded: quotes in a -Command argument do not survive Windows' command-line parsing

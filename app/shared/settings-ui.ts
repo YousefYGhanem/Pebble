@@ -80,9 +80,8 @@ export function validSettingsAction(a: unknown): a is SettingsAction {
     case 'agent': case 'terminal': case 'connector': case 'copyWebhook': return id
     case 'connector.set': return id && typeof o.key === 'string' && /^\w{1,40}$/.test(o.key)
     case 'open': return OPEN.includes(o.what as string)
-    case 'history.clear': case 'restart': case 'quit': case 'copyExtensionKey': case 'diagnose': case 'copyDiagnostics': case 'welcome': case 'welcome.clicked': case 'welcome.done': case 'update.check': case 'update.install': return true
+    case 'history.clear': case 'restart': case 'quit': case 'copyExtensionKey': case 'diagnose': case 'copyDiagnostics': case 'welcome': case 'welcome.clicked': case 'welcome.done': case 'update.check': case 'update.install': case 'chat.models': case 'connector.pickClose': return true
     case 'scene': return o.scene === null || typeof o.scene === 'string'
-    case 'chat.models': case 'connector.pickClose': return true
     case 'prayer.find': return typeof o.city === 'string' && o.city.trim().length > 0 && o.city.length <= 100
     case 'theme.edit': return !!o.tokens && typeof o.tokens === 'object' && Object.entries(o.tokens).every(([k, v]) =>
       k === 'radius' ? typeof v === 'number' && v >= 0 && v <= 40 : (THEME_COLORS as readonly string[]).includes(k) && typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v))

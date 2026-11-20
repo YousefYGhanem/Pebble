@@ -64,7 +64,6 @@ static class Media
         if (s == null) return false;
         return action switch
         {
-            "play" => await s.TryPlayAsync(),
             "pause" => await s.TryPauseAsync(),
             "toggle" => await s.TryTogglePlayPauseAsync(),
             "next" => await s.TrySkipNextAsync(),

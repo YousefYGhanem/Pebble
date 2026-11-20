@@ -1,7 +1,7 @@
 // The newest installer from GitHub Releases: the page's only request to another site. Falls back to the releases page.
 
 const API = 'https://api.github.com/repos/YousefYGhanem/Pebble/releases/latest'
-export const FALLBACK = 'https://github.com/YousefYGhanem/Pebble/releases/latest'
+const FALLBACK = 'https://github.com/YousefYGhanem/Pebble/releases/latest'
 
 export const release = $state({ href: FALLBACK, version: '' })
 

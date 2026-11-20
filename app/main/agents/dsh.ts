@@ -126,10 +126,17 @@ export class DshWatch {
     for (const file of this.pending) {
       const log = this.open(file)
       try {
-        const buf = fs.readFileSync(file)
-        if (buf.length < log.offset) log.offset = 0 // the log was rewritten
-        const r = readFrames(buf, log.offset)
-        log.offset = r.next
+        // only what was added since last time (the log grows with the session)
+        const fd = fs.openSync(file, 'r')
+        let buf: Buffer
+        try {
+          const size = fs.fstatSync(fd).size
+          if (size < log.offset) log.offset = 0 // the log was rewritten
+          buf = Buffer.alloc(size - log.offset)
+          fs.readSync(fd, buf, 0, buf.length, log.offset)
+        } finally { fs.closeSync(fd) }
+        const r = readFrames(buf)
+        log.offset += r.next
         for (const e of toHookEvents(r.events, log)) this.o.event(e)
       } catch (err) { logWarn(file, err) }
     }

@@ -64,7 +64,7 @@
   <header>
     <div class="tabs" role="tablist">
       {#each sessions as x (x.id)}
-        <button role="tab" aria-selected={!showHistory && x.id === s?.id} class="tab" class:on={!showHistory && x.id === s?.id} onclick={e => { e.stopPropagation(); selected = x.id; showHistory = false }}>
+        <button role="tab" aria-selected={!showHistory && !showUsage && x.id === s?.id} class="tab" class:on={!showHistory && !showUsage && x.id === s?.id} onclick={e => { e.stopPropagation(); selected = x.id; showHistory = showUsage = false }}>
           <StatusMark status={x.status} size={9} />{x.project}
         </button>
       {/each}
@@ -118,6 +118,7 @@
   {:else if s.ask}
     <AskView session={s} onanswer={a => onanswer(s.id, a)} />
   {:else}
+    {@const summary = stepsSummary(s.steps)}
     <div class="body">
       <div class="left">
         <div class="status {s.status}">
@@ -125,7 +126,7 @@
           {#if s.status === 'running' && s.startedAt}<span class="timer">{clock(now - s.startedAt)}</span>{/if}
         </div>
         {#if s.prompt}<div class="prompt" title={s.prompt}>{s.prompt}</div>{/if}
-        {#if stepsSummary(s.steps)}<div class="summary">{stepsSummary(s.steps)}</div>{/if}
+        {#if summary}<div class="summary">{summary}</div>{/if}
         <ol class="steps">
           {#each s.steps.slice(-6) as step, i (step.at + step.text)}
             <li class:failed={step.failed} class:current={s.status === 'running' && i === Math.min(5, s.steps.length - 1)}>

@@ -1,5 +1,5 @@
-<script lang="ts">
-  // Line icons on a 24×24 grid, drawn in the current text colour.
+<script lang="ts" module>
+  // Line icons on a 24×24 grid, drawn in the current text colour. (module: one table for every icon on screen)
   const PATHS: Record<string, string> = {
     read: 'M6 3h9l4 4v14H6z M14 3v5h5 M9 13h7 M9 17h5',
     edit: 'M4 20h4L19 9l-4-4L4 16z M13 7l4 4',
@@ -51,6 +51,9 @@
     snip: 'M6 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M8.1 7.9L20 20 M8.1 16.1L20 4',
     grid: 'M4 4h7v7H4z M13 4h7v7h-7z M4 13h7v7H4z M13 13h7v7h-7z'
   }
+</script>
+
+<script lang="ts">
   let { name, size = 14 }: { name: string; size?: number } = $props()
 </script>
 

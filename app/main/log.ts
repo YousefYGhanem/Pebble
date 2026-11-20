@@ -6,7 +6,7 @@ import path from 'node:path'
 let file = ''
 const MAX = 1024 * 1024
 
-export function redact(text: string): string {
+function redact(text: string): string {
   return text
     .replace(/\b[a-f0-9]{48}\b/g, '[token]')
     .replace(/\b(sk|ghp|gho|github_pat)[-_][A-Za-z0-9_-]{8,}/g, '[key]')

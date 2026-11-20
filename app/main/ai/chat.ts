@@ -41,6 +41,8 @@ export class Chat extends EventEmitter {
   }
 
   hasKey = (p: string) => !!this.keys[p]
+  private key = (p: string) => this.keys[p] && this.vault.decrypt(this.keys[p]!)
+  private provider = () => PROVIDERS.find(x => x.id === this.settings().provider)!
 
   setKey(provider: ProviderId, key: string) {
     if (!PROVIDERS.find(p => p.id === provider)?.key) throw new Error('this provider needs no key')
@@ -51,14 +53,14 @@ export class Chat extends EventEmitter {
   }
 
   state(): ChatState {
-    const s = this.settings(), p = PROVIDERS.find(x => x.id === s.provider)!
+    const p = this.provider()
     const look = this.look && { title: this.look.title, process: this.look.process }
     return { provider: p.name, ready: !p.key || this.hasKey(p.id), messages: this.messages, look, windows: this.windows, busy: this.busy, error: this.error, signIn: this.signIn, word: this.word }
   }
 
   async send(text: string) {
     if (this.busy || !text.trim()) return
-    const s = this.settings(), p = PROVIDERS.find(x => x.id === s.provider)!
+    const s = this.settings(), p = this.provider()
     this.messages.push({ role: 'user', text: text.trim(), at: Date.now(), look: this.look })
     this.look = undefined
     const answer: ChatMessage = { role: 'assistant', text: '', at: Date.now() }
@@ -72,7 +74,7 @@ export class Chat extends EventEmitter {
     this.emit('change')
     try {
       await this.ask({
-        provider: p.id, model: s.model || p.model, key: this.keys[p.id] && this.vault.decrypt(this.keys[p.id]!),
+        provider: p.id, model: s.model || p.model, key: this.key(p.id),
         system: system(s.name ?? 'Pip'), messages: history, sandbox: this.sandbox, signal: this.stopper.signal,
         onText: t => { answer.text += t; this.emit('change') }
       })
@@ -100,11 +102,11 @@ export class Chat extends EventEmitter {
 
   /** One whole answer from the chosen provider, outside the conversation (Fix in Word). */
   async complete(system: string, text: string): Promise<string> {
-    const s = this.settings(), p = PROVIDERS.find(x => x.id === s.provider)!
+    const s = this.settings(), p = this.provider()
     if (p.key && !this.hasKey(p.id)) throw new Error(`${p.name} needs a key (Settings)`)
     let out = ''
     await this.ask({
-      provider: p.id, model: s.model || p.model, key: this.keys[p.id] && this.vault.decrypt(this.keys[p.id]!),
+      provider: p.id, model: s.model || p.model, key: this.key(p.id),
       system, messages: [{ role: 'user', text, at: Date.now() }], sandbox: this.sandbox, signal: new AbortController().signal, onText: t => { out += t }
     })
     return out
@@ -112,9 +114,9 @@ export class Chat extends EventEmitter {
 
   /** The chosen provider's models (with its key). */
   models(): Promise<ModelChoice[]> {
-    const p = PROVIDERS.find(x => x.id === this.settings().provider)!
+    const p = this.provider()
     if (p.key && !this.hasKey(p.id)) return Promise.reject(new Error(`add your ${p.name} key first`))
-    return listModels(p.id, this.keys[p.id] && this.vault.decrypt(this.keys[p.id]!))
+    return listModels(p.id, this.key(p.id))
   }
 
   setWord(w: WordFixes | undefined) { this.word = w; this.emit('change') }

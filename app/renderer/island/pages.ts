@@ -1,17 +1,17 @@
 import { locale, t } from '../i18n.svelte'
 import type { Step } from '../../shared/state'
 
-// The island's pages, in order (the dots at the bottom and ‹ › follow this order).
+// The island's pages, in order (the page row and its arrow keys follow this order).
 export const PAGES = [
-  { id: 'home', label: 'Home', icon: 'home' },
-  { id: 'agents', label: 'Agents', icon: 'agents' },
-  { id: 'chat', label: 'Chat', icon: 'chat' },
-  { id: 'music', label: 'Music', icon: 'music' },
-  { id: 'files', label: 'Files', icon: 'files' },
-  { id: 'clipboard', label: 'Clipboard', icon: 'clipboard' },
-  { id: 'notes', label: 'Notes', icon: 'notes' },
-  { id: 'focus', label: 'Focus', icon: 'focus' },
-  { id: 'widgets', label: 'Widgets', icon: 'grid' }
+  { id: 'home', icon: 'home' },
+  { id: 'agents', icon: 'agents' },
+  { id: 'chat', icon: 'chat' },
+  { id: 'music', icon: 'music' },
+  { id: 'files', icon: 'files' },
+  { id: 'clipboard', icon: 'clipboard' },
+  { id: 'notes', icon: 'notes' },
+  { id: 'focus', icon: 'focus' },
+  { id: 'widgets', icon: 'grid' }
 ] as const
 
 export type Page = (typeof PAGES)[number]['id']

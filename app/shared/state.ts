@@ -94,7 +94,7 @@ const MAX_DIFF_LINES = 40
 export const basename = (p: string) => p.split(/[\\/]/).filter(Boolean).pop() ?? ''
 const str = (v: unknown) => (typeof v === 'string' ? v : '')
 
-export function stepKind(tool = ''): StepKind {
+function stepKind(tool = ''): StepKind {
   if (/^(Read|NotebookRead|LS|view|read_file|read_many_files|list_directory|readFile)$/i.test(tool)) return 'read'
   if (/^(Edit|MultiEdit|Write|NotebookEdit|apply_patch|write_file|replace|edit|write|patch)$/i.test(tool)) return 'edit'
   if (/^(Bash|PowerShell|pwsh|shell|exec_command|local_shell|run_shell_command|Shell)$/i.test(tool)) return 'run'
@@ -104,7 +104,7 @@ export function stepKind(tool = ''): StepKind {
   return 'other'
 }
 
-export function describeTool(name = '', input: Record<string, unknown> = {}): string {
+function describeTool(name = '', input: Record<string, unknown> = {}): string {
   const cmd = input.command
   if (cmd) return `${name}: ${(Array.isArray(cmd) ? cmd.join(' ') : String(cmd)).slice(0, 160)}`
   const file = input.file_path ?? input.filePath ?? input.path
@@ -130,7 +130,7 @@ export function diffOf(tool: string, input: Record<string, unknown>, findLine: (
 }
 
 /** The questions of an AskUserQuestion call (empty when the input is not that shape). */
-export function questionsOf(input: Record<string, unknown>): Question[] {
+function questionsOf(input: Record<string, unknown>): Question[] {
   if (!Array.isArray(input.questions)) return []
   return input.questions.flatMap((q: unknown) => {
     const o = q as Record<string, unknown>
@@ -216,18 +216,18 @@ export const risky = (tool: string) => /^(Bash|PowerShell|Write|Edit|MultiEdit|N
 export const recommended = (label: string) => /\(recommended\)/i.test(label)
 
 /** Conversation turns that are not typed by you: a helper agent's report, a background task's notice, the app's events. */
-export const fromTheApp = (prompt: string) =>
+const fromTheApp = (prompt: string) =>
   /^\s*<(agent-message|task-notification|system-reminder|side-sessions-event|ci-monitor-event|local-command-stdout|command-name|bash-notification)[\s>]/.test(prompt)
 
 /** The Claude app's tools for its own bookkeeping (mcp__ccd_turn__update_plan, mcp__ccd_session__…). */
-export const isAppTool = (tool = '') => /^mcp__ccd_/.test(tool)
+const isAppTool = (tool = '') => /^mcp__ccd_/.test(tool)
 const isWrapUp = (tool = '') => /^mcp__ccd_turn__wrap_up$/.test(tool)
 
 // what the app's own buttons do, as a reply in words
 const APP_ACTIONS: Record<string, string> = { commit: 'Commit it', create_pr: 'Create a pull request', verify: 'Verify it', merge: 'Merge it' }
 
 /** The next-step question of a turn and its ready answers; null when it asks nothing. */
-export function suggestionOf(input: Record<string, unknown>): { ask: string; options: string[] } | null {
+function suggestionOf(input: Record<string, unknown>): { ask: string; options: string[] } | null {
   const ask = typeof input.ask === 'string' ? input.ask.trim() : ''
   if (!ask) return null
   const actions = Array.isArray(input.actions) ? input.actions as Record<string, unknown>[] : []

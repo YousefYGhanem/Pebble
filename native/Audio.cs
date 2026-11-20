@@ -19,6 +19,7 @@ partial interface IMMDevice
 {
     [PreserveSig] int Activate(in Guid iid, int clsCtx, nint activationParams, out nint iface);
     [PreserveSig] int OpenPropertyStore(int access, out IPropertyStore store);
+    [PreserveSig] int GetId(out nint id);
 }
 
 [StructLayout(LayoutKind.Sequential)] struct PROPERTYKEY { public Guid fmtid; public uint pid; }
@@ -63,6 +64,8 @@ static class Audio
     static IAudioEndpointVolume? volume;
     static IAudioMeterInformation? meter;
     static IAudioEndpointVolume? mic;
+    static IMMDeviceEnumerator? enumerator;
+    static string? speakersId, micId;
     static string device = "";
     static DateTime fetched;
     static readonly Lock gate = new();
@@ -74,22 +77,39 @@ static class Audio
     }
 
     static void Check(int hr) { if (hr < 0) Marshal.ThrowExceptionForHR(hr); }
+    /// <summary>A call on the controls failed (the device went away): they are made afresh on the next call.</summary>
+    static void Ok(int hr) { if (hr < 0) { lock (gate) { volume = null; meter = null; speakersId = null; } Marshal.ThrowExceptionForHR(hr); } }
 
-    /// <summary>The default output device's controls, looked up again every few seconds (you may switch to headphones).</summary>
+    static string? IdOf(IMMDevice d)
+    {
+        if (d.GetId(out var p) < 0 || p == 0) return null;
+        try { return Marshal.PtrToStringUni(p); } finally { Marshal.FreeCoTaskMem(p); }
+    }
+
+    /// <summary>The default output device's controls. Which device is the default is checked every few seconds (you may
+    /// switch to headphones); the controls are made again only when it changed (the peak is read 30 times a second).</summary>
     static (IAudioEndpointVolume vol, IAudioMeterInformation meter) Endpoint()
     {
         lock (gate)
         {
             if (volume != null && meter != null && DateTime.UtcNow - fetched < TimeSpan.FromSeconds(3)) return (volume, meter);
-            Check(Win32.CoCreateInstance(CLSID_MMDeviceEnumerator, 0, 23, typeof(IMMDeviceEnumerator).GUID, out var ptr));
-            IMMDeviceEnumerator en;
-            try { en = (IMMDeviceEnumerator)Wrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.None); } finally { Marshal.Release(ptr); }
-            Check(en.GetDefaultAudioEndpoint(0 /* eRender */, 1 /* eMultimedia */, out var speakers));
-            volume = Activate<IAudioEndpointVolume>(speakers, typeof(IAudioEndpointVolume).GUID);
-            meter = Activate<IAudioMeterInformation>(speakers, typeof(IAudioMeterInformation).GUID);
-            device = NameOf(speakers);
+            if (enumerator == null)
+            {
+                Check(Win32.CoCreateInstance(CLSID_MMDeviceEnumerator, 0, 23, typeof(IMMDeviceEnumerator).GUID, out var ptr));
+                try { enumerator = (IMMDeviceEnumerator)Wrappers.GetOrCreateObjectForComInstance(ptr, CreateObjectFlags.None); } finally { Marshal.Release(ptr); }
+            }
+            Check(enumerator.GetDefaultAudioEndpoint(0 /* eRender */, 1 /* eMultimedia */, out var speakers));
+            var id = IdOf(speakers);
+            if (volume == null || meter == null || id == null || id != speakersId)
+            {
+                volume = Activate<IAudioEndpointVolume>(speakers, typeof(IAudioEndpointVolume).GUID);
+                meter = Activate<IAudioMeterInformation>(speakers, typeof(IAudioMeterInformation).GUID);
+                device = NameOf(speakers);
+                speakersId = id;
+            }
             // no microphone: no mic button (not an error)
-            mic = en.GetDefaultAudioEndpoint(1 /* eCapture */, 0 /* eConsole */, out var m) >= 0 ? Activate<IAudioEndpointVolume>(m, typeof(IAudioEndpointVolume).GUID) : null;
+            if (enumerator.GetDefaultAudioEndpoint(1 /* eCapture */, 0 /* eConsole */, out var m) < 0) { mic = null; micId = null; }
+            else if (IdOf(m) is var mid && (mic == null || mid == null || mid != micId)) { mic = Activate<IAudioEndpointVolume>(m, typeof(IAudioEndpointVolume).GUID); micId = mid; }
             fetched = DateTime.UtcNow;
             return (volume, meter);
         }
@@ -112,8 +132,8 @@ static class Audio
     public static (int volume, bool muted, string device) Get()
     {
         var (v, _) = Endpoint();
-        Check(v.GetMasterVolumeLevelScalar(out var level));
-        Check(v.GetMute(out var mute));
+        Ok(v.GetMasterVolumeLevelScalar(out var level));
+        Ok(v.GetMute(out var mute));
         return ((int)Math.Round(level * 100), mute != 0, device);
     }
 
@@ -121,8 +141,11 @@ static class Audio
     public static bool? MicMuted()
     {
         Endpoint();
-        if (mic == null || mic.GetMute(out var m) < 0) return null;
-        return m != 0;
+        var mic = Audio.mic;
+        if (mic == null) return null;
+        if (mic.GetMute(out var m) >= 0) return m != 0;
+        lock (gate) micId = null; // made afresh at the next look-up
+        return null;
     }
 
     /// <summary>Mutes or unmutes the default microphone (for every app at once); its new state.</summary>
@@ -134,13 +157,13 @@ static class Audio
         return on;
     }
 
-    public static void SetVolume(int percent) => Check(Endpoint().vol.SetMasterVolumeLevelScalar(Math.Clamp(percent, 0, 100) / 100f, 0));
-    public static void SetMute(bool on) => Check(Endpoint().vol.SetMute(on ? 1 : 0, 0));
+    public static void SetVolume(int percent) => Ok(Endpoint().vol.SetMasterVolumeLevelScalar(Math.Clamp(percent, 0, 100) / 100f, 0));
+    public static void SetMute(bool on) => Ok(Endpoint().vol.SetMute(on ? 1 : 0, 0));
 
     /// <summary>The loudest sample right now, 0–1 (0 when nothing plays).</summary>
     public static float Peak()
     {
-        Check(Endpoint().meter.GetPeakValue(out var p));
+        Ok(Endpoint().meter.GetPeakValue(out var p));
         return p;
     }
 }

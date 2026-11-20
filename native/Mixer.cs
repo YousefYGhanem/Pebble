@@ -82,9 +82,8 @@ static class Mixer
         try
         {
             using var p = Process.GetProcessById((int)pid);
-            var title = p.MainWindowTitle;
             var name = p.ProcessName;
-            return name.Length > 0 ? char.ToUpper(name[0]) + name[1..] : title;
+            return name.Length > 0 ? char.ToUpper(name[0]) + name[1..] : p.MainWindowTitle;
         }
         catch { return $"#{pid}"; }
     }
@@ -96,10 +95,11 @@ static class Mixer
         var seen = new HashSet<string>();
         foreach (var (pid, s) in Sessions())
         {
-            if (!seen.Add(NameOf(pid))) continue;
+            var name = NameOf(pid);
+            if (!seen.Add(name)) continue;
             var v = (ISimpleAudioVolume)s;
             if (v.GetMasterVolume(out var level) < 0 || v.GetMute(out var mute) < 0) continue;
-            rows.Add(new JsonObject { ["name"] = NameOf(pid), ["volume"] = (int)Math.Round(level * 100), ["muted"] = mute != 0 });
+            rows.Add((JsonNode)new JsonObject { ["name"] = name, ["volume"] = (int)Math.Round(level * 100), ["muted"] = mute != 0 });
         }
         return rows;
     }

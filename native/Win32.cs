@@ -26,7 +26,7 @@ static unsafe partial class Win32
         public uint biCompression, biSizeImage; public int biXPelsPerMeter, biYPelsPerMeter; public uint biClrUsed, biClrImportant;
     }
 
-    public const int SW_RESTORE = 9, GW_OWNER = 4, GA_ROOT = 2, GWL_EXSTYLE = -20, WS_EX_TOOLWINDOW = 0x80, DWMWA_CLOAKED = 14;
+    public const int SW_RESTORE = 9, GW_OWNER = 4, GWL_EXSTYLE = -20, WS_EX_TOOLWINDOW = 0x80, DWMWA_CLOAKED = 14;
     public const uint TH32CS_SNAPPROCESS = 2, SRCCOPY = 0x00CC0020, CAPTUREBLT = 0x40000000, KEYEVENTF_KEYUP = 2;
     public const byte VK_MENU = 0x12, VK_LWIN = 0x5B;
 
@@ -43,8 +43,6 @@ static unsafe partial class Win32
     [LibraryImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static partial bool SetForegroundWindow(nint hwnd);
     [LibraryImport("user32.dll")] [return: MarshalAs(UnmanagedType.Bool)] public static partial bool BringWindowToTop(nint hwnd);
     [LibraryImport("user32.dll")] public static partial nint GetWindow(nint hwnd, int cmd);
-    [LibraryImport("user32.dll")] public static partial nint GetAncestor(nint hwnd, int flags);
-    [LibraryImport("user32.dll")] public static partial nint WindowFromPoint(POINT p);
     [LibraryImport("user32.dll", EntryPoint = "FindWindowExW")] public static partial nint FindWindowEx(nint parent, nint after, nint cls, nint title);
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] public static partial nint GetWindowLongPtr(nint hwnd, int index);
     [LibraryImport("user32.dll")] public static partial void keybd_event(byte vk, byte scan, uint flags, nint extra);

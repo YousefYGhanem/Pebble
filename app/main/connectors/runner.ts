@@ -57,9 +57,16 @@ export function makeApi(o: {
   let webhook: ((body: unknown) => unknown) | undefined
   let windowsWaiter: ((list: { title: string; process: string }[]) => void) | undefined
   const store = { ...o.store }
+  let saved = JSON.stringify(store) // main writes the store to disk: only when it really changed
   const log = (level: 'info' | 'warn' | 'error') => (...a: unknown[]) =>
     send({ type: 'log', level, text: a.map(x => (x instanceof Error ? x.message : typeof x === 'string' ? x : JSON.stringify(x))).join(' ').slice(0, 2000) })
   const safely = (fn: () => unknown) => Promise.resolve().then(fn).catch(err => log('error')(err))
+
+  async function ok(url: string, opts?: FetchOptions) {
+    const r = await request(url, opts)
+    if (!r.ok) throw new Error(`${new URL(url).hostname} answered ${r.status}`)
+    return r
+  }
 
   async function request(url: string, opts: FetchOptions = {}) {
     // "secret:<name>": the address itself is a secret (a private calendar link): Pebble puts it in, the script never sees it
@@ -108,16 +115,8 @@ export function makeApi(o: {
     },
     after(ms: number, fn: () => unknown) { timers.push(setTimeout(() => void safely(fn), Math.max(0, ms))) },
     fetch: request,
-    async fetchJSON(url: string, opts?: FetchOptions) {
-      const r = await request(url, opts)
-      if (!r.ok) throw new Error(`${new URL(url).hostname} answered ${r.status}`)
-      return r.json()
-    },
-    async fetchText(url: string, opts?: FetchOptions) {
-      const r = await request(url, opts)
-      if (!r.ok) throw new Error(`${new URL(url).hostname} answered ${r.status}`)
-      return r.text()
-    },
+    fetchJSON: async (url: string, opts?: FetchOptions) => (await ok(url, opts)).json(),
+    fetchText: async (url: string, opts?: FetchOptions) => (await ok(url, opts)).text(),
     widget(id: string, w: Partial<Widget> & { text: string }) {
       if (!/^[\w-]{1,40}$/.test(id)) throw new Error(`bad widget id "${id}"`)
       const kind = w.kind === 'chip' || w.kind === 'activity' ? w.kind : 'card'
@@ -144,7 +143,11 @@ export function makeApi(o: {
     },
     store: {
       get: (key: string) => store[key],
-      set(key: string, value: unknown) { store[key] = value; send({ type: 'store', data: { ...store } }) }
+      set(key: string, value: unknown) {
+        store[key] = value
+        const now = JSON.stringify(store)
+        if (now !== saved) { saved = now; send({ type: 'store', data: { ...store } }) }
+      }
     },
     log: log('info')
   }
@@ -161,9 +164,10 @@ export function makeApi(o: {
 /** Runs a plugin script in its own context with only `pebble` in reach; returns what it exported. */
 export function loadPlugin(code: string, filename: string, pebble: object): unknown {
   const module = { exports: {} as unknown }
+  const say = (pebble as { log: (...a: unknown[]) => void }).log
   const context = vm.createContext({
     module, exports: module.exports, pebble,
-    console: { log: (pebble as { log: (...a: unknown[]) => void }).log, warn: (pebble as { log: (...a: unknown[]) => void }).log, error: (pebble as { log: (...a: unknown[]) => void }).log },
+    console: { log: say, warn: say, error: say },
     URL, URLSearchParams, TextEncoder, TextDecoder, structuredClone
   }, { codeGeneration: { strings: false, wasm: false } }) // no eval / new Function inside
   vm.runInContext(code, context, { filename, timeout: 2000 })

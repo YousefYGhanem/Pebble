@@ -6,7 +6,7 @@ import { onPath, writeText } from './config'
 // OpenCode loads every .js file in ~/.config/opencode/plugins at start. Pebble writes one small plugin there that passes
 // OpenCode's events to Pebble in Claude Code's shape. OpenCode runs any provider, DeepSeek too: the model of the turn
 // goes along, so the island shows it. Status only: OpenCode asks its permissions in its own UI.
-export const PLUGIN_FILE = path.join(os.homedir(), '.config', 'opencode', 'plugins', 'pebble.js')
+const PLUGIN_FILE = path.join(os.homedir(), '.config', 'opencode', 'plugins', 'pebble.js')
 export interface Install { port: number; token: string }
 
 export function plugin(o: Install): string {

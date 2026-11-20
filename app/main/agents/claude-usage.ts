@@ -31,7 +31,7 @@ export function parsePlanUsage(j: Record<string, unknown>): Usage | null {
   return { fiveHour, sevenDay, ...(extra.length ? { extra } : {}) }
 }
 
-export type PlanUsage = { usage: Usage } | { problem: 'none' | 'expired' | 'failed' }
+type PlanUsage = { usage: Usage } | { problem: 'none' | 'expired' | 'failed' }
 
 /**
  * Renews the sign-in in `file` with its refresh token; true when the file now holds a fresh one. The file is written

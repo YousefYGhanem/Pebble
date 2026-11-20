@@ -29,7 +29,7 @@ export function forThisEngine(json: Buffer): Buffer {
   return Buffer.from(JSON.stringify(config))
 }
 
-type Catalog =Record<string, { language: { family: string }; quality: string; files: Record<string, { size_bytes: number; md5_digest: string }> }>
+type Catalog = Record<string, { language: { family: string }; quality: string; files: Record<string, { size_bytes: number; md5_digest: string }> }>
 
 export class Voices {
   private catalog?: Catalog

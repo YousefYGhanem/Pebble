@@ -60,7 +60,6 @@ static class Server
     static async Task<JsonNode?> Dispatch(string cmd, JsonObject a) => cmd switch
     {
         "ping" => "pong",
-        "window.foreground" => Windows.Foreground(owner),
         "window.fromPoint" => Windows.FromPoint(Int(a, "x"), Int(a, "y"), owner),
         "window.focus" => Windows.Focus((nint)Long(a, "hwnd"), (uint)Long(a, "pid")),
         "window.type" => TypeInto((nint)Long(a, "hwnd"), (uint)Long(a, "pid"), Str(a, "text")),
@@ -81,7 +80,6 @@ static class Server
         "radios.get" => await Radios.Get(),
         "sensors.read" => Sensors.Read(),
         "radios.set" => await Radios.Set(Str(a, "kind"), a["on"]?.GetValue<bool>() ?? false),
-        "speech.voices" => Speech.Voices(),
         "speech.say" => await Say(a),
         "input.dictate" => Dictate(),
         "ocr.file" => await Ocr.File(Str(a, "file")),

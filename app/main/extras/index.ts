@@ -17,6 +17,16 @@ const MAX_SHELF = 24, MAX_CLIPS = 25, MAX_NOTES = 50, MAX_TODOS = 100
 const IMAGE = /\.(png|jpe?g|gif|webp|bmp)$/i
 // password managers mark what they copy like this; Windows' own clipboard history skips it too
 const PRIVATE_FORMATS = ['ExcludeClipboardContentFromMonitorProcessing', 'Clipboard Viewer Ignore']
+const isPrivate = async () => {
+  for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) return true
+  return false
+}
+/** The picture on the clipboard as PNG, or null. */
+async function clipboardPng(): Promise<Buffer | null> {
+  if (!await clipboard.has('image/png')) return null
+  const item = (await clipboard.read()).find(i => i.types.includes('image/png'))
+  return item ? Buffer.from(await (await item.getType('image/png')).arrayBuffer()) : null
+}
 
 /**
  * The extras' state and what they do (shared/extras.ts). Emits 'change' when the island should redraw,
@@ -169,15 +179,13 @@ export class Extras extends EventEmitter {
     let text = '', picture: Electron.NativeImage | null = null
     try {
       text = await clipboard.readText()
-      if (!text.trim() && await clipboard.has('image/png')) {
-        const item = (await clipboard.read()).find(i => i.types.includes('image/png'))
-        if (item) picture = nativeImage.createFromBuffer(Buffer.from(await (await item.getType('image/png')).arrayBuffer()))
-      }
+      const png = text.trim() ? null : await clipboardPng()
+      if (png) picture = nativeImage.createFromBuffer(png)
       else {
         if (text === this.lastClip) return // nothing new (the format checks only for new text)
         this.lastClip = text
       }
-      for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) return
+      if (await isPrivate()) return
     } catch { return } finally { this.reading = false }
     if (picture && !picture.isEmpty()) return this.addPicture(picture)
     if (!text.trim()) return
@@ -188,13 +196,9 @@ export class Extras extends EventEmitter {
   /** Windows' snipping overlay put your snip on the clipboard: it goes to the shelf as a PNG (Pictures, Pebble folder), and the
    * text OCR reads on it into the clipboard list. */
   private async takeSnip(): Promise<boolean> {
-    let png: Buffer
-    try {
-      if (!await clipboard.has('image/png')) return false
-      const item = (await clipboard.read()).find(i => i.types.includes('image/png'))
-      if (!item) return false
-      png = Buffer.from(await (await item.getType('image/png')).arrayBuffer())
-    } catch { return false }
+    let png: Buffer | null
+    try { png = await clipboardPng() } catch { return false }
+    if (!png) return false
     const d = new Date(), two = (n: number) => String(n).padStart(2, '0')
     const stamp = `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}.${two(d.getMinutes())}.${two(d.getSeconds())}`
     const file = path.join(app.getPath('pictures'), 'Pebble', `Snip ${stamp}.png`)
@@ -272,8 +276,6 @@ export class Extras extends EventEmitter {
     } catch (err) { log.warn('radios:', (err as Error).message) }
   }
 
-  // ---------- focus timer ----------
-
   // ---------- tasks: one timer, for the next task with a time ----------
 
   private todoTimer?: NodeJS.Timeout
@@ -297,6 +299,8 @@ export class Extras extends EventEmitter {
     }, Math.min(Math.max(0, t.due - Date.now()), 86_400_000))
     this.todoTimer.unref?.()
   }
+
+  // ---------- focus timer ----------
 
   private schedule() {
     clearTimeout(this.focusTimer)
@@ -335,7 +339,7 @@ export class Extras extends EventEmitter {
         let text = ''
         try {
           text = (await clipboard.readText()).slice(0, 100_000)
-          for (const f of PRIVATE_FORMATS) if (await clipboard.has(`electron application/osclipboard;format="${f}"`)) text = ''
+          if (await isPrivate()) text = ''
         } catch { text = '' }
         if (text !== s.clipText) { s.clipText = text; this.changed() }
         return
@@ -419,7 +423,7 @@ export function validAction(a: unknown): a is Action {
   if (!o || typeof o !== 'object' || typeof o.do !== 'string') return false
   const str = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length < 4096
   switch (o.do) {
-    case 'media': return ['toggle', 'next', 'previous', 'seek'].includes(o.action as string) && (o.positionMs === undefined || (typeof o.positionMs === 'number' && o.positionMs >= 0))
+    case 'media': return ['toggle', 'pause', 'next', 'previous', 'seek'].includes(o.action as string) && (o.positionMs === undefined || (typeof o.positionMs === 'number' && o.positionMs >= 0))
     case 'volume': return (o.volume === undefined || (typeof o.volume === 'number' && o.volume >= 0 && o.volume <= 100)) && (o.muted === undefined || typeof o.muted === 'boolean') && (o.volume !== undefined || o.muted !== undefined)
     case 'shelf.add': return Array.isArray(o.paths) && o.paths.length <= 50 && o.paths.every(str)
     case 'shelf.open': case 'shelf.reveal': case 'shelf.remove': case 'shelf.drag': return str(o.path)

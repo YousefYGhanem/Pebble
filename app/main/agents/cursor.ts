@@ -38,9 +38,7 @@ export function install(o: Install, file = HOOKS_FILE) {
 }
 
 export function remove(file = HOOKS_FILE) {
-  if (!fs.existsSync(file)) return
-  const c = strip(readConfig<Config>(file))
-  writeConfig(file, c)
+  if (fs.existsSync(file)) writeConfig(file, strip(readConfig<Config>(file)))
 }
 
 export function installed(o: Install, file = HOOKS_FILE): boolean {

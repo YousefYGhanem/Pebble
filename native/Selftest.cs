@@ -38,7 +38,7 @@ static class Selftest
         await Check("sound level", () => Task.FromResult($"peak {Audio.Peak():0.00}"));
         await Check("media", async () => (await Media.Get())?["app"]?.GetValue<string>() ?? "nothing playing");
         await Check("radios", async () => string.Join(", ", (await Radios.Get()).Select(r => $"{r!["kind"]} {((bool)r["on"]! ? "on" : "off")}")) is { Length: > 0 } s ? s : "none");
-        await Check("voices", () => Task.FromResult($"{Speech.Voices().Count} voices"));
+        await Check("voices", () => Task.FromResult($"{(global::Windows.Media.SpeechSynthesis.SpeechSynthesizer.AllVoices.Count)} voices"));
         await Check("speech", async () =>
         {
             var f = tmp + ".wav";

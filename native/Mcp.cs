@@ -67,6 +67,7 @@ static class Mcp
             if (req == null) continue;
             var id = req["id"]?.DeepClone();
             if (id == null) continue; // a notification (e.g. notifications/initialized): no answer
+            pending.RemoveAll(t => t.IsCompleted); // a long session must not keep every finished call
             pending.Add(Task.Run(async () => await Send(await Handle(req, id)))); // ask_user waits; other calls go on meanwhile
         }
         await Task.WhenAll(pending); // the client closed stdin: finish what it asked for first

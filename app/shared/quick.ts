@@ -54,7 +54,7 @@ const MONEY: Record<string, string> = {
 const ARABIC_UNITS: Record<string, string> = { 'ثانية': 's', 'ثواني': 's', 'ثوان': 's', 'دقيقة': 'm', 'دقائق': 'm', 'دقيقتين': 'm', 'ساعة': 'h', 'ساعات': 'h', 'ساعتين': 'h' }
 
 /** A request in plain words, rewritten into the bar's own short forms (anything else stays as it was). */
-export function natural(input: string): string {
+function natural(input: string): string {
   let s = input.trim().replace(/[?؟!.]+$/, '').trim()
   // polite openings: "hey pip, please", "can you", "could you"
   s = s.replace(/^(?:(?:hey|hi|ok|okay)\s+)?(?:pip[,:]?\s+)?(?:please\s+|pls\s+|(?:can|could|would) you\s+)?(?:please\s+)?/i, '').replace(/^(?:من فضلك|لو سمحت)\s+/, '')
@@ -342,7 +342,7 @@ function fromHsl(h: number, s: number, l: number): [number, number, number] {
 }
 const toHex = (rgb: number[]) => '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('')
 
-export function color(s: string): Answer | null {
+function color(s: string): Answer | null {
   const t = s.trim().toLowerCase()
   let rgb: [number, number, number] | undefined, from = ''
   const h = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/.exec(t)

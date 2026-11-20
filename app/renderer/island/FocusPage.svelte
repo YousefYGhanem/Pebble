@@ -47,7 +47,7 @@
         <div class="muted">{focus.break ? t('i.focus.onBreak') : focus.left !== undefined ? t('i.focus.paused') : t('i.focus.roundOf', { n: inCycle + 1, total: ROUNDS })}</div>
         {#if !focus.break}
           <!-- the cycle: finished rounds full, this one filling with a glowing head, then the long break -->
-          <div class="track" aria-hidden="true">
+          <div class="cycle" aria-hidden="true">
             {#each Array(ROUNDS) as _, i (i)}
               <span class="seg" class:full={i < inCycle}>{#if i === inCycle}<i style:width="{(1 - left / focus.seconds) * 100}%"></i>{/if}</span>
             {/each}
@@ -74,7 +74,7 @@
   .sounds .muted { margin-inline-end: 4px; }
   .sounds button { padding: 2px 10px; background: none; color: var(--muted); }
   .sounds button.on { background: var(--surface3); color: var(--text); }
-  .track { display: flex; gap: 5px; align-items: center; margin: 6px 0 4px; }
+  .cycle { display: flex; gap: 5px; align-items: center; margin: 6px 0 4px; }
   .seg { position: relative; width: 38px; height: 6px; border-radius: 3px; background: var(--surface3); }
   .seg.full { background: var(--accent); }
   .seg > i { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 3px; background: var(--accent); }

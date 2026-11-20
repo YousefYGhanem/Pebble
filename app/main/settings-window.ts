@@ -46,6 +46,7 @@ export class SettingsWindow {
   private diagnostics?: Check[] | 'running'
   private models?: SettingsView['chatModels']
   private pick?: SettingsView['connectorPick']
+  private icon?: string
 
   constructor(private d: SettingsDeps) {
     ipcMain.on('settings:ready', e => { if (this.from(e)) this.push() })
@@ -58,17 +59,15 @@ export class SettingsWindow {
     w.setMenu(null)
     if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) void w.loadURL(`${process.env.ELECTRON_RENDERER_URL}/${page}/index.html`)
     else void w.loadFile(path.join(__dirname, `../renderer/${page}/index.html`))
-    // links open in the browser, never inside Pebble's windows
-    w.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:\/\//.test(url)) void shell.openExternal(url); return { action: 'deny' } })
-    w.webContents.on('will-navigate', e => e.preventDefault())
+    // links open in the browser, never inside Pebble's windows: index.ts does that for every window (web-contents-created)
   }
 
-  /** First start: the welcome tour. It stays on top until it gets its first click (so it never opens hidden behind other windows). */
   /** what you just did with the island (open, close, tuck, back): the tour's demo step ticks it off */
   islandDid(what: 'open' | 'close' | 'tuck' | 'back') {
     if (this.welcome && !this.welcome.isDestroyed()) this.welcome.webContents.send('settings:island', what)
   }
 
+  /** First start: the welcome tour. It stays on top until it gets its first click (so it never opens hidden behind other windows). */
   openWelcome(offscreen = false) {
     if (this.welcome && !this.welcome.isDestroyed()) { this.welcome.focus(); return this.welcome }
     this.welcome = new BrowserWindow({
@@ -82,10 +81,10 @@ export class SettingsWindow {
     return this.welcome
   }
 
-  /** offscreen: never shown (screenshots for the docs) */
   /** the tab to show next (counted, so asking for the same tab again shows it again) */
   private openTab?: { tab: string; n: number }
 
+  /** offscreen: never shown (screenshots for the docs) */
   open(offscreen = false, tab?: string) {
     if (tab) { this.openTab = { tab, n: (this.openTab?.n ?? 0) + 1 }; this.push() }
     if (this.win && !this.win.isDestroyed()) { if (this.win.isMinimized()) this.win.restore(); this.win.focus(); return this.win }
@@ -105,7 +104,10 @@ export class SettingsWindow {
     const open = [this.win, this.welcome].filter(w => w && !w.isDestroyed()) as BrowserWindow[]
     if (!open.length) return
     const view = { ...this.d.view(), chatModels: this.models, connectorPick: this.pick, diagnostics: this.diagnostics, error: this.error, openTab: this.openTab } satisfies SettingsView
-    for (const w of open) { w.webContents.send('settings:view', view); w.setIcon(this.d.icon()) } // a newly chosen icon shows at once
+    // a newly chosen icon shows at once (new windows start with the current one)
+    const icon = this.d.icon(), newIcon = icon !== this.icon
+    this.icon = icon
+    for (const w of open) { w.webContents.send('settings:view', view); if (newIcon) w.setIcon(icon) }
   }
 
   private async act(a: SettingsAction) {

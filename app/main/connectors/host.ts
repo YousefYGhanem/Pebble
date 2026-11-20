@@ -150,11 +150,17 @@ export class ConnectorHost extends EventEmitter {
 
   /** Re-reads connectors.json and restarts the connectors whose config changed. */
   async reload() {
-    const before = JSON.stringify(this.config)
+    const of = (id: string) => JSON.stringify([this.config[id], this.secrets[id]])
+    const before = new Map([...this.found.keys()].map(id => [id, of(id)]))
     this.loadConfig()
-    if (JSON.stringify(this.config) === before) return
-    for (const [id] of this.found) { this.stop(id); if (this.config[id]?.enabled) await this.start(id) }
-    this.emit('change')
+    let changed = false
+    for (const [id] of this.found) {
+      if (of(id) === before.get(id)) continue
+      changed = true
+      this.stop(id)
+      if (this.config[id]?.enabled) await this.start(id)
+    }
+    if (changed) this.emit('change')
   }
 
   // ---------- running ----------
@@ -185,7 +191,7 @@ export class ConnectorHost extends EventEmitter {
     child.on('exit', code => {
       if (this.running.get(id) !== child) return
       this.running.delete(id)
-      for (const k of [...this.widgets.keys()]) if (k.startsWith(id + '/')) this.widgets.delete(k)
+      this.dropWidgets(id)
       this.emit('change')
       if (!this.config[id]?.enabled) return
       const n = (this.restarts.get(id) ?? 0) + 1
@@ -210,8 +216,10 @@ export class ConnectorHost extends EventEmitter {
     const child = this.running.get(id)
     this.running.delete(id)
     child?.kill()
-    for (const k of [...this.widgets.keys()]) if (k.startsWith(id + '/')) this.widgets.delete(k)
+    this.dropWidgets(id)
   }
+
+  private dropWidgets(id: string) { for (const k of this.widgets.keys()) if (k.startsWith(id + '/')) this.widgets.delete(k) }
 
   stopAll() { for (const id of [...this.running.keys()]) this.stop(id) }
 

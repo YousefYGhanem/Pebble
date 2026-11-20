@@ -14,7 +14,7 @@ static class Windows
     }
 
     static readonly Dictionary<uint, string> names = [];
-    static string ProcessName(uint pid)
+    public static string NameOf(uint pid)
     {
         lock (names)
         {
@@ -24,11 +24,11 @@ static class Windows
         }
     }
 
-    public static JsonObject Describe(nint hwnd) => new()
+    static JsonObject Describe(nint hwnd)
     {
-        ["hwnd"] = (long)hwnd, ["pid"] = Pid(hwnd), ["process"] = ProcessName(Pid(hwnd)),
-        ["class"] = ClassName(hwnd), ["title"] = Title(hwnd), ["rect"] = Rect(hwnd)
-    };
+        var pid = Pid(hwnd);
+        return new() { ["hwnd"] = (long)hwnd, ["pid"] = pid, ["process"] = NameOf(pid), ["class"] = ClassName(hwnd), ["title"] = Title(hwnd), ["rect"] = Rect(hwnd) };
+    }
 
     static readonly HashSet<string> Shell = ["Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd"];
 
@@ -36,8 +36,7 @@ static class Windows
     public static JsonObject? Foreground(uint ownerPid)
     {
         var h = GetForegroundWindow();
-        if (h == 0 || Shell.Contains(ClassName(h)) || Pid(h) == ownerPid) return null;
-        return new JsonObject { ["hwnd"] = (long)h, ["pid"] = Pid(h), ["class"] = ClassName(h), ["rect"] = Rect(h), ["title"] = Title(h), ["process"] = ProcessName(Pid(h)) };
+        return h == 0 || Shell.Contains(ClassName(h)) || Pid(h) == ownerPid ? null : Describe(h);
     }
 
     /// <summary>The top-level app window under a point, skipping the owner's own windows (Pebble's island and overlay).</summary>
@@ -83,8 +82,6 @@ static class Windows
         return chain;
     }
 
-    public static string NameOf(uint pid) => ProcessName(pid);
-
     /// <summary>Brings a window to the front (restoring it when minimised). Windows only lets the app in front hand
     /// over the foreground: a quick Alt tap lifts that lock, and minimise + restore is the last resort.</summary>
     public static bool Focus(nint hwnd, uint pid)
@@ -108,7 +105,7 @@ static class Windows
     {
         var list = new JsonArray();
         foreach (var h in TopWindows())
-            if (IsAppWindow(h) && Title(h) is { Length: > 0 } t) list.Add((JsonNode)new JsonObject { ["title"] = t, ["process"] = ProcessName(Pid(h)), ["hwnd"] = (long)h, ["pid"] = Pid(h) });
+            if (IsAppWindow(h) && Title(h) is { Length: > 0 } t) list.Add((JsonNode)new JsonObject { ["title"] = t, ["process"] = NameOf(Pid(h)), ["hwnd"] = (long)h, ["pid"] = Pid(h) });
         return list;
     }
 

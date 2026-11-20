@@ -13,9 +13,9 @@ const log = logger('hub')
 const PERMISSION_WAIT_S = 300
 const REPLY_WAIT_S = 1800
 const CLI_ASK_WAIT_S = 600
-// the charset matters: some clients (Windows PowerShell 5.1, scripts people write) read JSON without it as Latin-1
 /** Agents that post to /hook (?agent=…). */
 const HOOK_AGENTS: Agent[] = ['claude', 'codex', 'gemini', 'cursor', 'opencode']
+// the charset matters: some clients (Windows PowerShell 5.1, scripts people write) read JSON without it as Latin-1
 const JSON_TYPE = { 'Content-Type': 'application/json; charset=utf-8' }
 
 /** A shared secret so only agents configured by Pebble can post to it. Kept in userData. */
@@ -36,6 +36,14 @@ export function findLine(file: string, text: string): number {
     const i = body.indexOf(text.replace(/\r\n/g, '\n'))
     return i < 0 ? 1 : body.slice(0, i).split('\n').length
   } catch { return 1 }
+}
+
+/** A request's body as text; a body over max bytes ends the connection. */
+function readBody(req: http.IncomingMessage, max: number, done: (body: string) => void) {
+  let body = ''
+  req.setEncoding('utf8')
+  req.on('data', c => { body += c; if (body.length > max) req.destroy() })
+  req.on('end', () => done(body))
 }
 
 interface Held { res: http.ServerResponse; agent: Agent; suggestions?: unknown[]; timer: NodeJS.Timeout }
@@ -225,10 +233,7 @@ export class Hub extends EventEmitter {
       if (given.length !== expected.length || !timingSafeEqual(given, expected)) { res.writeHead(403).end(); return }
       if (req.method === 'GET' && url.pathname === '/wait') { this.handleWait(url.searchParams.get('session') ?? '', res); return }
       if (req.method !== 'POST') { res.writeHead(404).end(); return }
-      let body = ''
-      req.setEncoding('utf8')
-      req.on('data', chunk => { body += chunk; if (body.length > 8e6) req.destroy() })
-      req.on('end', () => {
+      readBody(req, 8e6, body => {
         let data: Record<string, unknown>
         try { data = JSON.parse(body) } catch { res.writeHead(400).end(); return }
         if (!data || typeof data !== 'object') { res.writeHead(400).end(); return }
@@ -260,10 +265,7 @@ export class Hub extends EventEmitter {
   }
 
   private handleExtension(key: string, req: http.IncomingMessage, res: http.ServerResponse) {
-    let body = ''
-    req.setEncoding('utf8')
-    req.on('data', c => { body += c; if (body.length > 1e6) req.destroy() })
-    req.on('end', () => {
+    readBody(req, 1e6, body => {
       let data: unknown
       try { data = JSON.parse(body) } catch { res.writeHead(400).end(); return }
       const answer = this.opts.extension!(key, data)
@@ -273,10 +275,7 @@ export class Hub extends EventEmitter {
   }
 
   private handleInbox(plugin: string, key: string, req: http.IncomingMessage, res: http.ServerResponse) {
-    let body = ''
-    req.setEncoding('utf8')
-    req.on('data', c => { body += c; if (body.length > 1e6) req.destroy() })
-    req.on('end', () => {
+    readBody(req, 1e6, body => {
       let data: unknown = body
       try { data = JSON.parse(body) } catch {} // plain text is fine too
       res.writeHead(this.opts.webhook!(plugin, key, data) ? 200 : 404).end()
@@ -398,7 +397,7 @@ export class Hub extends EventEmitter {
     const input = { questions: [{ question, options: options.map(label => ({ label })) }] }
     this.sessions.set(id, {
       id, agent: 'cli', project: title, status: 'question', detail: question, steps: [], files: [], at: Date.now(),
-      ask: { kind: 'question', input, questions: [{ question, options: options.map(label => ({ label })) }] }
+      ask: { kind: 'question', input, questions: input.questions }
     })
     this.hold(id, res, 'cli', CLI_ASK_WAIT_S)
     this.emit('question', id)

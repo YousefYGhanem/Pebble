@@ -33,13 +33,6 @@ static class Radios
 // Speaking with a Windows voice: text → a WAV file the island plays.
 static class Speech
 {
-    public static JsonArray Voices()
-    {
-        var list = new JsonArray();
-        foreach (var v in SpeechSynthesizer.AllVoices) list.Add((JsonNode)new JsonObject { ["id"] = v.Id, ["name"] = v.DisplayName, ["language"] = v.Language });
-        return list;
-    }
-
     /// <summary>language: "en", "nl-NL"… picks the first voice of that language (else the default voice).</summary>
     public static async Task Say(string text, string? language, string file)
     {

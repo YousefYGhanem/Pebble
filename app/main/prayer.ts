@@ -1,11 +1,11 @@
 import { CalculationMethod, Coordinates, Madhab, PolarCircleResolution, PrayerTimes } from 'adhan'
+import { PRAYER_METHODS } from '../shared/settings'
 
 // Prayer times, worked out on this PC (adhan, MIT): no network once your city is known. The five prayers of a day
 // (sunrise is not one of them), and which comes next.
 
-export const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const
+const PRAYERS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const
 export type Prayer = (typeof PRAYERS)[number]
-import { PRAYER_METHODS } from '../shared/settings'
 export type Method = (typeof PRAYER_METHODS)[number]
 
 /** A day's five prayers, in order, as times (ms). */

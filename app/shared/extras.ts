@@ -109,7 +109,7 @@ export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics:
 
 /** Everything the island can ask main to do with the extras (validated in main). */
 export type Action =
-  | { do: 'media'; action: 'toggle' | 'next' | 'previous' | 'seek'; positionMs?: number }
+  | { do: 'media'; action: 'toggle' | 'pause' | 'next' | 'previous' | 'seek'; positionMs?: number }
   | { do: 'volume'; volume?: number; muted?: boolean }
   | { do: 'shelf.add'; paths: string[] }
   | { do: 'shelf.open' | 'shelf.reveal' | 'shelf.remove' | 'shelf.drag'; path: string }
@@ -200,10 +200,10 @@ export function trimClips(list: ClipItem[], max: number): ClipItem[] {
   return [...list.filter(c => c.pinned), ...list.filter(c => !c.pinned).slice(0, max)]
 }
 
-/** A short notice the island shows for a moment (a "peek"): something on the PC just changed. */
 /** The Windows drive is almost full: under 8% or 5 GB free. */
 export const diskLow = (free: number, total: number) => total > 0 && (free / total < 0.08 || free < 5e9)
 
+/** A short notice the island shows for a moment (a "peek"): something on the PC just changed. */
 export type Notice =
   | { kind: 'device'; name: string }
   | { kind: 'caps'; on: boolean }

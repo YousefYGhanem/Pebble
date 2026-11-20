@@ -63,7 +63,7 @@ static class Hooks
                 if (pid == 0) return 0;
                 using var http = Client(token, TimeSpan.FromSeconds(3));
                 var chain = new JsonArray();
-                foreach (var a in Windows.Ancestors(Windows.ParentOf((uint)Environment.ProcessId))) chain.Add((JsonNode)JsonValue.Create(a));
+                foreach (var a in Windows.Ancestors((uint)Environment.ProcessId).Skip(1)) chain.Add((JsonNode)JsonValue.Create(a));
                 var body = new JsonObject { ["session_id"] = sid, ["pid"] = pid, ["hwnd"] = (long)hwnd, ["process"] = Windows.NameOf(pid), ["chain"] = chain }.ToJsonString();
                 await http.PostAsync(url + "/window", new StringContent(body, Encoding.UTF8, "application/json"));
                 return 0;

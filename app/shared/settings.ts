@@ -4,10 +4,10 @@ import { PIP_LOOKS } from './pip'
 
 // Everything the user can change. settings.json in userData holds only what differs from DEFAULTS;
 // it is merged over DEFAULTS and then checked against this schema.
-/** how prayer times are worked out (adhan's calculation methods) */
 /** what the game strip can show: CPU temperature only on PCs that report it (most do not) */
 export const STRIP_ITEMS = ['time', 'cpu', 'cpuTemp', 'ram', 'gpu', 'gpuTemp', 'agent', 'music'] as const
 
+/** how prayer times are worked out (adhan's calculation methods) */
 export const PRAYER_METHODS = ['MuslimWorldLeague', 'Egyptian', 'Karachi', 'UmmAlQura', 'Dubai', 'MoonsightingCommittee', 'NorthAmerica', 'Kuwait', 'Qatar', 'Singapore', 'Tehran', 'Turkey'] as const
 
 export const CHIPS = ['none', 'time', 'battery', 'cpu', 'ram', 'prayer'] as const
@@ -15,7 +15,7 @@ export const CHIPS = ['none', 'time', 'battery', 'cpu', 'ram', 'prayer'] as cons
 /** a built-in chip, or a connector's chip widget: "widget:<connector>/<widget>" */
 const CHIP = z.union([z.enum(CHIPS), z.string().regex(/^widget:[a-z0-9-]+\/[\w-]+$/)])
 
-export const settingsSchema = z.object({
+const settingsSchema = z.object({
   version: z.literal(1),
   theme: z.string().min(1),
   general: z.object({

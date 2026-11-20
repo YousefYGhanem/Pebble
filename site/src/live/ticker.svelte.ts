@@ -5,12 +5,12 @@ import { reducedMotion } from '../lib/motion'
  * the keyboard in it (live demos loop with it).
  * Use: const tick = ticker(2000); <div use:tick.watch>{tick.n}</div>
  */
-export function ticker(ms: number, slowerWhenReduced = 1.6) {
+export function ticker(ms: number) {
   const s = $state({ n: 0 })
   let visible = false, held = false, id = 0
   const sync = () => {
     clearInterval(id)
-    if (visible && !held && !document.hidden) id = window.setInterval(() => s.n++, reducedMotion() ? ms * slowerWhenReduced : ms)
+    if (visible && !held && !document.hidden) id = window.setInterval(() => s.n++, reducedMotion() ? ms * 1.6 : ms)
   }
   return {
     get n() { return s.n },

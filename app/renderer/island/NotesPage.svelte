@@ -23,7 +23,6 @@
     act({ do: 'todo.add', text: task.trim(), due, daily: daily || undefined })
     task = ''; time = ''; daily = false
   }
-  const at = (ms: number) => hhmm(ms)
   const progress = $derived(todayProgress(todos, now))
   let selected = $state<string>()
   let draft = $state<Note[]>([])
@@ -78,7 +77,7 @@
         <div class="task" class:done={x.done}>
           <input type="checkbox" checked={x.done} onchange={() => act({ do: 'todo.toggle', id: x.id })} aria-label={x.text} />
           <span class="ttext">{x.text}</span>
-          {#if x.due && !x.done}<span class="when">{at(x.due)}{#if x.daily} · {t('i.todo.everyDay')}{/if}</span>{/if}
+          {#if x.due && !x.done}<span class="when">{hhmm(x.due)}{#if x.daily} · {t('i.todo.everyDay')}{/if}</span>{/if}
           <button class="ghost" aria-label={t('i.common.delete')} title={t('i.common.delete')} onclick={() => undo.offer(t('i.undo.todo'), { hides: `todo:${x.id}`, commit: () => act({ do: 'todo.remove', id: x.id }) })}><Icon name="close" size={11} /></button>
         </div>
       {:else}

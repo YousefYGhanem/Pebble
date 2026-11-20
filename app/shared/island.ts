@@ -4,7 +4,7 @@ import type { Settings } from './settings'
 // area at the top of the screen; the island is drawn inside it and only the island itself catches the mouse.
 
 /** Room around the biggest island: the split pill on the left, the shadow and jelly overshoot. */
-export const MARGIN = 72
+const MARGIN = 72
 export const WINDOW_HEIGHT = 480
 export const windowWidth = (island: Settings['island']) => Math.max(island.openWidth, island.askWidth, island.width) + 2 * MARGIN
 

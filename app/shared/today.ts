@@ -7,8 +7,8 @@ import type { Usage } from './ipc'
 // ---------- usage alerts ----------
 
 export type UsageWindow = 'fiveHour' | 'sevenDay' | 'spend'
-// near (75), close (90), reached (100): a warning while there is still room to plan
-export const ALERT_LEVELS = [75, 90, 100] as const
+// reached (100), close (90), near (75): a warning while there is still room to plan; highest first
+const ALERT_LEVELS = [100, 90, 75] as const
 
 /** The limits a CLI just went past (only the highest, if a jump passed both). A new window starts below them again. */
 export function usageAlerts(prev: Usage | undefined, next: Usage): { window: UsageWindow; level: number; resetsAt: number }[] {
@@ -16,7 +16,7 @@ export function usageAlerts(prev: Usage | undefined, next: Usage): { window: Usa
   for (const w of ['fiveHour', 'sevenDay', 'spend'] as const) {
     const a = prev?.[w], b = next[w]
     if (!a || !b) continue // the first report after a start is the baseline, not news
-    const level = [...ALERT_LEVELS].reverse().find(l => a.used < l && b.used >= l)
+    const level = ALERT_LEVELS.find(l => a.used < l && b.used >= l)
     if (level) out.push({ window: w, level, resetsAt: b.resetsAt })
   }
   return out
@@ -39,7 +39,7 @@ export interface Day {
 
 export interface Days { today: Day; yesterday: Day | null }
 
-export const dayKey = (t: number) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
+const dayKey = (t: number) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 export const emptyDay = (t: number): Day => ({ day: dayKey(t), tasks: 0, seconds: 0, files: 0, agents: {}, spent: {} })
 
 /** Today and yesterday as of `now` (a new day moves today to yesterday; an older one is forgotten). */

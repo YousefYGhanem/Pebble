@@ -54,8 +54,9 @@
   const ICONS = Object.fromEntries(Object.entries(import.meta.glob<string>('../../../build/icons/*.svg', { query: '?url', import: 'default', eager: true }))
     .flatMap(([p, url]) => { const m = /\/(\w+)\.svg$/.exec(p); return m ? [[m[1]!, url]] : [] }))
   /** a still Pip in the given colours (canvas at 2x) */
-  function paintPip(canvas: HTMLCanvasElement, o: { look: PipLookId; body: string; visor: string; tok: { running?: string; pipBody?: string; pipVisor?: string } }) {
-    const paint = (o: { look: PipLookId; body: string; visor: string; tok: { running?: string; pipBody?: string; pipVisor?: string } }) => {
+  type PipPaint = { look: PipLookId; body: string; visor: string; tok: { running?: string; pipBody?: string; pipVisor?: string } }
+  function paintPip(canvas: HTMLCanvasElement, o: PipPaint) {
+    const paint = (o: PipPaint) => {
       const ctx = canvas.getContext('2d')!
       ctx.setTransform(2, 0, 0, 2, 0, 0)
       ctx.clearRect(0, 0, 56, 48)
@@ -406,8 +407,8 @@
           <div class="row"><span>{t('chat.voice')}<small>{s.chat.voice !== 'natural' ? t('chat.voiceWindowsHint') : engine === 'downloading' ? t('chat.voiceDownloading') : engine === 'failed' ? t('chat.voiceFailed', { error: v.voiceEngine?.error ?? '' }) : t('chat.voiceNaturalHint')}</small>
             {#if s.chat.voice === 'natural' && engine === 'failed'}<button class="link" onclick={() => set('chat.voice', 'natural')}>{t('chat.voiceRetry')}</button>{/if}</span>
             <div class="seg">
-              {#each ['natural', 'windows'] as const as v}
-                <button class:on={s.chat.voice === v} aria-pressed={s.chat.voice === v} onclick={() => set('chat.voice', v)}>{t(`chat.voice.${v}`)}</button>
+              {#each ['natural', 'windows'] as const as x}
+                <button class:on={s.chat.voice === x} aria-pressed={s.chat.voice === x} onclick={() => set('chat.voice', x)}>{t(`chat.voice.${x}`)}</button>
               {/each}
             </div></div>
         </section>

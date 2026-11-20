@@ -71,11 +71,11 @@ export function remove(file = SETTINGS_FILE) {
 
 /** True when everything is installed exactly as install(o) would write it now (port, token and helper path). */
 export function installed(o: Install, file = SETTINGS_FILE): boolean {
-  const hooks = readConfig<ClaudeSettings>(file).hooks ?? {}
+  const settings = readConfig<ClaudeSettings>(file), hooks = settings.hooks ?? {}
   const has = (event: string, test: (h: Hook) => boolean) => (hooks[event] ?? []).some(g => (g.hooks ?? []).some(test))
   return EVENTS.every(e => has(e, h => isOurs(h) && h.url === hookUrl(o.port) && h.headers?.['X-Pebble-Token'] === o.token))
     && has('Stop', h => h.command === hook(o, 'reply'))
     && has('UserPromptSubmit', h => h.command === hook(o, 'window'))
-    && (readConfig<ClaudeSettings>(file).statusLine?.command ?? '').startsWith(statusCommand(o))
+    && (settings.statusLine?.command ?? '').startsWith(statusCommand(o))
 }
 

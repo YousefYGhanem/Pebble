@@ -64,12 +64,14 @@
   // when each session stopped (an error, a usage limit), as the island first saw it: a stop goes quiet after a while
   // even if nobody opens it (its "last activity" time moves with every hook event, so it cannot tell)
   const stoppedSince = new Map<string, number>()
-  const withStops = $derived(sessions.map(s => {
-    if (s.status !== 'error') { stoppedSince.delete(s.id); return s }
-    if (!stoppedSince.has(s.id)) stoppedSince.set(s.id, Date.now())
-    return { ...s, stoppedAt: stoppedSince.get(s.id) }
-  }))
-  $effect(() => { for (const id of stoppedSince.keys()) if (!sessions.some(s => s.id === id)) stoppedSince.delete(id) }) // ended sessions
+  const withStops = $derived.by(() => {
+    for (const id of stoppedSince.keys()) if (!sessions.some(s => s.id === id)) stoppedSince.delete(id) // ended sessions
+    return sessions.map(s => {
+      if (s.status !== 'error') { stoppedSince.delete(s.id); return s }
+      if (!stoppedSince.has(s.id)) stoppedSince.set(s.id, Date.now())
+      return { ...s, stoppedAt: stoppedSince.get(s.id) }
+    })
+  })
   const shown = $derived(view ? rank(withStops, view.settings.features.doneSeconds, now) : [])
   const top = $derived<Session | undefined>(shown[0])
   const extras = $derived<ExtrasState | undefined>(view ? { ...view.extras, ...(scene ? sceneExtras : {}) } : undefined)
@@ -154,7 +156,11 @@
   }
   scheduleBlink()
 
-  function love(x = pipAt.x, y = pipAt.y + pipAt.r) { lovedAt = Date.now(); hearts(x, y); say('love'); wake(); later(2600) }
+  // particles are motion too: none with reduced motion
+  function love(x = pipAt.x, y = pipAt.y + pipAt.r) { lovedAt = Date.now(); if (!reduced) hearts(x, y); say('love'); wake(); later(2600) }
+  const celebrate = () => { if (!reduced) confetti(innerWidth / 2, top0.value + rect.value.h) }
+  /** Pip is glad for a moment (a task or a focus round done, you came back) */
+  function cheer(c: Chirp) { happyAt = Date.now(); kick(); say(c); later(3100) }
 
   function poke() {
     const t = Date.now()
@@ -191,8 +197,8 @@
       const before = lastStatus[x.id]
       if (x.status === 'done' && before && before !== 'done') {
         said = t('i.sr.done', { project: x.project })
-        happyAt = Date.now(); kick(); say('done'); later(3100)
-        if (x.startedAt && Date.now() - x.startedAt > 120_000) confetti(innerWidth / 2, top0.value + rect.value.h) // a long task
+        cheer('done')
+        if (x.startedAt && Date.now() - x.startedAt > 120_000) celebrate() // a long task
       }
       if (x.ask && before !== 'question') { alerted = t('i.sr.asks', { project: x.project, text: x.ask.kind === 'permission' ? x.ask.summary : x.detail }); kick(); say('question') }
       if (x.status === 'error' && before && before !== 'error') said = t('i.sr.stopped', { project: x.project })
@@ -205,16 +211,16 @@
     applyTheme(s.theme)
     setLanguage(s.settings.general.language, false)
     const first = !view
-    if (view && s.pip.achievements.length > view.pip.achievements.length) { confetti(innerWidth / 2, top0.value + rect.value.h); say('achievement'); love() }
+    if (view && s.pip.achievements.length > view.pip.achievements.length) { celebrate(); say('achievement'); love() }
     for (const c of s.pip.custom) if (!images.has(c.id)) { const img = new Image(); img.onload = () => wake(); img.src = c.data; images.set(c.id, img) }
     view = s
     if (!scene) noticeChanges(s.sessions)
     if (first) startHello()
     // a focus timer ran out (not stopped by hand): Pip is happy and chimes
-    if (prevFocus?.endsAt && !s.extras.focus && prevFocus.endsAt - Date.now() < 2000) { happyAt = Date.now(); kick(); say('done'); later(3100) }
+    if (prevFocus?.endsAt && !s.extras.focus && prevFocus.endsAt - Date.now() < 2000) cheer('done')
     prevFocus = s.extras.focus
     // you are back after Pip fell asleep: he wakes up glad to see you
-    if (prevSleepy && !s.pip.sleepy && !scene) { happyAt = Date.now(); kick(); say('hello'); later(3100) }
+    if (prevSleepy && !s.pip.sleepy && !scene) cheer('hello')
     prevSleepy = s.pip.sleepy
     // an update is ready: one peek (the Home page keeps the button)
     if (s.update && s.update !== lastUpdate) peek({ icon: 'download', title: t('i.peek.updateTitle', { version: s.update }), sub: t('i.peek.updateSub'), tone: 'ok' })
@@ -251,12 +257,12 @@
     page = untrack(() => shown.some(x => x.ask || x.status === 'running' || (x.status === 'done' && !x.seenAt) || x.status === 'error')) ? 'agents'
       : untrack(() => ({ music: 'music', focus: 'focus', activity: 'widgets' } as Partial<Record<string, Page>>)[medium] ?? 'home')
   })
-  let pageDir = $state(1)
+  // the new page slides in from the side it sits on in the page row
   let pagePrev: Page = 'home'
-  $effect(() => {
+  const pageDir = $derived.by(() => {
     const i = PAGES.findIndex(p => p.id === page), j = PAGES.findIndex(p => p.id === pagePrev)
-    pageDir = i >= j ? 1 : -1
     pagePrev = page
+    return i >= j ? 1 : -1
   })
   const act = (a: Action) => { if (!scene) window.pebble.act(a) }
   window.pebble.onExpand(id => { tucked = false; open = true; if (id) { selected = id; queueMicrotask(() => (page = 'agents')) } })
@@ -321,7 +327,7 @@
     if (s === 'bye') startBye(() => setTimeout(startHello, 600))
     if (s === 'jelly' || s === 'done' || s === 'ask') kick()
     if (s === 'done') say('done')
-    if (s === 'pip-happy') { happyAt = Date.now(); confetti(innerWidth / 2, top0.value + rect.value.h); say('done') }
+    if (s === 'pip-happy') { happyAt = Date.now(); celebrate(); say('done') }
     if (s === 'pip-love') love()
     if (s === 'pip-dizzy' || s === 'pip-grumpy') kick()
     wake()
@@ -385,8 +391,9 @@
 
     const moving = !rect.settled || [top0, splitW, eyes, eyeDx, eyeY, lookX, lookY].some(sp => !sp.settled)
     const blinking = t - blinkAt < 160
-    const lively = mood === 'dizzy' || mood === 'dancing' || particlesAlive() // moods that move by themselves
-    if (moving || blinking || lively || kickAt >= 0 || phase === 'hello' || phase === 'bye' || splitW.value > 0) next()
+    // what moves by itself: some moods and the split pill's running line (held still with reduced motion), particles
+    const lively = !reduced && (mood === 'dizzy' || mood === 'dancing' || (splitW.value > 0.5 && top?.status !== 'done')) || particlesAlive()
+    if (moving || blinking || lively || kickAt >= 0 || phase === 'hello' || phase === 'bye') next()
     else running = false
   }
 
@@ -401,6 +408,7 @@
     ctx.clearRect(0, 0, W, H)
 
     const s = view!.settings, tok = view!.theme.tokens
+    const at = reduced ? 0 : t // the clock of things that move by themselves (still with reduced motion)
     const v = rect.value
     const k = kickAt >= 0 ? jelly((t - kickAt) / 1000) : 0 // squash and stretch
     const w = v.w * (1 + k), h = Math.max(0, v.h * (1 - k * 0.6))
@@ -429,7 +437,7 @@
 
     if (s.island.skins && !thin && mode === 'resting') {
       const d = new Date()
-      drawSkin(ctx, box, s.island.style === 'notch', skinFor({ cpu: view!.extras.system.cpu, hour: d.getHours(), dayHours: (d.getTime() - started) / 3.6e6 }), reduced ? 0 : t)
+      drawSkin(ctx, box, s.island.style === 'notch', skinFor({ cpu: view!.extras.system.cpu, hour: d.getHours(), dayHours: (d.getTime() - started) / 3.6e6 }), at)
     }
 
     // a file dragged over the island: it glows warm from the bottom, ready to catch it (animation #13)
@@ -448,7 +456,7 @@
     if (splitW.value > 0.5) {
       const sh = Math.min(h, s.island.height)
       drawSplitPill(ctx, { x: box.x - 8 - splitW.value, y: box.y, w: splitW.value, h: sh, r: sh / 2 },
-        { fill: tok.background, alpha: 1 - s.island.seeThrough / 100, color: status === 'done' ? tok.done : tok.running, t: t / 1600, done: status === 'done' })
+        { fill: tok.background, alpha: 1 - s.island.seeThrough / 100, color: status === 'done' ? tok.done : tok.running, t: at / 1600, done: status === 'done' })
     }
 
     const mood = forced ?? moodFor({ status, now: Date.now(), pokes, lovedAt, happyAt, worriedAt, sleepy: view!.pip.sleepy, playing: view!.pip.playing, hovering })
@@ -461,9 +469,10 @@
       const y = box.y + Math.min(eyeY.value, h / 2) + (hat && h < 44 ? size * 0.22 : 0)
       const bt = (t - blinkAt) / 140
       const blink = bt >= 0 && bt < 1 && (mood === 'idle' || mood === 'curious' || mood === 'focused')
+      const look = pipColors(s.pip, tok)
       drawPip(ctx, {
-        x, y, size, mood, t: t / 1000, squash: k * 1.6,
-        color: status === 'ready' ? restingEyes(tok.text, pipColors(s.pip, tok).visor) : colorOf(status), ...pipColors(s.pip, tok),
+        x, y, size, mood, t: at / 1000, squash: k * 1.6,
+        color: status === 'ready' ? restingEyes(tok.text, look.visor) : colorOf(status), ...look,
         open: openness * (blink && !wink ? Math.abs(1 - 2 * bt) : 1), wink: blink && wink,
         lookX: lookX.value / 100, lookY: lookY.value / 100,
         outfit, outfitImage: outfit ? images.get(outfit) : undefined
@@ -732,7 +741,7 @@
           {:else if ask.kind === 'question' && quick}
             <div class="ask-text">{t('i.ask.asks', { project: s.project })}<div class="detail strong">{quick.question}</div></div>
             <div class="buttons">
-              {#each quick.options as o, i (o.label)}
+              {#each quick.options as o (o.label)}
                 <button class:likely={recommended(o.label)} title={o.description} onclick={() => armed() && answer(s.id, { kind: 'question', answers: { [quick.question]: o.label } })}>{o.label}</button>
               {/each}
               <button onclick={() => openOn(s.id)}>{t('i.ask.other')}</button>
@@ -799,14 +808,13 @@
   .strip > span { white-space: nowrap; }
   .who { font-size: 0.78em; color: var(--muted); margin-bottom: 2px; }
   .who.tipline { color: var(--accent-text); }
-  .tip { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--accent) 22%, transparent); font-size: 0.86em; }
-  .tip button { padding: 3px 12px; }
-  .undo { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: 999px; background: var(--surface2); font-size: 0.88em; }
-  .undo button { padding: 3px 12px; }
+  .tip, .undo { display: flex; align-items: center; gap: 12px; align-self: center; width: fit-content; margin: 0 auto 6px; padding: 5px 6px 5px 14px; border-radius: var(--r-pill); }
+  .tip { background: color-mix(in srgb, var(--accent) 22%, transparent); font-size: 0.86em; }
+  .undo { background: var(--surface2); font-size: 0.88em; }
+  .tip button, .undo button { padding: 3px 12px; }
   .line { display: flex; align-items: center; gap: 10px; padding: 0 56px 0 16px; }
   .title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .count { color: var(--muted); font-size: 0.85em; }
-
 
   .ask { padding: 12px 16px 14px; }
   .ask-text { padding-right: 52px; line-height: 1.35; }

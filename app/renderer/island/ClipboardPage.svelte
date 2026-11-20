@@ -24,7 +24,6 @@
     <span class="page-title">{t('i.page.clipboard')}</span>
     {#if extras.clipboard.length && !undo.hides('clipboard')}<button class="ghost" onclick={() => undo.offer(t('i.undo.clipboard'), { hides: 'clipboard', commit: () => act({ do: 'clip.clear' }) })}><Icon name="trash" size={13} />{t('i.common.clear')}</button>{/if}
     <span class="page-time">{hhmm(now)}</span><span class="pip-room"></span>
-  
     {#if hasPictures}
       <div class="kinds" role="group" aria-label={t('i.clip.kinds')}>
         {#each ['all', 'text', 'pictures'] as const as k}<button class:on={kind === k} aria-pressed={kind === k} onclick={() => (kind = k)}>{t(`i.clip.${k}`)}</button>{/each}

@@ -8,9 +8,9 @@ import { logger } from './log'
 const log = logger('chatapps')
 
 /** Sites the browser extension reads, by its content script's name for them. */
-export const SITES: Record<string, string> = { claude: 'claude.ai', chatgpt: 'ChatGPT', gemini: 'Gemini', deepseek: 'DeepSeek' }
+const SITES: Record<string, string> = { claude: 'claude.ai', chatgpt: 'ChatGPT', gemini: 'Gemini', deepseek: 'DeepSeek' }
 /** Desktop apps followed through UI Automation (beta), by process name. */
-export const DESKTOP_APPS: Record<string, string> = { claude: 'Claude (desktop)', chatgpt: 'ChatGPT (desktop)' }
+const DESKTOP_APPS: Record<string, string> = { claude: 'Claude (desktop)', chatgpt: 'ChatGPT (desktop)' }
 
 interface Tab { site: string; title: string; streaming: boolean; answer: string; seen: number; reply?: string }
 

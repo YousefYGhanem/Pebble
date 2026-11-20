@@ -9,7 +9,6 @@ import { initLog, logger } from './log'
 import { Store, writeJsonAtomic } from './store'
 import type { Settings } from '../shared/settings'
 import { Hub, loadToken } from './agents/hub'
-import * as claude from './agents/claude'
 import { adapters, type Adapter } from './agents/registry'
 import * as terminals from './agents/terminals'
 import { createIsland, islandDisplay, placeIsland } from './island'
@@ -33,7 +32,7 @@ import { Extras, validAction } from './extras'
 import { DropServer } from './extras/drop'
 import { allowInFirewall, checkReach } from './extras/reach'
 import { FocusGuard, guardPage, guardPreload } from './extras/guard'
-import { diskLow, emptyExtras, type ExtrasState } from '../shared/extras'
+import { diskLow, emptyExtras } from '../shared/extras'
 import { sharedSpawner, type Child } from './connectors/shared'
 import { ConnectorHost } from './connectors/host'
 import { describePermissions } from '../shared/connectors'
@@ -74,7 +73,7 @@ const captureDir = process.argv.find(a => a.startsWith('--capture='))?.slice(10)
 if (captureDir) {
   app.whenReady().then(async () => {
     const win = createIsland(store.settings, true)
-    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { claude: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: NO_EXTRAS, chat: { provider: 'Claude Code', ready: true, messages: [], busy: false }, update: null, day: { today: { ...emptyDay(Date.now()), tasks: 6, seconds: 5400, files: 14, agents: { claude: { tasks: 6, seconds: 5400 } }, spent: { claude: { unit: '%', base: 20, prev: 31, acc: 0 } } }, yesterday: null } } satisfies IslandState))
+    ipcMain.on(CH.ready, () => win.webContents.send(CH.state, { sessions: [], settings: store.settings, theme: store.theme, usage: { claude: { fiveHour: { used: 64, resetsAt: 0 }, sevenDay: { used: 22, resetsAt: 0 } } }, widgets: [], connectors: [], history: [], pip: { done: 12, achievements: [], custom: [], sleepy: false, playing: false }, extras: emptyExtras(), chat: { provider: 'Claude Code', ready: true, messages: [], busy: false }, update: null, day: { today: { ...emptyDay(Date.now()), tasks: 6, seconds: 5400, files: 14, agents: { claude: { tasks: 6, seconds: 5400 } }, spent: { claude: { unit: '%', base: 20, prev: 31, acc: 0 } } }, yesterday: null } } satisfies IslandState))
     await new Promise<void>(r => win.webContents.once('did-finish-load', () => r()))
     await new Promise(r => setTimeout(r, 1500)) // hello
     fs.mkdirSync(captureDir, { recursive: true })
@@ -106,8 +105,6 @@ const vault = {
 
 /** Pebble's icons (build/icons, made by npm run icon): next to the app once installed. */
 const iconFile = (name: string) => app.isPackaged ? path.join(process.resourcesPath, 'icons', name) : path.join(app.getAppPath(), 'build', 'icons', name)
-
-const NO_EXTRAS = emptyExtras()
 
 let island: BrowserWindow | undefined
 let scene: Scene | null = null
@@ -224,10 +221,10 @@ function toast(title: string, body: string, sessionId?: string, link?: string, o
 
 const agentName = (s: Session) => (s.agent === 'cli' ? s.project : AGENT_NAMES[s.agent]) + (s.provider ? ` (${s.provider})` : '')
 
-/** Game mode: hidden while something covers the island's screen, unless you brought it back yourself. */
 let schedulePrayer = () => {}
 let applyScreen = () => {}
 let wellnessAnswerHandler: (what: 'water' | 'stand', done: boolean) => void = () => {}
+/** Game mode: hidden while something covers the island's screen, unless you brought it back yourself. */
 const inGame = () => store.settings.island.gameMode && fullscreen.current === islandDisplay(store.settings).id
 /** a question came during a full-screen game: the island shows as its thin line until it is answered */
 let peeking = false
@@ -319,16 +316,17 @@ async function say(text: string) {
   const file = path.join(chat.folder, 'say.wav')
   const plain = text.replace(/```[\s\S]*?```/g, ' (code) ').replace(/[`*_#>|]/g, '').slice(0, 5000)
   const language = speechLanguage(plain)
+  const play = () => send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`)
   try {
     // a natural voice of the message's own language; the first time for a language it downloads (about 60 MB)
     if (store.settings.chat.voice === 'natural' && voices.available) {
       if (!voices.has(language)) toast(tr('m.voiceDownloading'), tr('m.voiceDownloadingBody'), undefined, undefined, { kind: 'extras' })
       const ok = await voices.speak(plain, language, file).catch(err => { log.warn('natural voice:', (err as Error).message); return false })
-      if (ok) { send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`); return }
+      if (ok) { play(); return }
     }
     // Windows' own voice of that language (its default voice reads other languages' words badly)
     await native.request('speech.say', { text: plain, file, language })
-    send(CH.play, `data:audio/wav;base64,${fs.readFileSync(file).toString('base64')}`)
+    play()
   } catch (err) {
     log.warn('say:', (err as Error).message)
     send(CH.play, null)
@@ -336,6 +334,8 @@ async function say(text: string) {
   }
 }
 function toggleTuck() { bringBack(); send(CH.tuck) }
+/** the microphone for every app at once; the island shows a muted mic until it is back on */
+function toggleMic() { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)) }
 
 function connected(a: Adapter) {
   try { return a.installed() } catch (err) { log.error(a.name, err); return false }
@@ -381,10 +381,9 @@ function applySettings() {
   bindShortcut('tuck', s.general.tuckShortcut, toggleTuck)
   bindShortcut('buddy', s.general.buddyShortcut, () => void buddy())
   bindShortcut('voice', s.general.voiceShortcut, () => showPage('chat', true))
-  // the microphone for every app at once; the island shows a muted mic until it is back on
   bindShortcut('strip', s.general.stripShortcut, () => store.update({ island: { gameStrip: !store.settings.island.gameStrip } })) // the game strip on or off
   bindShortcut('quick', s.general.quickShortcut, () => showPage('chat')) // Pip's page, ready to type
-  bindShortcut('mic', s.general.micShortcut, () => { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)) })
+  bindShortcut('mic', s.general.micShortcut, toggleMic)
   chatApps.apply()
   updater.apply()
   if (island) placeIsland(island, s)
@@ -484,7 +483,6 @@ const settingsWin = new SettingsWindow({
   })
 })
 
-/** Call after anything the tray or the Settings window shows has changed. */
 /** "Pebble · 2 agents working · 1 needs you" (the tray's tooltip) */
 function updateTrayStatus() {
   const list = hub.list()
@@ -492,6 +490,7 @@ function updateTrayStatus() {
   trayStatus(['Pebble', working ? tr('m.tray.working', { n: working }) : '', asks ? tr('m.tray.asks', { n: asks }) : '', tucked ? tr('m.tray.isTucked') : ''].filter(Boolean).join(' · '))
 }
 
+/** Call after anything the tray or the Settings window shows has changed. */
 function refreshTray() {
   const u = updater.status
   const f = store.settings.features
@@ -560,9 +559,8 @@ async function reply(id: string, text: string) {
   }
   if (s?.windowPid && hub.waiting(id) && words && native.available) {
     try {
-      // in VS Code or Cursor, Pebble's extension first shows the exact terminal tab, so the typing lands there
-      const scheme = editorScheme(s.windowProcess)
-      if (scheme && s.pidChain?.length && editorExtension(scheme)) { await shell.openExternal(`${scheme}://pebble.pebble/focus?pids=${s.pidChain.join(',')}`); await new Promise(r => setTimeout(r, 600)) }
+      // in VS Code or Cursor, the exact terminal tab first, so the typing lands there
+      if (await showEditorTab(s)) await new Promise(r => setTimeout(r, 600))
       await native.request('window.type', { pid: s.windowPid, hwnd: s.windowHandle ?? 0, text: words })
       hub.reply(id, words, true)
       return
@@ -575,10 +573,16 @@ ipcMain.on(CH.jump, (e, id: unknown) => {
   const s = hub.sessions.get(id)
   if (!s?.windowPid) return
   native.request('window.focus', { pid: s.windowPid, hwnd: s.windowHandle ?? 0 }).catch(err => log.warn('jump:', err.message))
-  // in VS Code or Cursor, Pebble's extension also shows the exact terminal tab (the one whose shell runs the agent)
-  const scheme = editorScheme(s.windowProcess)
-  if (scheme && s.pidChain?.length && editorExtension(scheme)) shell.openExternal(`${scheme}://pebble.pebble/focus?pids=${s.pidChain.join(',')}`)
+  void showEditorTab(s).catch(() => {})
 })
+
+/** In VS Code or Cursor, Pebble's extension shows the exact terminal tab (the one whose shell runs the agent). */
+async function showEditorTab(s: Session): Promise<boolean> {
+  const scheme = editorScheme(s.windowProcess)
+  if (!scheme || !s.pidChain?.length || !editorExtension(scheme)) return false
+  await shell.openExternal(`${scheme}://pebble.pebble/focus?pids=${s.pidChain.join(',')}`)
+  return true
+}
 
 /** The URL scheme of the editor that runs a session (VS Code, Insiders, Cursor), or null. */
 function editorScheme(process?: string): string | null {
@@ -633,7 +637,7 @@ ipcMain.on(CH.act, (e, a: unknown) => {
   }
   if (a.do === 'update.install') { updater.install(); return }
   if (a.do === 'wellness') { wellnessAnswerHandler(a.what, a.done); return }
-  if (a.do === 'mic.toggle') { native.request('mic.mute', {}).catch(err => log.warn('mic:', err.message)); return }
+  if (a.do === 'mic.toggle') { toggleMic(); return }
   if (a.do === 'power') { native.request('power.set', { mode: a.mode }).then(() => extras.readPower()).catch(err => log.warn('power:', err.message)); return }
   if (a.do === 'focus.sound') { store.update({ music: { focusSound: a.sound } }); return }
   if (a.do === 'tip.seen') { const seen = store.settings.general.tipsSeen; if (!seen.includes(a.id)) store.update({ general: { tipsSeen: [...seen, a.id] } }); return }
@@ -757,13 +761,12 @@ app.whenReady().then(async () => {
   })
   extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) }), undefined, undefined, { kind: 'extras' }))
   drop.on('change', push)
-  // an answer streams in many small pieces: show them at most ~20 times a second
   chat.on('answered', (text: string) => { if (store.settings.chat.readAloud) void say(text) })
-  // while an answer streams in, only the chat goes over (paced): the whole state follows once it is done
+  // an answer streams in many small pieces: only the chat goes over, at most ~20 times a second; the whole state (and
+  // Settings) follows once it is done
   let chatTimer: NodeJS.Timeout | undefined
   chat.on('change', () => {
-    settingsWin.push()
-    if (!chat.state().busy) { clearTimeout(chatTimer); chatTimer = undefined; push(); return }
+    if (!chat.state().busy) { clearTimeout(chatTimer); chatTimer = undefined; push(); settingsWin.push(); return }
     chatTimer ??= setTimeout(() => { chatTimer = undefined; send(CH.chat, chat.state()) }, 50)
   })
   connectors.discover()
@@ -778,7 +781,7 @@ app.whenReady().then(async () => {
   drop.on('received', (paths: string[]) => { void extras.shelve(paths); toast(tr('m.fromPhone'), paths.map(p => path.basename(p)).join(', '), undefined, undefined, { kind: 'extras' }) })
   setInterval(() => {
     const now = powerMonitor.getSystemIdleTime() >= store.settings.pip.sleepAfterMinutes * 60
-    if (now !== sleepy) { sleepy = now; push(); applyRest(); if (!now) void planUsage() }
+    if (now !== sleepy) { sleepy = now; push(); applyRest(); applyScreen(); if (!now) void planUsage() }
   }, 3_000).unref() // cheap: the tools wake within a few seconds of your return
   // your own outfits: dropping an SVG in the folder shows it right away
   try { fs.watch(pip.outfitsDir, () => { pip.loadOutfits(); refreshTray(); push() }) } catch {}
@@ -799,7 +802,6 @@ app.whenReady().then(async () => {
     // the question that peeked into the game is answered: out of the way again
     if (peeking && !hub.list().some(s => s.ask)) { peeking = false; send(CH.peek, false); updateVisibility() }
   })
-  // Codex's plan usage, from its newest session file
   // prayer times: worked out here; one timer for the next one, set again after it and when the settings change
   let prayerTimer: NodeJS.Timeout | undefined
   schedulePrayer = () => {
@@ -816,7 +818,7 @@ app.whenReady().then(async () => {
       send(CH.notice, { kind: 'prayer', name: next.name })
       bringBack()
       if (p.notify) toast(tr(`prayer.${next.name}`), tr('m.prayerNow', { city: p.city }), undefined, undefined, { kind: 'extras' })
-      if (p.pauseMusic && extras.state.media?.playing) void extras.act({ do: 'media', action: 'toggle' })
+      if (p.pauseMusic && extras.state.media?.playing) void extras.act({ do: 'media', action: 'pause' })
       setTimeout(() => schedulePrayer(), 60_000) // the one after it
     }, Math.min(Math.max(0, next.at - Date.now()), 86_400_000))
     prayerTimer.unref?.()
@@ -824,14 +826,14 @@ app.whenReady().then(async () => {
   schedulePrayer()
   // water and stand-up reminders: a look each minute (not while resting: away, a game, tucked)
   let wellness = freshWellness(Date.now())
-  setInterval(() => {
+  const wellnessTick = () => {
     const c = store.settings.wellness
     if ((!c.water && !c.stand) || rest === 'deep' || rest === 'off') return
     const r = wellnessCheck(wellness, Date.now(), powerMonitor.getSystemIdleTime(), c)
     wellness = r.st
     if (extras.state.glasses !== wellness.glasses) { extras.state.glasses = wellness.glasses; push() }
     if (r.due) { send(CH.notice, { kind: 'wellness', what: r.due }); bringBack() }
-  }, 60_000).unref()
+  }
   wellnessAnswerHandler = (what, done) => {
     wellness = wellnessAnswer(wellness, what, done, Date.now(), store.settings.wellness)
     extras.state.glasses = wellness.glasses
@@ -841,8 +843,10 @@ app.whenReady().then(async () => {
   const screenFile = path.join(userData, 'screentime.json')
   let screenDay: ScreenDay = freshScreen(Date.now())
   try { const j = JSON.parse(fs.readFileSync(screenFile, 'utf8')) as ScreenDay; if (j.day === screenDay.day && j.apps) screenDay = j } catch { /* none yet */ }
+  let savedScreen = screenDay // countTime returns the same day object when nothing was counted
   const front = { app: '', since: Date.now() }
-  let savedScreen = ''
+  // not while tucked or away: the foreground watch is off then (other watchers may still see windows go by)
+  let counting = false
   const creditFront = () => {
     const now = Date.now()
     // no input for 5 minutes: you are away; and a gap longer than the minute's look (sleep, switched off) is not app time
@@ -851,7 +855,7 @@ app.whenReady().then(async () => {
     front.since = now
   }
   native.on('foreground', (w: { process?: string } | null) => {
-    if (!store.settings.screenTime.enabled) return
+    if (!counting) return
     const app = appName(w?.process ?? '')
     if (app !== front.app) { creditFront(); front.app = app }
   })
@@ -859,16 +863,22 @@ app.whenReady().then(async () => {
     const top = store.settings.screenTime.enabled ? topApps(screenDay) : []
     if (JSON.stringify(top) !== JSON.stringify(extras.state.screen)) { extras.state.screen = top; push() }
   }
-  setInterval(() => {
-    if (!store.settings.screenTime.enabled) return
+  const screenTick = () => {
+    if (!counting) return
     creditFront()
     showScreen()
-    const json = JSON.stringify(screenDay)
-    if (json === savedScreen) return
-    savedScreen = json
+    if (screenDay === savedScreen) return
+    savedScreen = screenDay
     try { writeJsonAtomic(screenFile, screenDay) } catch (err) { log.warn('screen time:', (err as Error).message) }
-  }, 60_000).unref()
-  applyScreen = () => { front.since = Date.now(); native.watch('foreground', store.settings.screenTime.enabled && rest !== 'off' && !sleepy, 'screentime'); showScreen() }
+  }
+  setInterval(() => { wellnessTick(); screenTick() }, 60_000).unref()
+  applyScreen = () => {
+    if (counting) creditFront()
+    front.since = Date.now()
+    counting = store.settings.screenTime.enabled && rest !== 'off' && !sleepy
+    native.watch('foreground', counting, 'screentime')
+    showScreen()
+  }
   applyScreen()
   // the Windows drive almost full: a peek and a notification, at most once a day (not while resting)
   let diskTold = ''
@@ -895,6 +905,7 @@ app.whenReady().then(async () => {
   }
   setTimeout(() => void planUsage(), 5_000).unref()
   setInterval(() => void planUsage(), 5 * 60_000).unref()
+  // Codex's plan usage, from its newest session file
   let codexUsage = ''
   setInterval(() => {
     if (!store.settings.agents.codex.enabled || rest === 'deep' || rest === 'off') return
@@ -927,9 +938,10 @@ app.whenReady().then(async () => {
   powerMonitor.on('on-ac', () => { onBattery = false; applyRest() })
   hub.on('finished', (s: Session) => {
     history.add(s)
-    if (s.agent !== 'cli' && s.prompt) today.task({ agent: s.agent, seconds: s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0, files: s.files.length })
     if (s.agent !== 'cli' && s.prompt) {
-      for (const id of pip.finish(s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0)) {
+      const seconds = s.startedAt ? Math.round((Date.now() - s.startedAt) / 1000) : 0
+      today.task({ agent: s.agent, seconds, files: s.files.length })
+      for (const id of pip.finish(seconds)) {
         toast(tr('m.earned', { name: store.settings.pip.name }), translateOr(store.settings.general.language, `o.${id}`, ACHIEVEMENTS.find(a => a.id === id)?.name ?? id), undefined, undefined, { kind: 'extras' })
       }
       refreshTray()
