@@ -15,6 +15,9 @@
   const shelf = $derived(extras.shelf.filter(f => !undo.hides(`shelf:${f.path}`)))
   // a file without a picture: a document with its extension, not a folder
   const ext = (name: string) => /\.([a-z0-9]{1,5})$/i.exec(name)?.[1]?.toUpperCase() ?? ''
+  // the phone drop's troubleshooting steps, in place of its text while open
+  let help = $state(false)
+  const HELP = ['wifi', 'vpn', 'android', 'iphone', 'firewall', 'router', 'again'] as const
   const size = (b: number) => (b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`)
 </script>
 
@@ -33,6 +36,13 @@
         <img src={drop.qr} alt={t('i.files.qr')} />
         {#if drop.connected}<span class="ok"><Icon name="check" size={18} /></span>{/if}
       </div>
+      {#if help}
+      <div class="drop-text">
+        <div class="title">{t('i.files.helpTitle')}</div>
+        <ol class="help">{#each HELP as k (k)}<li>{t(`i.files.help.${k}`)}</li>{/each}</ol>
+        <button onclick={() => (help = false)}>{t('i.common.close')}</button>
+      </div>
+      {:else}
       <div class="drop-text">
         <div class="title">{drop.connected ? t('i.files.connected') : t('i.files.scan')}</div>
         <div class="muted">{t('i.files.how')}</div>
@@ -40,11 +50,12 @@
           <div class="warn">{drop.blocked === 'public' ? t('i.files.public') : t('i.files.firewall')}
             <button onclick={() => act({ do: drop.blocked === 'public' ? 'drop.network' : 'drop.allow' })}>{drop.blocked === 'public' ? t('i.files.makePrivate') : t('i.files.allow')}</button></div>
         {/if}
-        {#if !drop.connected}<div class="muted small">{t('i.files.notOpening')}</div>{/if}
+        <button class="link small" onclick={() => (help = true)}>{t('i.files.notWorking')}</button>
         {#if drop.received}<div>{t('i.files.received', { n: drop.received })}</div>{/if}
         <div class="muted small">{t('i.files.stops', { n: Math.max(1, Math.round((drop.expiresAt - now) / 60000)) })}</div>
         <button onclick={() => act({ do: 'drop.stop' })}>{t('i.common.stop')}</button>
       </div>
+      {/if}
     </div>
   {:else if !shelf.length}
     <div class="dropzone"><Icon name="download" size={22} /><b>{t('i.files.dropTitle')}</b><span class="muted">{t('i.files.dropSub')}</span></div>
@@ -99,4 +110,7 @@
   .ok { position: absolute; right: -8px; bottom: -8px; width: 30px; height: 30px; border-radius: 50%; background: var(--done); color: #fff; display: grid; place-items: center; }
   .drop-text { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
   .title { font-weight: 600; }
+  .link { background: none; padding: 0; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+  .link:hover { color: var(--text); }
+  .help { margin: 0; padding-inline-start: 1.2em; max-height: 150px; overflow-y: auto; font-size: 0.82em; display: flex; flex-direction: column; gap: 4px; }
 </style>

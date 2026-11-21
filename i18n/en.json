@@ -277,7 +277,6 @@
   "i.files.firewall": "Windows Firewall may block your phone.",
   "i.files.makePrivate": "It is my own network: make it Private",
   "i.files.allow": "Allow Pebble",
-  "i.files.notOpening": "Not opening? Your phone must be on the same Wi-Fi as this PC (not a guest network) with mobile data off.",
   "i.files.received": "{n} received",
   "i.files.stops": "Stops by itself in {n} min.",
   "i.chat.needsKey": "{name} needs a key for {provider}.",
@@ -763,5 +762,14 @@
   "i.strip.gpu": "GPU",
   "chat.voiceDownloading": "Downloading the natural voices engine (22 MB, once)… Until then, Windows voices read.",
   "chat.voiceFailed": "The download did not work: {error}. Windows voices read meanwhile.",
-  "chat.voiceRetry": "Try again"
+  "chat.voiceRetry": "Try again",
+  "i.files.notWorking": "Not working? Steps to try",
+  "i.files.helpTitle": "If your phone cannot open the page or send",
+  "i.files.help.wifi": "Put your phone on the same Wi-Fi as this PC (not a guest network), with mobile data off.",
+  "i.files.help.vpn": "Turn off any VPN on your phone and on this PC, or allow local network access in the VPN's settings (often called LAN access or local network sharing). Private DNS or ad-blocking apps on the phone can block it too.",
+  "i.files.help.android": "Android, Chrome: Settings → Apps → Chrome → Permissions → Nearby devices → Allow. If Chrome asks to find devices on your network, tap Allow.",
+  "i.files.help.iphone": "iPhone, Chrome: Settings → Privacy & Security → Local Network → turn on Chrome.",
+  "i.files.help.firewall": "Another firewall or antivirus on this PC (not Windows'): allow Pebble in it, or pause its firewall while you send.",
+  "i.files.help.router": "Some routers keep devices apart (AP or client isolation, common on office and hotel Wi-Fi): use your home Wi-Fi, or turn it off in the router.",
+  "i.files.help.again": "Still nothing? Stop the phone drop, start it again, and scan the new code."
 }
