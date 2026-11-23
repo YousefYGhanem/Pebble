@@ -22,6 +22,7 @@
   import { PAGES, albumColor, clock, hhmm, type Page } from './pages'
   import { focusLeft, lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
   import type { Widget } from '../../shared/connectors'
+  import type { ChatState } from '../../shared/chat'
   import { chirp, type Chirp } from './sound'
   import { playNoise } from './noise'
   import { RectSpring, Spring, contentOpacity, jelly, type Rect } from './spring'
@@ -59,6 +60,7 @@
   let album = $state<string | null>(null) // the album's colour, "r, g, b"
   let sceneExtras = $state<Partial<ExtrasState>>({})
   let sceneWidgets = $state<Widget[] | null>(null)
+  let sceneChat = $state<ChatState | null>(null)
 
   const sessions = $derived(scene ? sceneSessions : (view?.sessions ?? []))
   // when each session stopped (an error, a usage limit), as the island first saw it: a stop goes quiet after a while
@@ -318,6 +320,7 @@
     sceneSessions = setup.sessions
     sceneExtras = setup.extras ?? {}
     sceneWidgets = setup.widgets ?? null
+    sceneChat = setup.chat ?? null
     dropping = !!setup.dropping
     open = !!setup.open; tucked = !!setup.tucked; split = !!setup.split
     if (setup.page) { const p = setup.page; queueMicrotask(() => (page = p)) }
@@ -767,7 +770,7 @@
               {:else if page === 'clipboard' && extras}<ClipboardPage {extras} {now} {act} enabled={view.settings.clipboard.enabled} />
               {:else if page === 'notes' && extras}<NotesPage notes={extras.notes} todos={extras.todos} {now} {act} />
               {:else if page === 'focus' && extras}<FocusPage focus={extras.focus} done={extras.focusDone} sound={view.settings.music.focusSound} {now} {act} />
-              {:else if page === 'chat' && view.chat}<ChatPage chat={view.chat} {act} {listen} name={view.settings.pip.name} {extras} quick={view.settings.quick} />
+              {:else if page === 'chat' && (sceneChat ?? view.chat)}<ChatPage chat={(sceneChat ?? view.chat)!} {act} {listen} name={view.settings.pip.name} {extras} quick={view.settings.quick} />
               {:else if page === 'widgets'}<WidgetsPage {widgets} connectors={view.connectors} {now} {act} />
               {/if}
             </div>

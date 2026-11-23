@@ -43,6 +43,8 @@ export const SCENES = {
   'page-notes': 'Page: Notes',
   'page-focus': 'Page: Focus',
   'page-widgets': 'Page: Widgets (connectors)',
+  'page-pip': "Page: Pip's chat",
+  strip: 'Game strip',
   activity: 'A live activity (score)',
   hello: 'Hello (startup)',
   bye: 'Goodbye (without quitting)',

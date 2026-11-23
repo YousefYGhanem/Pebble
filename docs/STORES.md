@@ -90,7 +90,7 @@ peeks on the island; the regular installer keeps working without them.
 **Privacy policy URL:** https://github.com/YousefYGhanem/Pebble/blob/main/PRIVACY.md
 **Website:** https://github.com/YousefYGhanem/Pebble · **Support:** https://github.com/YousefYGhanem/Pebble/issues
 **Category:** Productivity (subcategory: none) · **Languages:** English, Arabic · **Price:** free
-**Screenshots:** `docs/store/*.png` (1920×1080; `npm run capture` then `npm run store-shots` to redraw). Logos are in
+**Screenshots:** `docs/store/*.png` (8, 1920×1080; `npm run capture` then `npm run store-shots` to redraw). Logos are in
 the package (`build/appx`, drawn by `npm run icon`); for the listing's own logo use `build/appx/LargeTile.png`.
 
 ### Listing, English
@@ -114,9 +114,12 @@ Open the island for more:
 - Home: your day at a glance, with your agents' work, the next prayer, screen time and quick controls
 - Music: what plays in any app, with timed lyrics and each app's own volume
 - Files: a shelf for files, snips of your screen, and sending files from your phone
-- Clipboard, Notes and To-do with reminders, a Focus timer with calm sounds, and connectors (GitHub, weather, your
-  calendar with a Join button, live scores, news)
-- Pip's chat: ask about anything, or show him a window
+- Pip's page (Ctrl+Alt+K): one box for everything. Sums, units, currencies, the time anywhere, timers and translations
+  answer as you type; anything else goes to Pip, a free AI that needs no account (or your own Claude Code, Codex or API
+  key). He reads answers aloud, with natural voices in 50+ languages if you choose them.
+- Clipboard, Notes and To-do with reminders, a Focus timer with calm sounds, and connectors (GitHub with your pull
+  requests' CI, weather, your calendar with a Join button, live scores, news, countdowns, local dev servers)
+- Game strip: CPU and GPU use and temperatures over full-screen games (Ctrl+Alt+G)
 
 Kind to your PC and your privacy: it rests while you are away, in a game or when you tuck it away. No account, no
 analytics, no ads. English and Arabic.
@@ -126,16 +129,21 @@ analytics, no ads. English and Arabic.
 - Answer permissions, questions and plans from the island
 - Claude plan usage with warnings before you hit a limit
 - Pip, a companion who reacts to your work
+- Pip's page: instant answers, timers, translations and a free AI chat
+- Read answers aloud, with natural voices in 50+ languages
+- Game strip: CPU and GPU readings over full-screen games
 - Music with timed lyrics and per-app volume
 - File shelf, screen snips and phone drop
 - Clipboard history, notes and to-dos with reminders
 - Focus timer with focus sounds
 - Water and stand-up reminders, prayer times, screen time
-- Connectors: GitHub, weather, calendar, live scores, news
+- Connectors: GitHub CI, weather, calendar, live scores, news, countdowns
 - Themes, including one that follows Windows light or dark
 - English and Arabic
 
-**Search terms** (up to 7): notch, dynamic island, AI agents, Claude Code, productivity, music widget, desktop pet
+**Search terms** (up to 7): notch, dynamic island, AI agents, Claude Code, AI assistant, game overlay, desktop pet
+
+**What's new in this version:** copy the first line and the headings of `docs/releases/v<version>.md`.
 
 ### Listing, Arabic
 
@@ -157,9 +165,12 @@ analytics, no ads. English and Arabic.
 - الرئيسية: يومك في لمحة، مع عمل وكلائك والصلاة القادمة ووقت الشاشة وأزرار سريعة
 - الموسيقى: ما يُشغَّل في أي تطبيق، مع كلمات متزامنة ومستوى صوت كل تطبيق
 - الملفات: رف للملفات، وقص أجزاء من الشاشة، وإرسال الملفات من هاتفك
-- الحافظة والملاحظات والمهام مع التذكيرات، ومؤقت تركيز بأصوات هادئة، وموصلات (GitHub والطقس وتقويمك مع زر
-  الانضمام والنتائج المباشرة والأخبار)
-- محادثة بيب: اسأله عن أي شيء، أو أره نافذة
+- صفحة بيب (Ctrl+Alt+K): مربع واحد لكل شيء. الحسابات والوحدات والعملات والوقت في أي مدينة والمؤقتات والترجمة تُجاب
+  أثناء الكتابة، وما عدا ذلك يذهب إلى بيب، ذكاء اصطناعي مجاني بلا حساب (أو Claude Code أو Codex أو مفتاح API الخاص
+  بك). ويقرأ الإجابات بصوت عالٍ، بأصوات طبيعية بأكثر من 50 لغة إن اخترتها.
+- الحافظة والملاحظات والمهام مع التذكيرات، ومؤقت تركيز بأصوات هادئة، وموصلات (GitHub مع فحوص طلبات الدمج، والطقس
+  وتقويمك مع زر الانضمام والنتائج المباشرة والأخبار والعد التنازلي وخوادم التطوير المحلية)
+- شريط الألعاب: استخدام المعالج وكرت الشاشة وحرارتهما فوق الألعاب بملء الشاشة (Ctrl+Alt+G)
 
 لطيف مع جهازك وخصوصيتك: يرتاح حين تغيب أو تلعب أو تخفيه. بلا حساب، بلا تتبع، بلا إعلانات. بالعربية والإنجليزية.
 
@@ -168,16 +179,19 @@ analytics, no ads. English and Arabic.
 - أجب عن الأذونات والأسئلة والخطط من الجزيرة
 - استخدام خطة Claude مع تنبيهات قبل بلوغ الحد
 - بيب، رفيق يتفاعل مع عملك
+- صفحة بيب: إجابات فورية ومؤقتات وترجمة ومحادثة ذكاء اصطناعي مجانية
+- قراءة الإجابات بصوت عالٍ، بأصوات طبيعية بأكثر من 50 لغة
+- شريط الألعاب: قراءات المعالج وكرت الشاشة فوق الألعاب بملء الشاشة
 - موسيقى بكلمات متزامنة ومستوى صوت لكل تطبيق
 - رف ملفات وقص الشاشة وإرسال من الهاتف
 - سجل الحافظة والملاحظات والمهام مع التذكيرات
 - مؤقت تركيز بأصوات تركيز
 - تذكير بشرب الماء والوقوف، ومواقيت الصلاة، ووقت الشاشة
-- موصلات: GitHub والطقس والتقويم والنتائج المباشرة والأخبار
+- موصلات: فحوص GitHub والطقس والتقويم والنتائج المباشرة والأخبار والعد التنازلي
 - سمات، منها واحدة تتبع الوضع الفاتح أو الداكن في ويندوز
 - العربية والإنجليزية
 
-**كلمات البحث:** نوتش، جزيرة، وكلاء الذكاء الاصطناعي، Claude Code، إنتاجية، موسيقى، رفيق سطح المكتب
+**كلمات البحث:** نوتش، جزيرة، وكلاء الذكاء الاصطناعي، Claude Code، مساعد ذكي، شريط الألعاب، رفيق سطح المكتب
 
 ## Privacy (for both listings)
 

@@ -3,6 +3,7 @@ import type { Session, Step } from '../../shared/state'
 import type { ExtrasState } from '../../shared/extras'
 import type { Page } from './pages'
 import type { Widget } from '../../shared/connectors'
+import type { ChatState } from '../../shared/chat'
 
 // Test mode (tray → Test mode): what each demo scene shows. Pretend sessions only live in the renderer;
 // answering one changes it here and never reaches an agent.
@@ -17,6 +18,8 @@ export interface SceneSetup {
   page?: Page
   dropping?: boolean
   widgets?: Widget[]
+  /** a pretend conversation with Pip */
+  chat?: ChatState
 }
 
 const COVER = 'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#6b5bff"/></linearGradient></defs><rect width="120" height="120" fill="url(#g)"/><circle cx="60" cy="60" r="26" fill="#fff" opacity=".85"/></svg>')
@@ -82,6 +85,13 @@ export function sceneSetup(scene: Scene, now = Date.now()): SceneSetup {
     case 'page-clipboard': return { sessions: [], extras, open: true, page: 'clipboard' }
     case 'page-notes': return { sessions: [], extras, open: true, page: 'notes' }
     case 'page-focus': return { sessions: [], extras: { focus: { seconds: 1500, endsAt: now + 1_122_000 } }, open: true, page: 'focus' }
+    case 'page-pip': return { sessions: [], open: true, page: 'chat', chat: { provider: 'Pollinations', ready: true, busy: false, messages: [
+      { role: 'user', text: 'What is a race condition, in one line?', at: now - 60_000 },
+      { role: 'assistant', text: 'Two tasks race, and the result depends on which one finishes first.', at: now - 55_000 },
+      { role: 'user', text: 'translate "see you tomorrow" to French', at: now - 20_000 },
+      { role: 'assistant', text: '**À demain !**', at: now - 18_000 }
+    ] } }
+    case 'strip': return { sessions: [working], extras: { ...extras, strip: true, system: { cpu: 41, ram: 58, gpu: 87, gpuTemp: 71, cpuTemp: 64 } } }
     case 'working': return { sessions: [working] }
     case 'ask': return { sessions: [base('question', 'Bash: npm install stripe', { ask: { kind: 'permission', tool: 'Bash', summary: 'Bash: npm install stripe', input: { command: 'npm install stripe' }, canAlways: true } })] }
     case 'question': return {
