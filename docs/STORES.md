@@ -93,105 +93,13 @@ peeks on the island; the regular installer keeps working without them.
 **Screenshots:** `docs/store/*.png` (8, 1920×1080; `npm run capture` then `npm run store-shots` to redraw). Logos are in
 the package (`build/appx`, drawn by `npm run icon`); for the listing's own logo use `build/appx/LargeTile.png`.
 
-### Listing, English
+### Listing (English and Arabic)
 
-**Product name:** Pebble Pet
-
-**Short description:**
-A notch-style island for Windows that follows your AI coding agents and answers their questions, with Pip, music,
-files, focus and your day around it.
-
-**Description:**
-Pebble Pet puts a small island at the top of your screen. It follows your AI coding agents (Claude Code, Codex, Gemini
-CLI, Cursor, OpenCode, Aider and DeepSeek Harness) and shows what each one is doing, live. When an agent needs you,
-the island grows into a card: allow or deny a command, answer its question, or review its plan, without switching
-windows. When it is done, you know.
-
-Pip, a little character who lives in the island, keeps you company: he reacts to your agents, dances to your music,
-falls asleep when you are away, and earns outfits as you work.
-
-Open the island for more:
-- Home: your day at a glance, with your agents' work, the next prayer, screen time and quick controls
-- Music: what plays in any app, with timed lyrics and each app's own volume
-- Files: a shelf for files, snips of your screen, and sending files from your phone
-- Pip's page (Ctrl+Alt+K): one box for everything. Sums, units, currencies, the time anywhere, timers and translations
-  answer as you type; anything else goes to Pip, a free AI that needs no account (or your own Claude Code, Codex or API
-  key). He reads answers aloud, with natural voices in 50+ languages if you choose them.
-- Clipboard, Notes and To-do with reminders, a Focus timer with calm sounds, and connectors (GitHub with your pull
-  requests' CI, weather, your calendar with a Join button, live scores, news, countdowns, local dev servers)
-- Game strip: CPU and GPU use and temperatures over full-screen games (Ctrl+Alt+G)
-
-Kind to your PC and your privacy: it rests while you are away, in a game or when you tuck it away. No account, no
-analytics, no ads. English and Arabic.
-
-**Features** (one per line, up to 20):
-- Follows Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Aider and DeepSeek Harness
-- Answer permissions, questions and plans from the island
-- Claude plan usage with warnings before you hit a limit
-- Pip, a companion who reacts to your work
-- Pip's page: instant answers, timers, translations and a free AI chat
-- Read answers aloud, with natural voices in 50+ languages
-- Game strip: CPU and GPU readings over full-screen games
-- Music with timed lyrics and per-app volume
-- File shelf, screen snips and phone drop
-- Clipboard history, notes and to-dos with reminders
-- Focus timer with focus sounds
-- Water and stand-up reminders, prayer times, screen time
-- Connectors: GitHub CI, weather, calendar, live scores, news, countdowns
-- Themes, including one that follows Windows light or dark
-- English and Arabic
-
-**Search terms** (up to 7): notch, dynamic island, AI agents, Claude Code, AI assistant, game overlay, desktop pet
-
-**What's new in this version:** copy the first line and the headings of `docs/releases/v<version>.md`.
-
-### Listing, Arabic
-
-**اسم المنتج:** Pebble Pet
-
-**وصف قصير:**
-جزيرة بأسلوب النوتش لويندوز تتابع وكلاء البرمجة بالذكاء الاصطناعي وتجيب عن أسئلتهم، ومعها بيب والموسيقى والملفات
-والتركيز ويومك.
-
-**الوصف:**
-يضع Pebble Pet جزيرة صغيرة أعلى شاشتك. تتابع وكلاء البرمجة بالذكاء الاصطناعي (Claude Code وCodex وGemini CLI وCursor
-وOpenCode وAider وDeepSeek Harness) وتعرض ما يفعله كل منهم مباشرة. وحين يحتاجك وكيل، تكبر الجزيرة إلى بطاقة: اسمح
-بأمر أو ارفضه، أجب عن سؤاله، أو راجع خطته، دون أن تنتقل بين النوافذ. وحين ينتهي، تعرف.
-
-بيب، شخصية صغيرة تعيش في الجزيرة، يرافقك: يتفاعل مع وكلائك، ويرقص على موسيقاك، وينام حين تغيب، ويكسب أزياء أثناء
-عملك.
-
-افتح الجزيرة لترى المزيد:
-- الرئيسية: يومك في لمحة، مع عمل وكلائك والصلاة القادمة ووقت الشاشة وأزرار سريعة
-- الموسيقى: ما يُشغَّل في أي تطبيق، مع كلمات متزامنة ومستوى صوت كل تطبيق
-- الملفات: رف للملفات، وقص أجزاء من الشاشة، وإرسال الملفات من هاتفك
-- صفحة بيب (Ctrl+Alt+K): مربع واحد لكل شيء. الحسابات والوحدات والعملات والوقت في أي مدينة والمؤقتات والترجمة تُجاب
-  أثناء الكتابة، وما عدا ذلك يذهب إلى بيب، ذكاء اصطناعي مجاني بلا حساب (أو Claude Code أو Codex أو مفتاح API الخاص
-  بك). ويقرأ الإجابات بصوت عالٍ، بأصوات طبيعية بأكثر من 50 لغة إن اخترتها.
-- الحافظة والملاحظات والمهام مع التذكيرات، ومؤقت تركيز بأصوات هادئة، وموصلات (GitHub مع فحوص طلبات الدمج، والطقس
-  وتقويمك مع زر الانضمام والنتائج المباشرة والأخبار والعد التنازلي وخوادم التطوير المحلية)
-- شريط الألعاب: استخدام المعالج وكرت الشاشة وحرارتهما فوق الألعاب بملء الشاشة (Ctrl+Alt+G)
-
-لطيف مع جهازك وخصوصيتك: يرتاح حين تغيب أو تلعب أو تخفيه. بلا حساب، بلا تتبع، بلا إعلانات. بالعربية والإنجليزية.
-
-**الميزات:**
-- يتابع Claude Code وCodex وGemini CLI وCursor وOpenCode وAider وDeepSeek Harness
-- أجب عن الأذونات والأسئلة والخطط من الجزيرة
-- استخدام خطة Claude مع تنبيهات قبل بلوغ الحد
-- بيب، رفيق يتفاعل مع عملك
-- صفحة بيب: إجابات فورية ومؤقتات وترجمة ومحادثة ذكاء اصطناعي مجانية
-- قراءة الإجابات بصوت عالٍ، بأصوات طبيعية بأكثر من 50 لغة
-- شريط الألعاب: قراءات المعالج وكرت الشاشة فوق الألعاب بملء الشاشة
-- موسيقى بكلمات متزامنة ومستوى صوت لكل تطبيق
-- رف ملفات وقص الشاشة وإرسال من الهاتف
-- سجل الحافظة والملاحظات والمهام مع التذكيرات
-- مؤقت تركيز بأصوات تركيز
-- تذكير بشرب الماء والوقوف، ومواقيت الصلاة، ووقت الشاشة
-- موصلات: فحوص GitHub والطقس والتقويم والنتائج المباشرة والأخبار والعد التنازلي
-- سمات، منها واحدة تتبع الوضع الفاتح أو الداكن في ويندوز
-- العربية والإنجليزية
-
-**كلمات البحث:** نوتش، جزيرة، وكلاء الذكاء الاصطناعي، Claude Code، مساعد ذكي، شريط الألعاب، رفيق سطح المكتب
+The listing's text and screenshots live in `docs/store/listing.json` (description, features, search terms, what's new,
+and a caption for each screenshot in `docs/store`). To change the live Store page, edit that file and run the **Store
+listing** workflow (Actions → Store listing → Run workflow): it copies the live submission, puts in the text and the
+screenshots, and submits it for Microsoft's review (`scripts/store-listing.ps1`). Run it after a release's Store upload
+has been certified, not while one is in review.
 
 ## Privacy (for both listings)
 

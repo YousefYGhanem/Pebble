@@ -1,0 +1,14 @@
+# Run by hand (Actions → Store listing): puts docs/store/listing.json and the screenshots in docs/store on the Microsoft
+# Store page and submits them for review (scripts/store-listing.ps1, docs/STORES.md).
+name: Store listing
+on: workflow_dispatch
+jobs:
+  listing:
+    runs-on: windows-latest
+    env:
+      PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+      PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+      PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v5
+      - run: ./scripts/store-listing.ps1
