@@ -1,0 +1,16 @@
+# Run by hand (Actions → Store check): signs in to Partner Center with the PARTNER_CENTER_* secrets and reads Pebble
+# Pet's listing, without uploading anything. Shows the Store upload in release.yml will work.
+name: Store check
+on: workflow_dispatch
+jobs:
+  check:
+    runs-on: windows-latest
+    env:
+      PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+      PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+      PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+      PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+    steps:
+      - uses: microsoft/microsoft-store-apppublisher@v1.1
+      - run: msstore reconfigure --tenantId $env:PARTNER_CENTER_TENANT_ID --sellerId $env:PARTNER_CENTER_SELLER_ID --clientId $env:PARTNER_CENTER_CLIENT_ID --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET
+      - run: msstore apps get 9PJNR7CT4ZN7
