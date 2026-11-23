@@ -11,16 +11,30 @@ $token = (Invoke-RestMethod -Method Post -Uri "https://login.microsoftonline.com
   resource = 'https://manage.devcenter.microsoft.com' }).access_token
 $auth = @{ Authorization = "Bearer $token" }
 function Send($method, $uri, $body) {
-  $json = if ($null -ne $body) { [Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Depth 30)) } else { $null }
+  $json = $null # assigned, not returned from an if: PowerShell would turn the bytes into a list of numbers
+  if ($null -ne $body) { $json = [Text.Encoding]::UTF8.GetBytes(($body | ConvertTo-Json -Depth 30)) }
   Invoke-RestMethod -Method $method -Uri $uri -Headers $auth -ContentType 'application/json; charset=utf-8' -Body $json
 }
 
-# a submission already waiting (a release's upload, or one started in Partner Center) is never replaced
+# a submission already waiting (a release's upload, or one started in Partner Center) is never replaced, except the one
+# named in STORE_DISCARD (a draft an earlier run of this left behind)
 $current = Send Get $api
+if ($current.pendingApplicationSubmission -and $current.pendingApplicationSubmission.id -eq $env:STORE_DISCARD) {
+  Send Delete "$api/submissions/$env:STORE_DISCARD" | Out-Null
+  Write-Host "Draft $env:STORE_DISCARD discarded"
+  $current = Send Get $api
+}
 if ($current.pendingApplicationSubmission) { throw "A submission is already pending ($($current.pendingApplicationSubmission.id)): wait until it is published, then run this again." }
 
 $sub = Send Post "$api/submissions"
 Write-Host "Submission $($sub.id) created"
+# the Arabic page, when the Store has none yet (the app itself is in English and Arabic)
+if (-not ($sub.listings.PSObject.Properties.Name -like 'ar*')) {
+  $en = $sub.listings.PSObject.Properties | Where-Object Name -like 'en*' | Select-Object -First 1
+  $ar = $en.Value | ConvertTo-Json -Depth 30 | ConvertFrom-Json
+  $ar.baseListing.images = @() # its screenshots are added below; English's pictures belong to English
+  $sub.listings | Add-Member -NotePropertyName 'ar' -NotePropertyValue $ar
+}
 foreach ($lang in $sub.listings.PSObject.Properties.Name) {
   $words = if ($lang -like 'ar*') { $data.ar } elseif ($lang -like 'en*') { $data.en } else { $null }
   if (-not $words) { Write-Host "Listing $lang left as it is"; continue }

@@ -1,7 +1,12 @@
 # Run by hand (Actions → Store listing): puts docs/store/listing.json and the screenshots in docs/store on the Microsoft
 # Store page and submits them for review (scripts/store-listing.ps1, docs/STORES.md).
 name: Store listing
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      discard:
+        description: A draft submission id to discard first (one an earlier run left behind)
+        required: false
 jobs:
   listing:
     runs-on: windows-latest
@@ -9,6 +14,7 @@ jobs:
       PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
       PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
       PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+      STORE_DISCARD: ${{ inputs.discard }}
     steps:
       - uses: actions/checkout@v5
       - run: ./scripts/store-listing.ps1
