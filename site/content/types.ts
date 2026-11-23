@@ -62,7 +62,8 @@ export interface Content {
     download: string
     downloadSub: string
     store: string
-    storeSoon: string
+    /** the small line over "Microsoft Store" on its button */
+    storeSub: string
     small: string
     worksWith: string
     agents: string[]

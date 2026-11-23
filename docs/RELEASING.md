@@ -54,6 +54,25 @@ them within a few days, which also helps SmartScreen. Signing (above) is the las
 
 Write them in `docs/releases/v<version>.md` before tagging; the workflow uses that file (else GitHub's list of changes).
 
+## Microsoft Store
+
+Pebble is on the Store as **Pebble Pet** (product ID `9PJNR7CT4ZN7`,
+https://apps.microsoft.com/detail/9PJNR7CT4ZN7). Every tag also builds the Store package: the run keeps it as the
+`store-package` artifact (`Pebble.msix`), and uploads it to Partner Center and submits it for certification once these
+are set up (once):
+
+1. **Entra app:** at https://entra.microsoft.com → App registrations → New registration (any name, e.g. "Pebble
+   releases"). Note its *Application (client) ID* and the *Tenant ID* (Overview). Under Certificates & secrets, add a
+   client secret and copy its value at once (it is shown only once; it expires, so renew it when it does).
+2. **Partner Center:** Account settings → User management → Microsoft Entra applications → Add the app, role
+   **Manager**. The *Seller ID* is under Account settings → Identifiers.
+3. **GitHub:** repository Settings → Secrets and variables → Actions, add `PARTNER_CENTER_TENANT_ID`,
+   `PARTNER_CENTER_SELLER_ID`, `PARTNER_CENTER_CLIENT_ID`, `PARTNER_CENTER_CLIENT_SECRET`.
+
+The Store version appears after Microsoft's certification (usually within a few days). Publishing replaces a draft
+submission you started in Partner Center, so finish or discard drafts before tagging. Without the secrets, download the
+artifact from the run and upload it in Partner Center by hand (Submission → Packages).
+
 ## Store packages
 
 `npm run pack:extensions` writes the browser extension zip and the VS Code extension to `dist/extensions/` (the release

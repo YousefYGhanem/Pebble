@@ -16,6 +16,11 @@ jobs:
       SIGNPATH_ORGANIZATION_ID: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
       SIGNPATH_PROJECT_SLUG: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
       SIGNPATH_POLICY_SLUG: ${{ secrets.SIGNPATH_POLICY_SLUG }}
+      # Microsoft Store uploads (docs/RELEASING.md): empty until you add these secrets, and the Store package is only kept
+      PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+      PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+      PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+      PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -39,3 +44,18 @@ jobs:
       - run: gh release upload ${{ github.ref_name }} (Get-ChildItem dist/extensions/*.zip).FullName
       # published last, so installed copies never see a release without its installer
       - run: gh release edit ${{ github.ref_name }} --draft=false --latest
+      # Microsoft Store (Pebble Pet, 9PJNR7CT4ZN7): the same version as a Store package, kept with the run, then uploaded
+      # and submitted for certification when the Partner Center secrets exist. After the GitHub release, so a Store
+      # problem never holds that back.
+      - run: npx electron-builder --win appx --publish never -c.directories.output=dist/store
+      - run: Copy-Item (Get-ChildItem dist/store/*.appx).FullName dist/store/Pebble.msix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-package
+          path: dist/store/Pebble.msix
+      - if: env.PARTNER_CENTER_CLIENT_ID != ''
+        uses: microsoft/microsoft-store-apppublisher@v1.1
+      - if: env.PARTNER_CENTER_CLIENT_ID != ''
+        run: msstore reconfigure --tenantId $env:PARTNER_CENTER_TENANT_ID --sellerId $env:PARTNER_CENTER_SELLER_ID --clientId $env:PARTNER_CENTER_CLIENT_ID --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET
+      - if: env.PARTNER_CENTER_CLIENT_ID != ''
+        run: msstore publish dist/store/Pebble.msix -id 9PJNR7CT4ZN7

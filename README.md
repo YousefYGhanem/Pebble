@@ -7,7 +7,8 @@ screen. Free and open source (MIT). **Website:** [yousefyghanem.github.io/Pebble
 | --- | --- | --- | --- |
 | ![](docs/screens/open.png) | ![](docs/screens/question.png) | ![](docs/screens/plan.png) | ![](docs/screens/reply.png) |
 
-**Install:** download `Pebble Setup <version>.exe` from
+**Install:** get it from the [Microsoft Store](https://apps.microsoft.com/detail/9PJNR7CT4ZN7) (listed as Pebble Pet; the
+Store keeps it up to date), or download `Pebble Setup <version>.exe` from
 [Releases](https://github.com/YousefYGhanem/Pebble/releases) (Windows 10/11, no admin rights). It updates itself; the
 installer is not signed yet, so Windows asks once (More info → Run anyway). Uninstalling takes Pebble out of every agent
 and shell again. Releasing: [docs/RELEASING.md](docs/RELEASING.md).

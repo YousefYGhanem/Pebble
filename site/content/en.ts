@@ -17,7 +17,7 @@ const en: Content = {
     download: 'Download for Windows',
     downloadSub: 'Latest release',
     store: 'Microsoft Store',
-    storeSoon: 'Coming soon',
+    storeSub: 'Get it from',
     small: 'Free · Open source (MIT) · Windows 10 and 11',
     worksWith: 'Follows',
     agents: ['Claude Code', 'Codex', 'Gemini CLI', 'Cursor', 'OpenCode', 'Aider', 'DeepSeek Harness', 'Any MCP agent'],
@@ -447,7 +447,7 @@ const en: Content = {
       { q: 'Will it slow my PC down?', a: 'Hardly. At rest the island draws no frames. With an agent working it uses about 6% of one CPU core, and about 0.1% while tucked away. When you are away or in a game, what nobody needs pauses.' },
       { q: 'What about my privacy?', a: 'Pebble has no server of its own: no account, no analytics, no tracking. It talks to a service only for a feature you switch on, such as lyrics, weather or the AI you pick for the chat. Keys are encrypted for your Windows account.' },
       { q: 'Why does Windows warn me about the installer?', a: 'The installer is not code-signed yet, so SmartScreen may show "Windows protected your PC" the first time. Choose More info, then Run anyway. The source code is all on GitHub.' },
-      { q: 'Is there a Microsoft Store version?', a: 'It is on its way, listed as Pebble Pet. Until then, download it from GitHub: it updates itself.' }
+      { q: 'Is there a Microsoft Store version?', a: 'Yes, as Pebble Pet. The Store installs it and keeps it up to date; the download from GitHub updates itself. Both get each new version.' }
     ]
   },
   cta: { title: 'Give your agents a home', lead: 'Free, open source and light. Pip is waiting.' },
