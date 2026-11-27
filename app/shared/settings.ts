@@ -149,6 +149,8 @@ const settingsSchema = z.object({
     toasts: z.boolean(),
     /** short notices on the island when something on the PC changes (charger, network, Caps Lock, sound device…) */
     peeks: z.boolean(),
+    /** wireless accessories' batteries on Home, and a peek when one runs low */
+    batteries: z.boolean(),
     /** a notification (and a worried Pip) when a CLI passes 80% and 95% of its session or week */
     usageAlerts: z.boolean(),
     /** which Windows notifications, by where they come from (problems with Pebble itself always show) */
@@ -193,7 +195,7 @@ export const DEFAULTS: Settings = {
     cursor: { enabled: true }, opencode: { enabled: true }, aider: { enabled: true }, dsh: { enabled: true }
   },
   terminals: { minSeconds: 10 },
-  features: { sound: true, toasts: true, peeks: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
+  features: { sound: true, toasts: true, peeks: true, batteries: true, usageAlerts: true, notify: { asks: true, done: true, connectors: true, extras: true }, rest: { away: true, games: true, battery: true }, doneSeconds: 8 },
   strip: { items: ['time', 'cpu', 'gpu', 'gpuTemp', 'ram'] },
   quick: { translateTo: 'auto', tools: true, copyToAi: true },
   chat: { provider: 'free', model: '', readAloud: false, voice: 'windows' },

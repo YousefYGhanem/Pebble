@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, test, expect } from 'vitest'
-import { diskLow, focusFinished, focusLeft, nextDue, noticesFor, todayProgress, toggleTodo, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
+import { batteryAlerts, diskLow, focusFinished, focusLeft, nextDue, noticesFor, todayProgress, toggleTodo, trimClips, looksSecret, lyricIndex, maskSecret, positionNow, type Media } from '../app/shared/extras'
 import { Lyrics, parseLrc, plainTitle } from '../app/main/extras/lyrics'
 import { guardActive, matchSite } from '../app/main/extras/guard'
 import { DropServer, lanAddress, safeName } from '../app/main/extras/drop'
@@ -206,4 +206,18 @@ test('the Windows drive is almost full under 8% or 5 GB free', () => {
   expect(diskLow(30e9, 500e9)).toBe(true)
   expect(diskLow(100e9, 500e9)).toBe(false)
   expect(diskLow(0, 0)).toBe(false)
+})
+
+test('accessory batteries: one peek at 20%, one at 10%, again only after charging', () => {
+  const told = new Map<string, number>()
+  const mouse = (level: number, charging = false) => [{ name: 'Mouse', kind: 'mouse' as const, level, charging }]
+  expect(batteryAlerts(mouse(50), told)).toEqual([])
+  expect(batteryAlerts(mouse(20), told).map(x => x.critical)).toEqual([false])
+  expect(batteryAlerts(mouse(18), told)).toEqual([])
+  expect(batteryAlerts(mouse(9), told).map(x => x.critical)).toEqual([true])
+  expect(batteryAlerts(mouse(8), told)).toEqual([])
+  expect(batteryAlerts(mouse(8, true), told)).toEqual([]) // charging: forgotten
+  expect(batteryAlerts(mouse(15), told).map(x => x.critical)).toEqual([false])
+  expect(batteryAlerts(mouse(25), told)).toEqual([]) // between 20 and 30: neither told nor reset
+  expect(batteryAlerts(mouse(19), told)).toEqual([])
 })

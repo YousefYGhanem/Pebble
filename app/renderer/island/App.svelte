@@ -20,7 +20,7 @@
   import { fly } from 'svelte/transition'
   import { emitPeak } from './peak'
   import { PAGES, albumColor, clock, hhmm, type Page } from './pages'
-  import { focusLeft, lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
+  import { BATTERY_LOW, focusLeft, lyricIndex, positionNow, type Action, type ExtrasState } from '../../shared/extras'
   import type { Widget } from '../../shared/connectors'
   import type { ChatState } from '../../shared/chat'
   import { chirp, type Chirp } from './sound'
@@ -92,6 +92,7 @@
     reminder = null
   }
   let noticeN = 0
+  const DEVICE_ICON = { mouse: 'mouse', keyboard: 'keyboard', headset: 'headset', controller: 'gamepad', device: 'battery' } as const
   function peek(p: Peek) {
     if (scene || !view?.settings.features.peeks) return
     const n = ++noticeN
@@ -298,7 +299,10 @@
       return
     }
     // a device name "Headphones (AirPods Pro)": the part in brackets is the device itself
-    if (n.kind === 'disk') peek({ icon: 'files', title: t('i.peek.diskTitle'), sub: t('i.peek.diskSub', { drive: n.drive, gb: (n.free / 1e9).toFixed(1) }), tone: 'warn' })
+    if (n.kind === 'connected') peek({ icon: DEVICE_ICON[n.device], title: n.name, sub: t(`i.peek.connected.${n.device}`) + (n.charging ? ` · ${t('i.peek.chargingTitle')}` : ''),
+      value: n.level ? `${n.level}%` : undefined, ring: n.level ? n.level / 100 : undefined, tone: n.level !== undefined && n.level <= BATTERY_LOW && !n.charging ? 'warn' : 'ok' })
+    else if (n.kind === 'battery') peek({ icon: DEVICE_ICON[n.device], title: n.name, sub: t(n.critical ? 'i.peek.batteryCritical' : 'i.peek.batteryLow'), value: `${n.level}%`, ring: n.level / 100, tone: 'warn' })
+    else if (n.kind === 'disk') peek({ icon: 'files', title: t('i.peek.diskTitle'), sub: t('i.peek.diskSub', { drive: n.drive, gb: (n.free / 1e9).toFixed(1) }), tone: 'warn' })
     else if (n.kind === 'timer') { peek({ icon: 'focus', title: t('i.timer.done'), sub: n.text || t('i.timer.name'), tone: 'ok' }); say('done') }
     else if (n.kind === 'prayer') { peek({ icon: 'moon', title: t(`prayer.${n.name}`), sub: t('i.prayer.now'), tone: 'ok' }); say('done') }
     else if (n.kind === 'usage') peek({ icon: 'agents', title: t(n.level >= 100 ? 'i.peek.usageReached' : 'i.peek.usageTitle', { agent: n.agent, n: n.level }),

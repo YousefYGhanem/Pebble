@@ -5,7 +5,7 @@ import path from 'node:path'
 import { EventEmitter } from 'node:events'
 import { app, clipboard, ClipboardItem, nativeImage, screen, shell } from 'electron'
 import type { RestLevel } from '../rest'
-import { emptyExtras, focusFinished, nextDue, noticesFor, toggleTodo, trimClips, type PcState, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
+import { batteryAlerts, emptyExtras, focusFinished, nextDue, noticesFor, toggleTodo, trimClips, type PcState, type Accessory, type Action, type ExtrasState, type Media, type Note, type ShelfFile } from '../../shared/extras'
 import type { Settings } from '../../shared/settings'
 import type { Native } from '../native'
 import { Lyrics } from './lyrics'
@@ -71,12 +71,23 @@ export class Extras extends EventEmitter {
       if (seq !== undefined && seq !== this.clipSeq) { this.clipSeq = seq; void this.readClipboard() }
       this.changed()
     })
-    this.native.on('ready', () => { void this.readRadios(); this.readPower() })
+    this.native.on('ready', () => { void this.readRadios(); this.readPower(); void this.readBatteries() })
+    // an accessory connected: its battery a few seconds later (it reports once it is settled), then a peek
+    this.native.on('accessory', (d: { name?: unknown; kind?: unknown }) => {
+      if (typeof d?.name !== 'string' || !d.name) return
+      const name = d.name.slice(0, 60), kind = (['mouse', 'keyboard', 'headset', 'controller', 'device'].includes(d.kind as string) ? d.kind : 'device') as Accessory['kind']
+      setTimeout(async () => {
+        await this.readBatteries()
+        const a = this.state.accessories.find(x => x.name === name)
+        this.emit('notice', { kind: 'connected', name, device: a?.kind ?? kind, level: a?.level, charging: a?.charging })
+      }, 4000)
+    })
     this.applySettings()
     // without the native helper (its PC poll tells when the clipboard changed), a check each second
     setInterval(() => { if (!this.native.available) void this.readClipboard() }, 1000).unref()
     setInterval(() => this.sampleSystem(), 3000).unref()
     setInterval(() => void this.readRadios(), 60_000).unref()
+    setInterval(() => void this.readBatteries(), 5 * 60_000).unref() // batteries drain slowly
   }
 
   /** Music on/off from the settings. */
@@ -84,6 +95,9 @@ export class Extras extends EventEmitter {
     const on = this.settings().music.enabled
     this.native.watch('media', on && this.rest !== 'off') // watching again sends the song playing now
     this.native.watch('audio', !this.deep()) // the volume (music), and the PC's changes the island peeks at
+    const batteries = this.settings().features.batteries
+    if (batteries !== this.batteriesOn) { this.batteriesOn = batteries; void this.readBatteries() } // switched in Settings
+    this.native.watch('accessories', batteries && !this.deep()) // a peek when one connects
     if (!on && this.state.media) { this.state.media = null; this.state.art = null; this.state.lyrics = null; this.changed() }
     this.peaks()
   }
@@ -265,6 +279,23 @@ export class Extras extends EventEmitter {
         if (r.gpu !== s.gpu || r.gpuTemp !== s.gpuTemp || r.cpuTemp !== s.cpuTemp) { this.state.system = { ...s, ...r }; this.changed() }
       }).catch(() => {})
     }
+  }
+
+  private batteryTold = new Map<string, number>()
+  private batteriesOn?: boolean
+  /** Wireless accessories' batteries (native/Accessories.cs); a peek when one runs low. Not while away or in a game. */
+  async readBatteries() {
+    if (!this.native.available || this.deep()) return
+    if (!this.settings().features.batteries) { if (this.state.accessories.length) { this.state.accessories = []; this.changed() } return }
+    try {
+      const KINDS = ['mouse', 'keyboard', 'headset', 'controller', 'device']
+      const list = (await this.native.request<Accessory[]>('batteries.read'))
+        .filter(a => typeof a.name === 'string' && Number.isInteger(a.level) && a.level >= 1 && a.level <= 100 && KINDS.includes(a.kind))
+        .map(a => ({ ...a, name: a.name.slice(0, 60) }))
+        .sort((a, b) => a.level - b.level)
+      for (const { a, critical } of batteryAlerts(list, this.batteryTold)) this.emit('notice', { kind: 'battery', name: a.name, device: a.kind, level: a.level, critical })
+      if (JSON.stringify(list) !== JSON.stringify(this.state.accessories)) { this.state.accessories = list; this.changed() }
+    } catch (err) { log.warn('batteries:', (err as Error).message) }
   }
 
   private async readRadios() {

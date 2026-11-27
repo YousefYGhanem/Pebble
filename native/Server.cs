@@ -79,6 +79,7 @@ static class Server
         "mic.mute" => Audio.MicSetMute(a["on"]?.GetValue<bool>() ?? !(Audio.MicMuted() ?? false)),
         "radios.get" => await Radios.Get(),
         "sensors.read" => Sensors.Read(),
+        "batteries.read" => await Accessories.Read(),
         "radios.set" => await Radios.Set(Str(a, "kind"), a["on"]?.GetValue<bool>() ?? false),
         "speech.say" => await Say(a),
         "input.dictate" => Dictate(),
@@ -152,6 +153,7 @@ static class Server
                 // while the left button is down: where the mouse is (dragging a file onto the island); one last event on release
                 "drag" => Poll(cts.Token, 40, () => { var c = Windows.Cursor(); return c["down"]!.GetValue<bool>() ? c : null; }, d => Event("drag", d), idleMs: 150),
                 "media" => WatchMedia(cts.Token),
+                "accessories" => Accessories.Watch(cts.Token, d => Event("accessory", d)),
                 _ => throw new ArgumentException("unknown topic " + topic)
             };
             return true;

@@ -771,5 +771,17 @@
   "i.files.help.iphone": "iPhone, Chrome: Settings → Privacy & Security → Local Network → turn on Chrome.",
   "i.files.help.firewall": "Another firewall or antivirus on this PC (not Windows'): allow Pebble in it, or pause its firewall while you send.",
   "i.files.help.router": "Some routers keep devices apart (AP or client isolation, common on office and hotel Wi-Fi): use your home Wi-Fi, or turn it off in the router.",
-  "i.files.help.again": "Still nothing? Stop the phone drop, start it again, and scan the new code."
+  "i.files.help.again": "Still nothing? Stop the phone drop, start it again, and scan the new code.",
+  "i.home.batteries": "Accessory batteries",
+  "i.peek.batteryLow": "Battery low: charge it soon",
+  "i.peek.batteryCritical": "Battery almost empty: charge it now",
+  "m.batteryLow": "{name}: battery almost empty",
+  "m.batteryLowBody": "{n}% left. Charge it now.",
+  "notify.batteries": "Accessory batteries",
+  "notify.batteriesHint": "your wireless mouse, keyboard, headphones and controllers on Home (Bluetooth, Xbox, Razer), a peek with its battery when one connects, and when one runs low",
+  "i.peek.connected.mouse": "Mouse connected",
+  "i.peek.connected.keyboard": "Keyboard connected",
+  "i.peek.connected.headset": "Headphones connected",
+  "i.peek.connected.controller": "Controller connected",
+  "i.peek.connected.device": "Connected"
 }

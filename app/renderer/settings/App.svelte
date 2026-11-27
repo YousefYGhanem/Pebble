@@ -217,6 +217,8 @@
             <input type="checkbox" class="switch" checked={s.features.sound} onchange={() => set('features.sound', !s.features.sound)} /></label>
           <label class="row"><span>{t('notify.peeks')}<small>{t('notify.peeksHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.features.peeks} onchange={() => set('features.peeks', !s.features.peeks)} /></label>
+          <label class="row"><span>{t('notify.batteries')}<small>{t('notify.batteriesHint')}</small></span>
+            <input type="checkbox" class="switch" checked={s.features.batteries} onchange={() => set('features.batteries', !s.features.batteries)} /></label>
           <label class="row"><span>{t('notify.usage')}<small>{t('notify.usageHint')}</small></span>
             <input type="checkbox" class="switch" checked={s.features.usageAlerts} onchange={() => set('features.usageAlerts', !s.features.usageAlerts)} /></label>
         </section>

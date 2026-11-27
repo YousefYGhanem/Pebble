@@ -762,6 +762,12 @@ app.whenReady().then(async () => {
     // a task's reminder always shows (peeks can be off); it also goes to Windows' notifications
     if (n.kind === 'todo') { bringBack(); send(CH.notice, n); toast(tr('m.todoDue'), n.text ?? '', undefined, undefined, { kind: 'extras' }) }
     else if (n.kind === 'timer') { bringBack(); send(CH.notice, n); toast(tr('m.timerDone'), n.text || tr('m.timerDoneBody'), undefined, undefined, { kind: 'extras' }) }
+    else if (n.kind === 'battery') {
+      const b = n as unknown as { name: string; level: number; critical: boolean }
+      if (store.settings.features.peeks) send(CH.notice, n)
+      // at 10% a notification too: a peek is easy to miss
+      if (b.critical) toast(tr('m.batteryLow', { name: b.name }), tr('m.batteryLowBody', { n: b.level }), undefined, undefined, { kind: 'extras' })
+    }
     else if (store.settings.features.peeks) send(CH.notice, n)
   })
   extras.on('focus-done', (seconds: number) => toast(tr('m.focusOver'), tr('m.focusOverBody', { n: Math.round(seconds / 60) }), undefined, undefined, { kind: 'extras' }))

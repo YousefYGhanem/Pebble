@@ -2,7 +2,7 @@
   // Home: a small dashboard. The date and time, Wi-Fi and Bluetooth switches, and a tile for each part of Pebble that
   // has something going on; a click goes to its page.
   import type { Action, ExtrasState } from '../../shared/extras'
-  import { focusLeft, nextDue, todayProgress } from '../../shared/extras'
+  import { BATTERY_LOW, focusLeft, nextDue, todayProgress } from '../../shared/extras'
   import type { Session } from '../../shared/state'
   import Icon from './Icon.svelte'
   import { clock, hhmm, type Page } from './pages'
@@ -25,6 +25,7 @@
   const date = $derived(new Date(now))
   const busy = $derived(sessions.filter(s => s.status === 'running' || s.status === 'question'))
   const r = $derived(extras.radios)
+  const ICON = { mouse: 'mouse', keyboard: 'keyboard', headset: 'headset', controller: 'gamepad', device: 'battery' } as const
 </script>
 
 <div class="page">
@@ -101,6 +102,20 @@
     </button>
   {/if}
 
+  <!-- wireless accessories' batteries, lowest first -->
+  {#if extras.accessories.length}
+    <div class="batteries" role="group" aria-label={t('i.home.batteries')}>
+      {#each extras.accessories as a (a.name)}
+        <span class="acc" class:low={a.level <= BATTERY_LOW && !a.charging} title={a.name}>
+          <Icon name={ICON[a.kind]} size={14} />
+          <span class="acc-name">{a.name}</span>
+          <span class="bar" aria-hidden="true"><i style:width="{a.level}%"></i></span>
+          <span class="acc-level">{a.charging ? '⚡' : ''}{a.level}%</span>
+        </span>
+      {/each}
+    </div>
+  {/if}
+
   <!-- the day at a glance: one quiet line (prayer, screen time, water), each part only when there is one -->
   {#if extras.prayer || extras.screen.length || extras.glasses}
     <span class="todoline muted today">
@@ -164,5 +179,13 @@
   .day:hover { background: var(--surface2); }
   .facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.9em; }
   .today { gap: 14px; flex-wrap: wrap; }
+  .batteries { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px 14px; padding: 8px 12px; border-radius: 16px; background: var(--surface1); font-size: 0.86em; }
+  .acc { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--muted); }
+  .acc-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+  .bar { flex: none; width: 34px; height: 6px; border-radius: 3px; background: var(--surface3); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 3px; background: var(--done); }
+  .acc-level { flex: none; font-variant-numeric: tabular-nums; min-width: 4ch; text-align: end; }
+  .acc.low .bar i { background: var(--question); }
+  .acc.low .acc-level { color: var(--question); }
   .today > span { display: inline-flex; align-items: center; gap: 6px; }
 </style>

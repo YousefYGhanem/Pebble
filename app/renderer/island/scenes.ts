@@ -41,7 +41,8 @@ function demoExtras(now: number): Partial<ExtrasState> {
     ],
     notes: [{ id: 'n1', text: 'Release checklist\n- sign the installer\n- update the changelog', at: now }, { id: 'n2', text: 'Ideas: a calmer goodbye', at: now - 86_400_000 }],
     system: { cpu: 23, ram: 61 },
-    radios: { wifi: true, bluetooth: false }
+    radios: { wifi: true, bluetooth: false },
+    accessories: [{ name: 'Xbox Wireless Controller', kind: 'controller', level: 18 }, { name: 'Razer Viper V3 HyperSpeed', kind: 'mouse', level: 69 }, { name: 'WH-1000XM5', kind: 'headset', level: 82, charging: true }]
   }
 }
 

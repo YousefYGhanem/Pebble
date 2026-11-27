@@ -102,10 +102,27 @@ export interface ExtrasState {
   drop: Drop | null
   /** the speakers' volume (0–100), as Windows has it: the Music page's slider follows it */
   volume: { level: number; muted: boolean } | null
+  /** wireless accessories' batteries (Bluetooth, game controllers, Razer receivers), read every few minutes */
+  accessories: Accessory[]
+}
+
+export interface Accessory { name: string; kind: 'mouse' | 'keyboard' | 'headset' | 'controller' | 'device'; level: number; charging?: boolean }
+export const BATTERY_LOW = 20
+export const BATTERY_CRITICAL = 10
+/** The low-battery alerts a new reading brings: each accessory once at 20% and once at 10%, and again only after it
+ *  charged (or passed 30%). `told` keeps what was said, by name. */
+export function batteryAlerts(list: Accessory[], told: Map<string, number>): { a: Accessory; critical: boolean }[] {
+  const out: { a: Accessory; critical: boolean }[] = []
+  for (const a of list) {
+    if (a.charging || a.level > BATTERY_LOW + 10) { told.delete(a.name); continue }
+    const stage = a.level <= BATTERY_CRITICAL ? 2 : a.level <= BATTERY_LOW ? 1 : 0
+    if (stage > (told.get(a.name) ?? 0)) { told.set(a.name, stage); out.push({ a, critical: stage === 2 }) }
+  }
+  return out
 }
 
 /** nothing yet (a fresh start; a copy for each user) */
-export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, rates: null, translated: null, clipText: '', timers: [], picked: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null })
+export const emptyExtras = (): ExtrasState => ({ media: null, art: null, lyrics: null, shelf: [], clipboard: [], notes: [], focus: null, focusDone: null, todos: [], mixer: null, rates: null, translated: null, clipText: '', timers: [], picked: null, prayer: null, screen: [], glasses: 0, power: null, strip: false, mic: null, system: { cpu: 0, ram: 0 }, radios: null, drop: null, volume: null, accessories: [] })
 
 /** Everything the island can ask main to do with the extras (validated in main). */
 export type Action =
@@ -213,6 +230,8 @@ export type Notice =
   | { kind: 'todo'; id: string; text: string }
   | { kind: 'timer'; text: string }
   | { kind: 'disk'; drive: string; free: number }
+  | { kind: 'battery'; name: string; device: Accessory['kind']; level: number; critical: boolean }
+  | { kind: 'connected'; name: string; device: Accessory['kind']; level?: number; charging?: boolean }
   | { kind: 'wellness'; what: 'water' | 'stand' }
   | { kind: 'prayer'; name: string }
   | { kind: 'usage'; agent: string; window: 'fiveHour' | 'sevenDay' | 'spend'; level: number; when: string }
