@@ -76,9 +76,10 @@ export class Extras extends EventEmitter {
     this.native.on('accessory', (d: { name?: unknown; kind?: unknown }) => {
       if (typeof d?.name !== 'string' || !d.name) return
       const name = d.name.slice(0, 60), kind = (['mouse', 'keyboard', 'headset', 'controller', 'device'].includes(d.kind as string) ? d.kind : 'device') as Accessory['kind']
+      const find = async () => { await this.readBatteries(); return this.state.accessories.find(x => x.name === name) }
       setTimeout(async () => {
-        await this.readBatteries()
-        const a = this.state.accessories.find(x => x.name === name)
+        // headphones tell their battery a few seconds after they connect: one more look before the peek goes without it
+        const a = (await find()) ?? (await new Promise<Accessory | undefined>(r => setTimeout(() => r(find()), 6000)))
         this.emit('notice', { kind: 'connected', name, device: a?.kind ?? kind, level: a?.level, charging: a?.charging })
       }, 4000)
     })

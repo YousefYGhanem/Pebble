@@ -778,7 +778,7 @@
   "m.batteryLow": "{name}: battery almost empty",
   "m.batteryLowBody": "{n}% left. Charge it now.",
   "notify.batteries": "Accessory batteries",
-  "notify.batteriesHint": "your wireless mouse, keyboard, headphones and controllers on Home (Bluetooth, Xbox, Razer), a peek with its battery when one connects, and when one runs low",
+  "notify.batteriesHint": "your wireless mouse, keyboard, headphones and controllers on Home (Bluetooth, Xbox, Razer, Logitech), a peek with its battery when one connects, and when one runs low",
   "i.peek.connected.mouse": "Mouse connected",
   "i.peek.connected.keyboard": "Keyboard connected",
   "i.peek.connected.headset": "Headphones connected",
