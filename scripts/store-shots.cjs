@@ -12,7 +12,7 @@ const SHOTS = [
   ['1-agents', 'open.png', 'Your AI agents, at the top of your screen', 'Claude Code, Codex, Gemini, Cursor and more: what they do, live'],
   ['2-answer', 'question.png', 'Answer them without switching windows', 'Permissions and questions, right on the island'],
   ['3-plan', 'plan.png', 'Review a plan before it runs', 'Read it, approve it, or say what to change'],
-  ['4-home', 'page-home.png', 'Your day at a glance', 'Agents, music, focus, files, reminders and prayer times'],
+  ['4-home', 'page-home.png', 'Your day at a glance', "Agents, music, focus, files and your accessories' batteries"],
   ['5-music', 'page-music.png', 'Music and lyrics from any player', "Plus every app's own volume"],
   ['6-files', 'page-files.png', 'A shelf for your files', 'Drop them on the island, drag them anywhere, send them from your phone'],
   ['7-pip', 'page-pip.png', 'Ask Pip anything, in your own words', 'A free AI out of the box; sums, units, timers and translations answer instantly'],

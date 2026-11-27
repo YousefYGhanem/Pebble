@@ -53,9 +53,8 @@ jobs:
         with:
           name: store-package
           path: dist/store/Pebble.msix
+      # one submission: the package, and the listing's text, "what's new" and screenshots from docs/store/listing.json
       - if: env.PARTNER_CENTER_CLIENT_ID != ''
-        uses: microsoft/microsoft-store-apppublisher@v1.1
-      - if: env.PARTNER_CENTER_CLIENT_ID != ''
-        run: msstore reconfigure --tenantId $env:PARTNER_CENTER_TENANT_ID --sellerId $env:PARTNER_CENTER_SELLER_ID --clientId $env:PARTNER_CENTER_CLIENT_ID --clientSecret $env:PARTNER_CENTER_CLIENT_SECRET
-      - if: env.PARTNER_CENTER_CLIENT_ID != ''
-        run: msstore publish dist/store/Pebble.msix -id 9PJNR7CT4ZN7
+        run: ./scripts/store-listing.ps1
+        env:
+          STORE_PACKAGE: dist/store/Pebble.msix

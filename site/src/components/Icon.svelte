@@ -44,6 +44,8 @@
     stretch: '<circle cx="12" cy="4.8" r="1.8"/><path d="M5 8.5l7 1.5 7-1.5M12 10v5l-3 5.5M12 15l3 5.5"/>',
     moon: '<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>',
     chart: '<path d="M4.5 19.5h15M7 16v-4M11 16V8M15 16v-6M19 16V5"/>',
+    mouse: '<path d="M12 3a6 6 0 0 0-6 6v6a6 6 0 0 0 12 0V9a6 6 0 0 0-6-6z"/><path d="M12 7v4"/>',
+    headset: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/>',
     speaker: '<path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
     caps: '<path d="M12 4.5L5 12h4v4h6v-4h4z"/><path d="M9 19.5h6"/>',
     mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/><path d="M4 4l16 16"/>',

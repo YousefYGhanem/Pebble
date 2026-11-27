@@ -1,6 +1,6 @@
 # The Store listing (Pebble Pet) from docs/store/listing.json and docs/store/*.png, through the Microsoft Store
-# submission API: copies the live submission, replaces each English and Arabic listing's text and screenshots, uploads
-# the pictures and submits it for certification. Run by the "Store listing" workflow, with the PARTNER_CENTER_* secrets.
+# submission API: copies the live submission, replaces each English and Arabic listing's text and screenshots (and, for
+# a release, the package), uploads them and submits it all for certification. Run by the "Store listing" workflow, with the PARTNER_CENTER_* secrets.
 $ErrorActionPreference = 'Stop'
 $app = '9PJNR7CT4ZN7'
 $api = "https://manage.devcenter.microsoft.com/v1.0/my/applications/$app"
@@ -52,8 +52,16 @@ foreach ($lang in $sub.listings.PSObject.Properties.Name) {
   Write-Host "Listing $lang updated"
 }
 
+# a release's package too (STORE_PACKAGE: the .msix the release built): it replaces the one in the Store
+$files = @($data.screenshots | ForEach-Object { "docs/store/$_" })
+if ($env:STORE_PACKAGE) {
+  foreach ($p in @($sub.applicationPackages | Where-Object { $_ })) { $p.fileStatus = 'PendingDelete' }
+  $sub.applicationPackages = @(@($sub.applicationPackages | Where-Object { $_ }) + [pscustomobject]@{ fileName = (Split-Path $env:STORE_PACKAGE -Leaf); fileStatus = 'PendingUpload'; minimumDirectXVersion = 'None'; minimumSystemRam = 'None' })
+  $files += $env:STORE_PACKAGE
+  Write-Host "Package $(Split-Path $env:STORE_PACKAGE -Leaf) added"
+}
 $zip = Join-Path $env:RUNNER_TEMP 'listing.zip'
-Compress-Archive -Force -DestinationPath $zip -Path ($data.screenshots | ForEach-Object { "docs/store/$_" })
+Compress-Archive -Force -DestinationPath $zip -Path $files
 Invoke-RestMethod -Method Put -Uri $sub.fileUploadUrl -InFile $zip -Headers @{ 'x-ms-blob-type' = 'BlockBlob' } | Out-Null
 $null = Send Put "$api/submissions/$($sub.id)" $sub
 $null = Send Post "$api/submissions/$($sub.id)/commit"

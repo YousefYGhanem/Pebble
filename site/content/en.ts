@@ -21,7 +21,7 @@ const en: Content = {
     small: 'Free · Open source (MIT) · Windows 10 and 11',
     worksWith: 'Follows',
     agents: ['Claude Code', 'Codex', 'Gemini CLI', 'Cursor', 'OpenCode', 'Aider', 'DeepSeek Harness', 'Any MCP agent'],
-    news: { badge: 'New in 0.5.1', text: 'The game strip, over full-screen games', to: 'game-strip' }
+    news: { badge: 'New in 0.5.2', text: "Your accessories' batteries", to: 'batteries' }
   },
   demo: {
     label: 'A live demo of the Pebble island following an agent',
@@ -298,6 +298,23 @@ const en: Content = {
         { id: 'de', label: 'German', sub: 'Hallo, ich bin Pip. Ich wohne oben auf deinem Bildschirm.' }
       ],
       mood: 'dancing'
+    },
+    {
+      id: 'batteries',
+      icon: 'plug',
+      kicker: 'Accessory batteries',
+      title: 'Know before your mouse dies',
+      text: "Home shows your wireless mouse, keyboard, headphones and controllers with their batteries. When one connects, the island peeks with its name and battery; when one runs low, it tells you at 20%, and with a notification at 10%.",
+      points: ['Bluetooth devices of any brand', 'Xbox and other game controllers', 'Razer and Logitech wireless receivers', 'A peek when one connects or runs low'],
+      live: 'batteries',
+      chips: [
+        { id: 'mouse', label: 'Razer Viper V3 HyperSpeed', sub: '69' },
+        { id: 'controller', label: 'Xbox Wireless Controller', sub: '34' },
+        { id: 'headset', label: 'Nothing Ear (a)', sub: '90' },
+        { id: 'connected', label: 'Headphones connected' },
+        { id: 'low', label: 'Battery low: charge it soon' }
+      ],
+      mood: 'happy'
     },
     {
       id: 'game-strip',

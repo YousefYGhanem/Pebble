@@ -10,7 +10,7 @@
     "8-strip.png"
   ],
   "en": {
-    "description": "Pebble Pet puts a small island at the top of your screen. It follows your AI coding agents (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Aider and DeepSeek Harness) and shows what each one is doing, live. When an agent needs you, the island grows into a card: allow or deny a command, answer its question, or review its plan, without switching windows. When it is done, you know.\n\nPip, a little character who lives in the island, keeps you company: he reacts to your agents, dances to your music, falls asleep when you are away, and earns outfits as you work.\n\nOpen the island for more:\n- Home: your day at a glance, with your agents' work, the next prayer, screen time and quick controls\n- Music: what plays in any app, with timed lyrics and each app's own volume\n- Files: a shelf for files, snips of your screen, and sending files from your phone\n- Pip's page (Ctrl+Alt+K): one box for everything. Sums, units, currencies, the time anywhere, timers and translations answer as you type; anything else goes to Pip, a free AI that needs no account (or your own Claude Code, Codex or API key). He reads answers aloud, with natural voices in 50+ languages if you choose them.\n- Clipboard, Notes and To-do with reminders, a Focus timer with calm sounds, and connectors (GitHub with your pull requests' CI, weather, your calendar with a Join button, live scores, news, countdowns, local dev servers)\n- Game strip: CPU and GPU use and temperatures over full-screen games (Ctrl+Alt+G)\n\nKind to your PC and your privacy: it rests while you are away, in a game or when you tuck it away. No account, no analytics, no ads. English and Arabic.",
+    "description": "Pebble Pet puts a small island at the top of your screen. It follows your AI coding agents (Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Aider and DeepSeek Harness) and shows what each one is doing, live. When an agent needs you, the island grows into a card: allow or deny a command, answer its question, or review its plan, without switching windows. When it is done, you know.\n\nPip, a little character who lives in the island, keeps you company: he reacts to your agents, dances to your music, falls asleep when you are away, and earns outfits as you work.\n\nOpen the island for more:\n- Home: your day at a glance, with your agents' work, the next prayer, screen time and quick controls\n- Music: what plays in any app, with timed lyrics and each app's own volume\n- Files: a shelf for files, snips of your screen, and sending files from your phone\n- Pip's page (Ctrl+Alt+K): one box for everything. Sums, units, currencies, the time anywhere, timers and translations answer as you type; anything else goes to Pip, a free AI that needs no account (or your own Claude Code, Codex or API key). He reads answers aloud, with natural voices in 50+ languages if you choose them.\n- Clipboard, Notes and To-do with reminders, a Focus timer with calm sounds, and connectors (GitHub with your pull requests' CI, weather, your calendar with a Join button, live scores, news, countdowns, local dev servers)\n- Game strip: CPU and GPU use and temperatures over full-screen games (Ctrl+Alt+G)\n- Accessory batteries: your wireless mouse, keyboard, headphones and controllers (Bluetooth, Xbox, Razer, Logitech), with a peek when one connects and when one runs low\n\nKind to your PC and your privacy: it rests while you are away, in a game or when you tuck it away. No account, no analytics, no ads. English and Arabic.",
     "features": [
       "Follows Claude Code, Codex, Gemini CLI, Cursor, OpenCode, Aider and DeepSeek Harness",
       "Answer permissions, questions and plans from the island",
@@ -19,6 +19,7 @@
       "Pip's page: instant answers, timers, translations and a free AI chat",
       "Read answers aloud, with natural voices in 50+ languages",
       "Game strip: CPU and GPU readings over full-screen games",
+      "Battery levels of your wireless mouse, keyboard, headphones and controllers",
       "Music with timed lyrics and per-app volume",
       "File shelf, screen snips and phone drop",
       "Clipboard history, notes and to-dos with reminders",
@@ -37,7 +38,7 @@
       "game overlay",
       "desktop pet"
     ],
-    "releaseNotes": "The game strip over full-screen games (Ctrl+Alt+G) with GPU and temperatures, replies that reach Claude as your own message, a smaller download with natural voices as an optional download, and fixes.",
+    "releaseNotes": "Accessory batteries: your wireless mouse, keyboard, headphones and controllers on Home (Bluetooth, Xbox, Razer, Logitech), a peek when one connects and when one runs low. A clearer song line on the Music page, and help for the phone drop.",
     "screenshots": [
       "Your AI agents, at the top of your screen",
       "Answer them without switching windows",
@@ -50,7 +51,7 @@
     ]
   },
   "ar": {
-    "description": "يضع Pebble Pet جزيرة صغيرة أعلى شاشتك. تتابع وكلاء البرمجة بالذكاء الاصطناعي (Claude Code وCodex وGemini CLI وCursor وOpenCode وAider وDeepSeek Harness) وتعرض ما يفعله كل منهم مباشرة. وحين يحتاجك وكيل، تكبر الجزيرة إلى بطاقة: اسمح بأمر أو ارفضه، أجب عن سؤاله، أو راجع خطته، دون أن تنتقل بين النوافذ. وحين ينتهي، تعرف.\n\nبيب، شخصية صغيرة تعيش في الجزيرة، يرافقك: يتفاعل مع وكلائك، ويرقص على موسيقاك، وينام حين تغيب، ويكسب أزياء أثناء عملك.\n\nافتح الجزيرة لترى المزيد:\n- الرئيسية: يومك في لمحة، مع عمل وكلائك والصلاة القادمة ووقت الشاشة وأزرار سريعة\n- الموسيقى: ما يُشغَّل في أي تطبيق، مع كلمات متزامنة ومستوى صوت كل تطبيق\n- الملفات: رف للملفات، وقص أجزاء من الشاشة، وإرسال الملفات من هاتفك\n- صفحة بيب (Ctrl+Alt+K): مربع واحد لكل شيء. الحسابات والوحدات والعملات والوقت في أي مدينة والمؤقتات والترجمة تُجاب أثناء الكتابة، وما عدا ذلك يذهب إلى بيب، ذكاء اصطناعي مجاني بلا حساب (أو Claude Code أو Codex أو مفتاح API الخاص بك). ويقرأ الإجابات بصوت عالٍ، بأصوات طبيعية بأكثر من 50 لغة إن اخترتها.\n- الحافظة والملاحظات والمهام مع التذكيرات، ومؤقت تركيز بأصوات هادئة، وموصلات (GitHub مع فحوص طلبات الدمج، والطقس وتقويمك مع زر الانضمام والنتائج المباشرة والأخبار والعد التنازلي وخوادم التطوير المحلية)\n- شريط الألعاب: استخدام المعالج وكرت الشاشة وحرارتهما فوق الألعاب بملء الشاشة (Ctrl+Alt+G)\n\nلطيف مع جهازك وخصوصيتك: يرتاح حين تغيب أو تلعب أو تخفيه. بلا حساب، بلا تتبع، بلا إعلانات. بالعربية والإنجليزية.",
+    "description": "يضع Pebble Pet جزيرة صغيرة أعلى شاشتك. تتابع وكلاء البرمجة بالذكاء الاصطناعي (Claude Code وCodex وGemini CLI وCursor وOpenCode وAider وDeepSeek Harness) وتعرض ما يفعله كل منهم مباشرة. وحين يحتاجك وكيل، تكبر الجزيرة إلى بطاقة: اسمح بأمر أو ارفضه، أجب عن سؤاله، أو راجع خطته، دون أن تنتقل بين النوافذ. وحين ينتهي، تعرف.\n\nبيب، شخصية صغيرة تعيش في الجزيرة، يرافقك: يتفاعل مع وكلائك، ويرقص على موسيقاك، وينام حين تغيب، ويكسب أزياء أثناء عملك.\n\nافتح الجزيرة لترى المزيد:\n- الرئيسية: يومك في لمحة، مع عمل وكلائك والصلاة القادمة ووقت الشاشة وأزرار سريعة\n- الموسيقى: ما يُشغَّل في أي تطبيق، مع كلمات متزامنة ومستوى صوت كل تطبيق\n- الملفات: رف للملفات، وقص أجزاء من الشاشة، وإرسال الملفات من هاتفك\n- صفحة بيب (Ctrl+Alt+K): مربع واحد لكل شيء. الحسابات والوحدات والعملات والوقت في أي مدينة والمؤقتات والترجمة تُجاب أثناء الكتابة، وما عدا ذلك يذهب إلى بيب، ذكاء اصطناعي مجاني بلا حساب (أو Claude Code أو Codex أو مفتاح API الخاص بك). ويقرأ الإجابات بصوت عالٍ، بأصوات طبيعية بأكثر من 50 لغة إن اخترتها.\n- الحافظة والملاحظات والمهام مع التذكيرات، ومؤقت تركيز بأصوات هادئة، وموصلات (GitHub مع فحوص طلبات الدمج، والطقس وتقويمك مع زر الانضمام والنتائج المباشرة والأخبار والعد التنازلي وخوادم التطوير المحلية)\n- شريط الألعاب: استخدام المعالج وكرت الشاشة وحرارتهما فوق الألعاب بملء الشاشة (Ctrl+Alt+G)\n- بطاريات الملحقات: الفأرة ولوحة المفاتيح والسماعات ووحدات التحكم اللاسلكية (بلوتوث وXbox وRazer وLogitech)، مع لمحة حين تتصل إحداها وحين تنخفض بطاريتها\n\nلطيف مع جهازك وخصوصيتك: يرتاح حين تغيب أو تلعب أو تخفيه. بلا حساب، بلا تتبع، بلا إعلانات. بالعربية والإنجليزية.",
     "features": [
       "يتابع Claude Code وCodex وGemini CLI وCursor وOpenCode وAider وDeepSeek Harness",
       "أجب عن الأذونات والأسئلة والخطط من الجزيرة",
@@ -59,6 +60,7 @@
       "صفحة بيب: إجابات فورية ومؤقتات وترجمة ومحادثة ذكاء اصطناعي مجانية",
       "قراءة الإجابات بصوت عالٍ، بأصوات طبيعية بأكثر من 50 لغة",
       "شريط الألعاب: قراءات المعالج وكرت الشاشة فوق الألعاب بملء الشاشة",
+      "مستوى بطارية الفأرة ولوحة المفاتيح والسماعات ووحدات التحكم اللاسلكية",
       "موسيقى بكلمات متزامنة ومستوى صوت لكل تطبيق",
       "رف ملفات وقص الشاشة وإرسال من الهاتف",
       "سجل الحافظة والملاحظات والمهام مع التذكيرات",
@@ -77,7 +79,7 @@
       "شريط الألعاب",
       "رفيق سطح المكتب"
     ],
-    "releaseNotes": "شريط الألعاب فوق الألعاب بملء الشاشة (Ctrl+Alt+G) مع كرت الشاشة ودرجات الحرارة، وردود تصل إلى Claude كرسالتك أنت، وتنزيل أصغر مع الأصوات الطبيعية كتنزيل اختياري، وإصلاحات.",
+    "releaseNotes": "بطاريات الملحقات: الفأرة ولوحة المفاتيح والسماعات ووحدات التحكم اللاسلكية في الرئيسية (بلوتوث وXbox وRazer وLogitech)، ولمحة حين تتصل إحداها وحين تنخفض بطاريتها. وخط أوضح للأغنية في صفحة الموسيقى، ومساعدة للإرسال من الهاتف.",
     "screenshots": [
       "وكلاؤك في أعلى شاشتك",
       "أجبهم دون تبديل النوافذ",

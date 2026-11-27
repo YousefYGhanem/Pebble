@@ -69,8 +69,10 @@ are set up (once):
 3. **GitHub:** repository Settings → Secrets and variables → Actions, add `PARTNER_CENTER_TENANT_ID`,
    `PARTNER_CENTER_SELLER_ID`, `PARTNER_CENTER_CLIENT_ID`, `PARTNER_CENTER_CLIENT_SECRET`.
 
-The Store version appears after Microsoft's certification (usually within a few days). Publishing replaces a draft
-submission you started in Partner Center, so finish or discard drafts before tagging. Without the secrets, download the
+The release's submission carries the package and the listing from `docs/store/listing.json` (put the version's
+"what's new" there before tagging). The Store version appears after Microsoft's certification (usually within a few
+days). The Store takes one submission at a time: the upload stops if one is still pending, so finish or discard drafts,
+and let the last one be published, before tagging. Without the secrets, download the
 artifact from the run and upload it in Partner Center by hand (Submission → Packages).
 
 ## Store packages

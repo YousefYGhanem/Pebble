@@ -18,7 +18,7 @@ export interface Chip {
 }
 
 /** Live demos a feature can show next to its text (site/src/live). */
-export type Live = 'status' | 'usage' | 'pip' | 'peeks' | 'themes' | 'keys' | 'chat' | 'lang' | 'ai' | 'voices' | 'strip'
+export type Live = 'status' | 'usage' | 'pip' | 'peeks' | 'themes' | 'keys' | 'chat' | 'lang' | 'ai' | 'voices' | 'strip' | 'batteries'
 
 /** Pip's moods (app/shared/pip.ts) */
 export type PipMood = 'idle' | 'curious' | 'focused' | 'alert' | 'happy' | 'love' | 'sleepy' | 'dizzy' | 'grumpy' | 'dancing' | 'sad'

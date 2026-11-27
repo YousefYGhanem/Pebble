@@ -11,11 +11,12 @@
   import Providers from './Providers.svelte'
   import Voices from './Voices.svelte'
   import Strip from './Strip.svelte'
+  import Batteries from './Batteries.svelte'
   import { glow } from '../lib/motion'
 
   // Which live demo a feature shows (its `live` field in the content files).
   let { f }: { f: Feature } = $props()
-  const DEMOS = { status: Status, usage: Usage, pip: Moods, peeks: Peeks, themes: Themes, keys: Keys, chat: Chat, lang: Lang, ai: Providers, voices: Voices, strip: Strip }
+  const DEMOS = { status: Status, usage: Usage, pip: Moods, peeks: Peeks, themes: Themes, keys: Keys, chat: Chat, lang: Lang, ai: Providers, voices: Voices, strip: Strip, batteries: Batteries }
   const Demo = $derived(f.live ? DEMOS[f.live] : null)
 </script>
 

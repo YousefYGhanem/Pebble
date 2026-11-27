@@ -21,7 +21,7 @@ const ar: Content = {
     small: 'مجاني · مفتوح المصدر (MIT) · Windows 10 و11',
     worksWith: 'يتابع',
     agents: ['Claude Code', 'Codex', 'Gemini CLI', 'Cursor', 'OpenCode', 'Aider', 'DeepSeek Harness', 'أي وكيل MCP'],
-    news: { badge: 'جديد في 0.5.1', text: 'شريط الألعاب، فوق الألعاب بملء الشاشة', to: 'game-strip' }
+    news: { badge: 'جديد في 0.5.2', text: 'بطاريات ملحقاتك', to: 'batteries' }
   },
   demo: {
     label: 'عرض حي لجزيرة Pebble وهي تتابع وكيلًا',
@@ -298,6 +298,23 @@ const ar: Content = {
         { id: 'de', label: 'الألمانية', sub: 'Hallo, ich bin Pip. Ich wohne oben auf deinem Bildschirm.' }
       ],
       mood: 'dancing'
+    },
+    {
+      id: 'batteries',
+      icon: 'plug',
+      kicker: 'بطاريات الملحقات',
+      title: 'اعرف قبل أن تنطفئ فأرتك',
+      text: 'تعرض الرئيسية الفأرة ولوحة المفاتيح والسماعات ووحدات التحكم اللاسلكية مع بطارياتها. وحين تتصل إحداها، تطل الجزيرة باسمها وبطاريتها؛ وحين تنخفض، تخبرك عند 20%، وبإشعار عند 10%.',
+      points: ['أجهزة البلوتوث من أي علامة تجارية', 'Xbox ووحدات تحكم الألعاب الأخرى', 'مستقبلات Razer وLogitech اللاسلكية', 'لمحة حين تتصل إحداها أو تنخفض بطاريتها'],
+      live: 'batteries',
+      chips: [
+        { id: 'mouse', label: 'Razer Viper V3 HyperSpeed', sub: '69' },
+        { id: 'controller', label: 'Xbox Wireless Controller', sub: '34' },
+        { id: 'headset', label: 'Nothing Ear (a)', sub: '90' },
+        { id: 'connected', label: 'اتصلت السماعات' },
+        { id: 'low', label: 'البطارية منخفضة: اشحنها قريبًا' }
+      ],
+      mood: 'happy'
     },
     {
       id: 'game-strip',
