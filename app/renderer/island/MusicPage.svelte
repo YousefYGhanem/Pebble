@@ -98,7 +98,7 @@
         </div>
       </div>
     </div>
-    <div class="progress" role="slider" tabindex="0" aria-label={t('i.music.position')} aria-valuemin={0} aria-valuemax={Math.round((m.durationMs ?? 0) / 1000)} aria-valuenow={Math.round(pos / 1000)} aria-valuetext={clock(pos)} onclick={seek} onkeydown={seekKey} class:seekable={m.canSeek}>
+    <div class="progress" role="slider" tabindex="0" aria-label={t('i.music.position')} aria-valuemin={0} aria-valuemax={Math.round((m.durationMs ?? 0) / 1000)} aria-valuenow={Math.round(pos / 1000)} aria-valuetext={clock(pos)} onclick={seek} onkeydown={seekKey} class:seekable={m.canSeek} class:wavy={m.playing && !reduced}>
       <!-- the played part waves while it plays (flat when paused) -->
       <div class="fill" class:wavy={m.playing && !reduced} style:width="{m.durationMs ? (pos / m.durationMs) * 100 : 0}%"></div>
     </div>
@@ -148,16 +148,15 @@
   .vol { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
   .vol input { width: 90px; }
   /* a 5 px line in a 21 px target (Fitts; WCAG 2.5.8) */
-  .progress { position: relative; height: 21px; padding: 8px 0; margin: -8px 0; } /* border-box: the line is the 5 px inside */
-  /* the whole song's length: the album's colour, faint, so the line shows on light and dark themes alike */
-  .progress::before { content: ''; position: absolute; inset: 8px 0; border-radius: 3px;
-    background: color-mix(in srgb, color-mix(in srgb, rgb(var(--album)) 35%, var(--text)) 24%, transparent); }
+  .progress { position: relative; height: 21px; padding: 8px 0; margin: -8px 0; /* border-box: the line is the 5 px inside */
+    --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Cpath d='M0 5 Q4.5 0 9 5 T18 5' fill='none' stroke='black' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x 0 0 / 18px 10px; }
+  /* the whole song's length: the played line's own shape and colour, faded */
+  .progress::before { content: ''; position: absolute; inset: 8px 0; border-radius: 3px; background: rgba(var(--album), 0.3); }
   .progress.seekable { cursor: pointer; }
-  .fill { position: relative; height: 100%; border-radius: 3px; background: rgb(var(--album)); box-shadow: 0 0 6px rgba(var(--album), 0.45); transition: width 1s linear; }
-  /* a wave cut out of the fill (a still shape: no frames to draw) */
-  .fill.wavy { height: 10px; margin-top: -2.5px; border-radius: 0;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Cpath d='M0 5 Q4.5 0 9 5 T18 5' fill='none' stroke='black' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x 0 0 / 18px 10px;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Cpath d='M0 5 Q4.5 0 9 5 T18 5' fill='none' stroke='black' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x 0 0 / 18px 10px; }
+  .fill { position: relative; height: 100%; border-radius: 3px; background: rgb(var(--album)); transition: width 1s linear; }
+  /* a wave cut out of the line and its track, in step (a still shape: no frames to draw); flat again when paused */
+  .fill.wavy { height: 10px; margin-top: -2.5px; border-radius: 0; -webkit-mask: var(--wave); mask: var(--wave); }
+  .progress.wavy::before { inset: 5.5px 0; border-radius: 0; -webkit-mask: var(--wave); mask: var(--wave); }
   .times { display: flex; justify-content: space-between; font-size: 0.82em; margin-top: -6px; font-variant-numeric: tabular-nums; }
   .lyrics { display: flex; flex-direction: column; gap: 2px; height: 150px; overflow-y: auto; scrollbar-width: none; padding: 50px 0;
     -webkit-mask: linear-gradient(transparent, #000 30%, #000 70%, transparent); mask: linear-gradient(transparent, #000 30%, #000 70%, transparent); }
