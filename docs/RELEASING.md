@@ -57,7 +57,8 @@ Write them in `docs/releases/v<version>.md` before tagging; the workflow uses th
 ## Microsoft Store
 
 Pebble is on the Store as **Pebble Pet** (product ID `9PJNR7CT4ZN7`,
-https://apps.microsoft.com/detail/9PJNR7CT4ZN7). Every tag also builds the Store package: the run keeps it as the
+https://apps.microsoft.com/detail/9PJNR7CT4ZN7). After each Release, the **Store release** workflow builds the same tag as a Store package (run it by hand with a tag to
+send one again): the run keeps it as the
 `store-package` artifact (`Pebble.msix`), and uploads it to Partner Center and submits it for certification once these
 are set up (once):
 
