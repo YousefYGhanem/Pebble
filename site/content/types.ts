@@ -61,9 +61,8 @@ export interface Content {
     lead: string
     download: string
     downloadSub: string
+    /** the Store badge's text for screen readers (the badge's own words) */
     store: string
-    /** the small line over "Microsoft Store" on its button */
-    storeSub: string
     small: string
     worksWith: string
     agents: string[]
