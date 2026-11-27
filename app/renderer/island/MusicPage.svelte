@@ -148,9 +148,12 @@
   .vol { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
   .vol input { width: 90px; }
   /* a 5 px line in a 21 px target (Fitts; WCAG 2.5.8) */
-  .progress { height: 5px; padding: 8px 0; margin: -8px 0; background: var(--surface2) content-box; }
+  .progress { position: relative; height: 21px; padding: 8px 0; margin: -8px 0; } /* border-box: the line is the 5 px inside */
+  /* the whole song's length: the album's colour, faint, so the line shows on light and dark themes alike */
+  .progress::before { content: ''; position: absolute; inset: 8px 0; border-radius: 3px;
+    background: color-mix(in srgb, color-mix(in srgb, rgb(var(--album)) 35%, var(--text)) 24%, transparent); }
   .progress.seekable { cursor: pointer; }
-  .fill { height: 100%; border-radius: 3px; background: rgb(var(--album)); transition: width 1s linear; }
+  .fill { position: relative; height: 100%; border-radius: 3px; background: rgb(var(--album)); box-shadow: 0 0 6px rgba(var(--album), 0.45); transition: width 1s linear; }
   /* a wave cut out of the fill (a still shape: no frames to draw) */
   .fill.wavy { height: 10px; margin-top: -2.5px; border-radius: 0;
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='10'%3E%3Cpath d='M0 5 Q4.5 0 9 5 T18 5' fill='none' stroke='black' stroke-width='2.4'/%3E%3C/svg%3E") repeat-x 0 0 / 18px 10px;
