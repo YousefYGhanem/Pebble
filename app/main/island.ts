@@ -20,7 +20,8 @@ export function createIsland(settings: Settings, offscreen = false): BrowserWind
       preload: path.join(__dirname, '../preload/island.js'),
       contextIsolation: true,
       sandbox: true,
-      offscreen, // --capture renders without ever showing the window
+      // --capture renders without ever showing the window (--capture-scale=2: sharper pictures, for the films)
+      offscreen: offscreen ? { deviceScaleFactor: Number(process.argv.find(a => a.startsWith('--capture-scale='))?.slice(16)) || 1 } : false,
       backgroundThrottling: false // the island animates while another app has focus
     }
   })

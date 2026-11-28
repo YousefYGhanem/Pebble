@@ -1,0 +1,23 @@
+{
+  "name": "pebble-videos",
+  "private": true,
+  "description": "Pebble's films, made with Remotion from the app's own island captures and Pip (see BRAND.md)",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "stills": "node scripts/stills.ts",
+    "render": "node scripts/render.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.547",
+    "@remotion/cli": "4.0.547",
+    "@remotion/renderer": "4.0.547",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.547"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.0"
+  }
+}
